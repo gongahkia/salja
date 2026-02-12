@@ -4,6 +4,7 @@ import (
 "fmt"
 "os"
 "path/filepath"
+"time"
 
 "github.com/BurntSushi/toml"
 )
@@ -101,6 +102,22 @@ return fmt.Errorf("invalid conflict_strategy '%s'", cfg.ConflictStrategy)
 validDataLossModes := map[string]bool{"warn": true, "error": true, "silent": true}
 if !validDataLossModes[cfg.DataLossMode] {
 return fmt.Errorf("invalid data_loss_mode '%s': must be 'warn', 'error', or 'silent'", cfg.DataLossMode)
+}
+
+if cfg.DefaultTimezone != "" {
+if _, err := time.LoadLocation(cfg.DefaultTimezone); err != nil {
+return fmt.Errorf("invalid default_timezone '%s': %w", cfg.DefaultTimezone, err)
+}
+}
+
+services := map[string]ServiceAuth{
+"ticktick": cfg.API.TickTick, "todoist": cfg.API.Todoist,
+"google": cfg.API.Google, "microsoft": cfg.API.Microsoft, "notion": cfg.API.Notion,
+}
+for name, svc := range services {
+if svc.ClientID != "" && svc.ClientSecret == "" {
+fmt.Fprintf(os.Stderr, "Warning: api.%s has client_id set but client_secret is empty\n", name)
+}
 }
 
 return nil

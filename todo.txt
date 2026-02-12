@@ -2,13 +2,6 @@ SALJA Evolution Map — Audit-Driven Improvements
 Philosophy: File-based calendar conversion CLI for power users and developers. Data fidelity configurable. Interactive-first.
 ================================================================================
 
---- PHASE: MODEL ENHANCEMENTS ---
-
-(B) Add a Validate() error method to model.CalendarItem in internal/model/types.go that checks: Title not empty, Priority in 0-5 range, StartTime before EndTime when both set, ItemType is valid +feature
-(B) Add helper methods to model.CalendarItem: IsCompleted() bool, HasRecurrence() bool, HasSubtasks() bool, Duration() time.Duration +feature
-(B) Add CreatedAt and UpdatedAt time.Time fields to model.CalendarItem for sync tracking and conflict resolution timestamp comparison +feature
-(B) Add a Timezone string field to model.CalendarItem and populate it from ICS TZID, API timezone fields, and config default_timezone +feature
-
 --- PHASE: CONFIG HARDENING ---
 
 (B) Add timezone validation in internal/config/config.go validate() that checks default_timezone against time.LoadLocation to verify it is a valid IANA timezone name +feature
