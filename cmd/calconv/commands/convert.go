@@ -11,6 +11,7 @@ import (
 "github.com/gongahkia/calendar-converter/internal/model"
 "github.com/gongahkia/calendar-converter/internal/parsers"
 "github.com/gongahkia/calendar-converter/internal/writers"
+"github.com/schollz/progressbar/v3"
 "github.com/spf13/cobra"
 )
 
@@ -55,6 +56,20 @@ for _, item := range collection.Items {
 fmt.Printf("  - %s (%s)\n", item.Title, item.ItemType)
 }
 return nil
+}
+
+var bar *progressbar.ProgressBar
+if !quiet && len(collection.Items) > 10 {
+bar = progressbar.NewOptions(len(collection.Items),
+progressbar.OptionSetDescription("Converting"),
+progressbar.OptionSetWriter(os.Stderr),
+progressbar.OptionShowCount(),
+progressbar.OptionClearOnFinish(),
+)
+for range collection.Items {
+bar.Add(1)
+}
+bar.Finish()
 }
 
 if err := WriteOutput(collection, outputFile, toFormat); err != nil {

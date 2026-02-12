@@ -31,6 +31,7 @@ func main() {
 	rootCmd.AddCommand(commands.NewDiffCmd())
 	rootCmd.AddCommand(commands.NewConfigCmd())
 	rootCmd.AddCommand(commands.NewAuthCmd())
+	rootCmd.AddCommand(commands.NewSyncCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
