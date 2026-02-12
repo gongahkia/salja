@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/emersion/go-ical"
-	"github.com/gongahkia/calendar-converter/internal/model"
+	"github.com/gongahkia/salja/internal/model"
 )
 
 type Writer struct{}
@@ -30,7 +30,7 @@ func (w *Writer) WriteFile(collection *model.CalendarCollection, filePath string
 func (w *Writer) Write(collection *model.CalendarCollection, writer io.Writer) error {
 	cal := ical.NewCalendar()
 	cal.Props.SetText(ical.PropVersion, "2.0")
-	cal.Props.SetText(ical.PropProductID, "-//gongahkia//calendar-converter//EN")
+	cal.Props.SetText(ical.PropProductID, "-//gongahkia//salja//EN")
 
 	for _, item := range collection.Items {
 		var comp *ical.Component

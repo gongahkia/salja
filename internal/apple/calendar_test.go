@@ -6,11 +6,11 @@ import (
 "testing"
 "time"
 
-"github.com/gongahkia/calendar-converter/internal/model"
+"github.com/gongahkia/salja/internal/model"
 )
 
 func TestCalendarReadWriteCycle(t *testing.T) {
-calName := "calconv-test-calendar"
+calName := "salja-test-calendar"
 
 // Create test calendar
 createScript := `tell application "Calendar"

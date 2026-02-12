@@ -9,7 +9,7 @@ import (
 "net/http"
 "time"
 
-"github.com/gongahkia/calendar-converter/internal/model"
+"github.com/gongahkia/salja/internal/model"
 )
 
 const graphBaseURL = "https://graph.microsoft.com/v1.0"

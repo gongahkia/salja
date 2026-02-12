@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gongahkia/calendar-converter/internal/model"
+	"github.com/gongahkia/salja/internal/model"
 )
 
 type NotionParser struct{}

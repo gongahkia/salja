@@ -9,7 +9,7 @@ import (
 "strings"
 "time"
 
-"github.com/gongahkia/calendar-converter/internal/model"
+"github.com/gongahkia/salja/internal/model"
 )
 
 type Strategy string
@@ -148,7 +148,7 @@ if configDir == "" {
 home, _ := os.UserHomeDir()
 configDir = filepath.Join(home, ".config")
 }
-logDir := filepath.Join(configDir, "calconv")
+logDir := filepath.Join(configDir, "salja")
 os.MkdirAll(logDir, 0755)
 
 logPath := filepath.Join(logDir, "conflict-log.json")

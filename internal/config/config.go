@@ -89,10 +89,10 @@ return nil
 
 func ConfigDir() string {
 if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
-return filepath.Join(xdg, "calconv")
+return filepath.Join(xdg, "salja")
 }
 home, _ := os.UserHomeDir()
-return filepath.Join(home, ".config", "calconv")
+return filepath.Join(home, ".config", "salja")
 }
 
 func ConfigPath() string {
@@ -101,16 +101,16 @@ return filepath.Join(ConfigDir(), "config.toml")
 
 func CacheDir() string {
 if xdg := os.Getenv("XDG_CACHE_HOME"); xdg != "" {
-return filepath.Join(xdg, "calconv")
+return filepath.Join(xdg, "salja")
 }
 home, _ := os.UserHomeDir()
-return filepath.Join(home, ".cache", "calconv")
+return filepath.Join(home, ".cache", "salja")
 }
 
 func DataDir() string {
 if xdg := os.Getenv("XDG_DATA_HOME"); xdg != "" {
-return filepath.Join(xdg, "calconv")
+return filepath.Join(xdg, "salja")
 }
 home, _ := os.UserHomeDir()
-return filepath.Join(home, ".local", "share", "calconv")
+return filepath.Join(home, ".local", "share", "salja")
 }

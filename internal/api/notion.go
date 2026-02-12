@@ -9,7 +9,7 @@ import (
 "net/http"
 "time"
 
-"github.com/gongahkia/calendar-converter/internal/model"
+"github.com/gongahkia/salja/internal/model"
 )
 
 const notionBaseURL = "https://api.notion.com/v1"

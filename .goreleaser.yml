@@ -5,8 +5,8 @@ before:
     - go mod tidy
 
 builds:
-  - main: ./cmd/calconv
-    binary: calconv
+  - main: ./cmd/salja
+    binary: salja
     env:
       - CGO_ENABLED=0
     goos:
@@ -40,12 +40,12 @@ changelog:
       - "^test:"
 
 brews:
-  - name: calconv
+  - name: salja
     repository:
       owner: gongahkia
-      name: homebrew-calconv
-    homepage: "https://github.com/gongahkia/calendar-converter"
+      name: homebrew-salja
+    homepage: "https://github.com/gongahkia/salja"
     description: "Universal calendar and task converter CLI"
     license: "MIT"
     test: |
-      system "#{bin}/calconv", "--version"
+      system "#{bin}/salja", "--version"

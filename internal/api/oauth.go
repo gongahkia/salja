@@ -44,7 +44,7 @@ if dir == "" {
 home, _ := os.UserHomeDir()
 dir = filepath.Join(home, ".config")
 }
-return &TokenStore{Path: filepath.Join(dir, "calconv", "tokens.json")}
+return &TokenStore{Path: filepath.Join(dir, "salja", "tokens.json")}
 }
 
 func (s *TokenStore) Load() (TokenFile, error) {
@@ -80,7 +80,7 @@ return nil, err
 }
 t, ok := tf[service]
 if !ok {
-return nil, fmt.Errorf("no token for service %q — run: calconv auth login %s", service, service)
+return nil, fmt.Errorf("no token for service %q — run: salja auth login %s", service, service)
 }
 return t, nil
 }

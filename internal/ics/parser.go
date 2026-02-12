@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/emersion/go-ical"
-	"github.com/gongahkia/calendar-converter/internal/model"
+	"github.com/gongahkia/salja/internal/model"
 )
 
 type Parser struct{}

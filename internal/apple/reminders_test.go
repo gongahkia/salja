@@ -5,11 +5,11 @@ package apple
 import (
 "testing"
 
-"github.com/gongahkia/calendar-converter/internal/model"
+"github.com/gongahkia/salja/internal/model"
 )
 
 func TestRemindersReadWriteCycle(t *testing.T) {
-listName := "calconv-test-list"
+listName := "salja-test-list"
 
 // Create test list
 createScript := `tell application "Reminders"

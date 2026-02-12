@@ -9,7 +9,7 @@ import (
 "net/http"
 "time"
 
-"github.com/gongahkia/calendar-converter/internal/model"
+"github.com/gongahkia/salja/internal/model"
 )
 
 const tickTickBaseURL = "https://api.ticktick.com/open/v1"

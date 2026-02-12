@@ -1,4 +1,4 @@
-module github.com/gongahkia/calendar-converter
+module github.com/gongahkia/salja
 
 go 1.25.7
 
