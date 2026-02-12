@@ -1,0 +1,120 @@
+SALJA Evolution Map — Audit-Driven Improvements
+Philosophy: File-based calendar conversion CLI for power users and developers. Data fidelity configurable. Interactive-first.
+================================================================================
+
+--- PHASE: FORMAT REGISTRY REFACTOR ---
+
+(B) Replace the switch-based parser factory in cmd/salja/commands/convert.go ReadInput() with a map[string]ParserFactory registry in a new file internal/registry/registry.go that maps format names to constructor functions +refactor
+(B) Replace the switch-based writer factory in cmd/salja/commands/convert.go WriteOutput() with a map[string]WriterFactory registry in internal/registry/registry.go that maps format names to constructor functions +refactor
+(B) Define a Parser interface in internal/registry/registry.go with methods Parse(io.Reader, string) (*model.CalendarCollection, error) and ParseFile(string) (*model.CalendarCollection, error) that all parsers implement +refactor
+(B) Define a Writer interface in internal/registry/registry.go with methods Write(*model.CalendarCollection, io.Writer) error and WriteFile(*model.CalendarCollection, string) error that all writers implement +refactor
+(B) Add a FormatCapabilities struct to each registry entry with fields SupportsEvents, SupportsTasks, SupportsRecurrence, SupportsSubtasks bool and use it to auto-generate the list-formats table instead of hardcoding +refactor
+(B) Refactor DetectFormat() in convert.go to use the registry's file extension mappings instead of hardcoded switch with fragile filename substring matching +refactor
+
+--- PHASE: DATA FIDELITY CONFIG ---
+
+(B) Add a config option data_loss_mode = "warn" | "error" | "silent" in internal/config/config.go that controls behavior when target format cannot represent source fields +feature
+(B) Create internal/fidelity/checker.go that compares source CalendarItem fields against target format capabilities from the registry and returns a list of DataLossWarning structs +feature
+(B) Integrate the fidelity checker into cmd/salja/commands/convert.go so it runs before WriteOutput and respects the data_loss_mode config setting +feature
+(B) Add data loss warnings for subtask flattening when converting to formats that lack subtask support (gcal, outlook, asana, notion) +feature
+(B) Add data loss warnings for recurrence rule dropping when converting to formats that lack recurrence support (todoist, notion, trello, asana, omnifocus) +feature
+(B) Add data loss warnings for timezone loss when converting through formats that strip timezone info +feature
+
+--- PHASE: ERROR HANDLING HARDENING ---
+
+(B) Add consistent error wrapping with fmt.Errorf and %w verb to all CSV parser Parse() methods (gcal.go, outlook.go, notion.go, asana.go) to include filename and line context +refactor
+(B) Add CSV header validation to all CSV parsers: after reading headers, verify required columns exist and return a clear ParseError listing missing columns before attempting row parsing +refactor
+(B) Add bounds checking in all CSV parsers to guard against colMap returning index 0 when a column is missing by initializing colMap values to -1 and checking before access +refactor
+(B) Fix silent fmt.Sscanf failures in internal/ics/parser.go parseRRule function (around line 309) by checking the return count and returning an error if expected fields are not parsed +refactor
+(B) Add Unwrap() error method to ConflictError and PermissionError in internal/errors/errors.go for consistency with ParseError, ValidationError, and APIError +refactor
+(B) Fix os.UserHomeDir() error handling in internal/api/oauth.go DefaultTokenStore() by returning an error instead of silently using empty string +refactor
+(B) Fix rand.Read error handling in internal/api/oauth.go generateState() by checking the error return value +refactor
+(B) Add file locking to internal/api/oauth.go TokenStore Load/Save methods using os.OpenFile with O_EXCL or flock to prevent concurrent access races +refactor
+(B) Fix the interactive conflict resolver in internal/conflict/resolver.go to handle EOF on stdin gracefully instead of panicking when run without a TTY +refactor
+(B) Fix unsafe slice access in internal/conflict/resolver.go line 128 by checking len(r.resolutions) > 0 before indexing +refactor
+(B) Fix the conflict log writer in internal/conflict/resolver.go to not silently ignore json.Unmarshal errors when reading existing log file +refactor
+(B) Use config.ConfigDir() in internal/conflict/resolver.go instead of manually constructing ~/.config/salja path for the conflict log location +refactor
+
+--- PHASE: PARSER CORRECTNESS ---
+
+(B) Fix TickTick parser priority mapping inconsistency: parser returns PriorityNone for priority=0 but API mapper returns PriorityLow — unify to same behavior in both internal/parsers/ticktick.go and internal/api/ticktick.go +refactor
+(B) Add fallback date format parsing to internal/parsers/ticktick.go parseDate to handle ISO 8601, RFC3339, and common TickTick export variants (YYYY-MM-DD, MM/DD/YYYY) +refactor
+(B) Add fallback date format parsing to internal/parsers/outlook.go to handle both 12-hour (3:04:05 PM) and 24-hour (15:04:05) time formats with AM/PM detection +refactor
+(B) Fix ICS flattener in internal/ics/flattener.go advance() to handle BYDAY, BYMONTH, BYMONTHDAY rules instead of only FREQ-based advancement +refactor
+(B) Fix ICS flattener in internal/ics/flattener.go to deduplicate occurrences when RDATE dates overlap with RRULE-generated dates +refactor
+(B) Fix ICS flattener to not mutate the original CalendarItem.Recurrence pointer in place — create a copy before setting Recurrence to nil on instances +refactor
+(B) Fix Todoist parser in internal/parsers/todoist.go to preserve parent priority on subtasks instead of hardcoding priority=1 +refactor
+(B) Fix OmniFocus parser in internal/parsers/omnifocus.go to properly parse priority levels and structured description fields from TaskPaper format +refactor
+(B) Fix Google Calendar API mapper in internal/api/gcal.go to store RRULE in the Recurrence struct instead of appending raw RRULE text to description +refactor
+(B) Fix Microsoft Graph API mapper in internal/api/msgraph.go to preserve source timezone from the event's TimeZone field instead of hardcoding UTC +refactor
+
+--- PHASE: WRITER COMPLETENESS ---
+
+(B) Add subtask-to-description flattening in internal/writers/gcal.go when CalendarItems have subtasks — append checklist as markdown-style text to the Description field +feature
+(B) Add subtask-to-description flattening in internal/writers/outlook.go when CalendarItems have subtasks +feature
+(B) Add subtask-to-description flattening in internal/writers/asana.go when CalendarItems have subtasks +feature
+(B) Add subtask-to-description flattening in internal/writers/notion.go when CalendarItems have subtasks +feature
+(B) Add recurrence-to-description annotation in internal/writers/asana.go when CalendarItems have recurrence rules — append human-readable recurrence summary +feature
+(B) Add recurrence-to-description annotation in internal/writers/notion.go when CalendarItems have recurrence rules +feature
+(B) Add timezone preservation to internal/writers/outlook.go by including timezone info in the Start Date and End Date columns when available +feature
+(B) Make the Trello checklist name in internal/writers/trello.go configurable via config instead of hardcoded "Checklist" string +feature
+
+--- PHASE: CONFLICT DETECTION OPTIMIZATION ---
+
+(B) Add UID-based indexing to internal/conflict/detector.go by building a map[string]int index of target UIDs before comparison to eliminate O(n²) for UID matches +refactor
+(B) Make conflict detection thresholds configurable in internal/config/config.go: levenshtein_threshold (default 3), min_title_length (default 10), date_proximity_hours (default 24) +feature
+(B) Expand field-level merge in internal/conflict/resolver.go to handle Status, Tags, Recurrence, and Reminders fields in addition to Title, Description, and Priority +feature
+
+--- PHASE: PARSER TEST SUITES ---
+
+(B) Write tests for internal/parsers/ticktick.go covering: basic task with all fields, checklist subtasks, priority mapping (0/1/3/5), repeat rules, empty fields, malformed CSV row +feature
+(B) Write tests for internal/parsers/todoist.go covering: flat task, indent-based subtask hierarchy (INDENT 1/2/3), priority inversion (4=highest), date with timezone, labels column +feature
+(B) Write tests for internal/parsers/gcal.go covering: all-day event, timed event with timezone, multi-day event, event with location and description, missing optional columns +feature
+(B) Write tests for internal/parsers/outlook.go covering: event with 12-hour time format, event with 24-hour time, recurring event fields, categories mapping +feature
+(B) Write tests for internal/parsers/notion.go covering: task with all columns, configurable column mapping, missing columns graceful handling, date-only vs datetime +feature
+(B) Write tests for internal/parsers/trello.go covering: card with checklist items, card with labels, card with due date, archived cards, board with multiple lists +feature
+(B) Write tests for internal/parsers/asana.go covering: task with assignee and section, completed task, subtask rows, tags column, date formats +feature
+(B) Write tests for internal/parsers/omnifocus.go covering: nested project/task hierarchy via indentation, @tags parsing, due/defer dates, notes blocks +feature
+(B) Write tests for internal/writers/ticktick.go covering: roundtrip from parse-then-write produces valid CSV, subtask serialization, priority mapping back to 0/1/3/5 +feature
+(B) Write tests for internal/writers/todoist.go covering: roundtrip, indent-based hierarchy reconstruction, priority inversion back to 1-4 scale +feature
+(B) Write tests for internal/writers/gcal.go covering: roundtrip, all-day event date format, location and description preservation +feature
+(B) Write tests for internal/writers/trello.go covering: roundtrip, checklist generation from subtasks, label serialization, JSON structure validity +feature
+
+--- PHASE: MODEL ENHANCEMENTS ---
+
+(B) Add a Validate() error method to model.CalendarItem in internal/model/types.go that checks: Title not empty, Priority in 0-5 range, StartTime before EndTime when both set, ItemType is valid +feature
+(B) Add helper methods to model.CalendarItem: IsCompleted() bool, HasRecurrence() bool, HasSubtasks() bool, Duration() time.Duration +feature
+(B) Add CreatedAt and UpdatedAt time.Time fields to model.CalendarItem for sync tracking and conflict resolution timestamp comparison +feature
+(B) Add a Timezone string field to model.CalendarItem and populate it from ICS TZID, API timezone fields, and config default_timezone +feature
+
+--- PHASE: CONFIG HARDENING ---
+
+(B) Add timezone validation in internal/config/config.go validate() that checks default_timezone against time.LoadLocation to verify it is a valid IANA timezone name +feature
+(B) Add API config validation in internal/config/config.go to warn when a service section has client_id set but client_secret is empty +feature
+(B) Add config option conflict_thresholds with sub-fields levenshtein_threshold, min_title_length, date_proximity_hours for tuning conflict detection sensitivity +feature
+
+--- PHASE: CHARSET & DATE ROBUSTNESS ---
+
+(B) Add Windows-1252 (CP1252) encoding detection and transcoding support to internal/errors/charset.go as a fallback before Latin-1 since CP1252 is more common in Windows-exported CSVs +feature
+(B) Integrate TranscodeToUTF8 from internal/errors/charset.go into all CSV parser Parse() methods so charset detection happens automatically on file open +feature
+(B) Integrate AmbiguousDateParser from internal/errors/dateparse.go into CSV parsers that handle date fields so locale-aware date interpretation is used instead of hardcoded format strings +feature
+
+--- PHASE: STREAMING & SCALE ---
+
+(B) Add a Close() method to StreamingCSVParser and StreamingICSParser in internal/errors/streaming.go for proper resource cleanup +refactor
+(B) Integrate StreamingCSVParser into CSV parsers as an optional mode triggered when file size exceeds a configurable threshold (default 10MB) in config +feature
+(B) Refactor internal/conflict/detector.go to use sorted-merge or hash-based matching when item count exceeds 1000 to avoid O(n²) degradation +refactor
+
+--- PHASE: PROGRESS & UX ---
+
+(B) Fix the progress bar bug in cmd/salja/commands/convert.go where the bar loop increments without doing actual work — move progress updates to wrap individual item conversion within WriteOutput +refactor
+(B) Add item-count summary to all commands that process files: show "Converted N events, M tasks (K warnings)" at the end of convert, validate, and diff +feature
+(B) Add a --format flag to the diff command in cmd/salja/commands/diff.go that supports "table" (default), "json", and "patch" output styles +feature
+
+--- PHASE: BUILD QUALITY ---
+
+(B) Fix Go version mismatch: update .github/workflows/ci.yml to use the same Go version specified in go.mod instead of hardcoded 1.22 +infra
+(B) Add golangci-lint to .github/workflows/ci.yml lint job instead of only running go vet, using the golangci/golangci-lint-action GitHub Action +infra
+(B) Add go test -race flag to the test job in .github/workflows/ci.yml to catch data races in conflict resolver and token store +infra
+(B) Add test coverage reporting to .github/workflows/ci.yml using go test -coverprofile and upload as a GitHub Actions artifact +infra
+(B) Add a make lint target to Makefile that fails the build if golangci-lint is installed and reports errors, instead of silently skipping +infra
