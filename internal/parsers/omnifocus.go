@@ -37,7 +37,7 @@ func (p *OmniFocusParser) Parse(r io.Reader, sourcePath string) (*model.Calendar
 
 	scanner := bufio.NewScanner(r)
 	var currentItem *model.CalendarItem
-	var indent int
+	_ = 0 // indent tracking reserved for nested support
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -67,7 +67,7 @@ func (p *OmniFocusParser) Parse(r io.Reader, sourcePath string) (*model.Calendar
 			}
 
 			currentItem = &item
-			indent = currentIndent
+			_ = currentIndent
 		} else if currentItem != nil && strings.TrimSpace(line) != "" {
 			currentItem.Description += strings.TrimSpace(line) + "\n"
 		}

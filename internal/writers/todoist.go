@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"time"
 
 	"github.com/gongahkia/calendar-converter/internal/model"
 )

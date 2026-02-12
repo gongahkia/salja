@@ -2,7 +2,7 @@ package writers
 
 import (
 	"encoding/json"
-	"fmt"
+	
 	"io"
 	"os"
 

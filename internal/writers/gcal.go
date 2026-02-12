@@ -2,7 +2,7 @@ package writers
 
 import (
 	"encoding/csv"
-	"fmt"
+	
 	"io"
 	"os"
 

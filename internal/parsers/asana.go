@@ -2,7 +2,7 @@ package parsers
 
 import (
 	"encoding/csv"
-	"fmt"
+	
 	"io"
 	"os"
 	"strings"
