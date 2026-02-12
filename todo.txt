@@ -22,3 +22,7 @@ Philosophy: CLI-first, file-first with optional API mode, universal calendar/tas
 --- PHASE 9: BUILD & DISTRIBUTION ---
 
 (A) Create Homebrew formula in a tap repo (homebrew-calconv) with binary download, sha256 verification, and test block +build
+
+--- PHASE 10: NAME BRAINSTORMING ---
+
+(A) Brainstorm 10 possible names for this project, noting I prefer names that tend towards japanese or korean or east-asian mythology, with romanised pronounciations being ok
