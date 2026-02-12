@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type ItemType string
 
@@ -93,6 +96,43 @@ type CalendarItem struct {
 	Timezone       string
 	IsAllDay       bool
 	ItemType       ItemType
+	CreatedAt      *time.Time
+	UpdatedAt      *time.Time
+}
+
+func (item *CalendarItem) Validate() error {
+	if item.Title == "" {
+		return fmt.Errorf("title is required")
+	}
+	if item.Priority < 0 || item.Priority > 5 {
+		return fmt.Errorf("priority must be 0-5, got %d", item.Priority)
+	}
+	if item.StartTime != nil && item.EndTime != nil && item.StartTime.After(*item.EndTime) {
+		return fmt.Errorf("start time %v is after end time %v", *item.StartTime, *item.EndTime)
+	}
+	if item.ItemType != "" && item.ItemType != ItemTypeEvent && item.ItemType != ItemTypeTask && item.ItemType != ItemTypeJournal {
+		return fmt.Errorf("invalid item type: %s", item.ItemType)
+	}
+	return nil
+}
+
+func (item *CalendarItem) IsCompleted() bool {
+	return item.Status == StatusCompleted
+}
+
+func (item *CalendarItem) HasRecurrence() bool {
+	return item.Recurrence != nil
+}
+
+func (item *CalendarItem) HasSubtasks() bool {
+	return len(item.Subtasks) > 0
+}
+
+func (item *CalendarItem) Duration() time.Duration {
+	if item.StartTime == nil || item.EndTime == nil {
+		return 0
+	}
+	return item.EndTime.Sub(*item.StartTime)
 }
 
 type CalendarCollection struct {
