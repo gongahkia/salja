@@ -66,7 +66,7 @@ func (w *GoogleCalendarWriter) Write(collection *model.CalendarCollection, write
 			row[5] = "False"
 		}
 
-		row[6] = item.Description
+		row[6] = flattenSubtasksToDescription(item.Description, item.Subtasks)
 		row[7] = item.Location
 		row[8] = "False"
 

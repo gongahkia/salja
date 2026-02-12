@@ -9,10 +9,12 @@ import (
 	"github.com/gongahkia/salja/internal/model"
 )
 
-type TrelloWriter struct{}
+type TrelloWriter struct {
+	ChecklistName string
+}
 
 func NewTrelloWriter() *TrelloWriter {
-	return &TrelloWriter{}
+	return &TrelloWriter{ChecklistName: "Checklist"}
 }
 
 type trelloExport struct {
@@ -80,7 +82,7 @@ func (w *TrelloWriter) Write(collection *model.CalendarCollection, writer io.Wri
 
 		if len(item.Subtasks) > 0 {
 			checklist := trelloChecklistExport{
-				Name:       "Checklist",
+				Name:       w.ChecklistName,
 				CheckItems: []trelloCheckItemExport{},
 			}
 			for _, subtask := range item.Subtasks {

@@ -44,7 +44,8 @@ func (w *AsanaWriter) Write(collection *model.CalendarCollection, writer io.Writ
 		}
 
 		row[3] = ""
-		row[4] = item.Description
+		desc := flattenSubtasksToDescription(item.Description, item.Subtasks)
+		row[4] = recurrenceToDescription(desc, item.Recurrence)
 
 		if len(item.Tags) > 0 {
 			row[5] = strings.Join(item.Tags, ", ")

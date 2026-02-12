@@ -49,6 +49,9 @@ func (w *OutlookWriter) Write(collection *model.CalendarCollection, writer io.Wr
 			} else {
 				row[1] = item.StartTime.Format("1/2/2006")
 				row[2] = item.StartTime.Format("3:04:05 PM")
+				if item.Timezone != "" && item.Timezone != "UTC" {
+					row[2] += " " + item.Timezone
+				}
 			}
 		}
 
@@ -59,6 +62,9 @@ func (w *OutlookWriter) Write(collection *model.CalendarCollection, writer io.Wr
 			} else {
 				row[3] = item.EndTime.Format("1/2/2006")
 				row[4] = item.EndTime.Format("3:04:05 PM")
+				if item.Timezone != "" && item.Timezone != "UTC" {
+					row[4] += " " + item.Timezone
+				}
 			}
 		}
 
@@ -76,7 +82,7 @@ func (w *OutlookWriter) Write(collection *model.CalendarCollection, writer io.Wr
 			row[9] = strings.Join(item.Tags, "; ")
 		}
 
-		row[10] = item.Description
+		row[10] = flattenSubtasksToDescription(item.Description, item.Subtasks)
 		row[11] = item.Location
 
 		switch item.Priority {

@@ -29,13 +29,13 @@ func (w *NotionWriter) Write(collection *model.CalendarCollection, writer io.Wri
 	csvWriter := csv.NewWriter(writer)
 	defer csvWriter.Flush()
 
-	header := []string{"Title", "Date", "Status", "Tags", "Priority"}
+	header := []string{"Title", "Date", "Status", "Tags", "Priority", "Description"}
 	if err := csvWriter.Write(header); err != nil {
 		return err
 	}
 
 	for _, item := range collection.Items {
-		row := make([]string, 5)
+		row := make([]string, 6)
 		row[0] = item.Title
 
 		if item.DueDate != nil {
@@ -67,6 +67,9 @@ func (w *NotionWriter) Write(collection *model.CalendarCollection, writer io.Wri
 		default:
 			row[4] = ""
 		}
+
+		desc := flattenSubtasksToDescription(item.Description, item.Subtasks)
+		row[5] = recurrenceToDescription(desc, item.Recurrence)
 
 		if err := csvWriter.Write(row); err != nil {
 			return err
