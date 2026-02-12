@@ -79,53 +79,67 @@ func (p *Parser) parseEvent(comp *ical.Component) (*model.CalendarItem, error) {
 		Status:   model.StatusPending,
 	}
 
-	for _, prop := range comp.Props {
-		switch prop.Name {
-		case ical.PropUID:
-			item.UID = prop.Value
-		case ical.PropSummary:
-			item.Title = prop.Value
-		case ical.PropDescription:
-			item.Description = prop.Value
-		case ical.PropLocation:
-			item.Location = prop.Value
-		case ical.PropDateTimeStart:
-			dt, isAllDay, tz := parseDateTime(prop)
-			item.StartTime = &dt
-			item.IsAllDay = isAllDay
-			if tz != "" {
-				item.Timezone = tz
-			}
-		case ical.PropDateTimeEnd:
-			dt, _, _ := parseDateTime(prop)
-			item.EndTime = &dt
-		case ical.PropRRule:
-			rec, err := parseRRule(prop.Value)
-			if err != nil {
-				return nil, err
-			}
-			item.Recurrence = rec
-		case ical.PropExDate:
-			exdates := parseExDate(prop)
-			if item.Recurrence == nil {
-				item.Recurrence = &model.Recurrence{}
-			}
-			item.Recurrence.ExDates = append(item.Recurrence.ExDates, exdates...)
-		case ical.PropRDate:
-			rdates := parseRDate(prop)
-			if item.Recurrence == nil {
-				item.Recurrence = &model.Recurrence{}
-			}
-			item.Recurrence.RDates = append(item.Recurrence.RDates, rdates...)
-		case ical.PropCategories:
-			item.Tags = parseCategories(prop.Value)
-		case ical.PropPriority:
-			item.Priority = parsePriority(prop.Value)
+	if uid, err := comp.Props.Text("UID"); err == nil {
+		item.UID = uid
+	}
+	if summary, err := comp.Props.Text("SUMMARY"); err == nil {
+		item.Title = summary
+	}
+	if desc, err := comp.Props.Text("DESCRIPTION"); err == nil {
+		item.Description = desc
+	}
+	if loc, err := comp.Props.Text("LOCATION"); err == nil {
+		item.Location = loc
+	}
+	
+	if dtstart := comp.Props.Get("DTSTART"); dtstart != nil {
+		dt, isAllDay, tz := parseDateTime(dtstart)
+		item.StartTime = &dt
+		item.IsAllDay = isAllDay
+		if tz != "" {
+			item.Timezone = tz
 		}
+	}
+	
+	if dtend := comp.Props.Get("DTEND"); dtend != nil {
+		dt, _, _ := parseDateTime(dtend)
+		item.EndTime = &dt
+	}
+	
+	if rrule := comp.Props.Get("RRULE"); rrule != nil {
+		rec, err := parseRRule(rrule.Value)
+		if err != nil {
+			return nil, err
+		}
+		item.Recurrence = rec
+	}
+	
+	for _, exdate := range comp.Props.Values("EXDATE") {
+		exdates := parseExDate(&exdate)
+		if item.Recurrence == nil {
+			item.Recurrence = &model.Recurrence{}
+		}
+		item.Recurrence.ExDates = append(item.Recurrence.ExDates, exdates...)
+	}
+	
+	for _, rdate := range comp.Props.Values("RDATE") {
+		rdates := parseRDate(&rdate)
+		if item.Recurrence == nil {
+			item.Recurrence = &model.Recurrence{}
+		}
+		item.Recurrence.RDates = append(item.Recurrence.RDates, rdates...)
+	}
+	
+	if categories, err := comp.Props.Text("CATEGORIES"); err == nil {
+		item.Tags = parseCategories(categories)
+	}
+	
+	if priority := comp.Props.Get("PRIORITY"); priority != nil {
+		item.Priority = parsePriority(priority.Value)
 	}
 
 	for _, child := range comp.Children {
-		if child.Name == ical.CompAlarm {
+		if child.Name == "VALARM" {
 			reminder := parseAlarm(child)
 			if reminder != nil {
 				item.Reminders = append(item.Reminders, *reminder)
@@ -142,50 +156,65 @@ func (p *Parser) parseTodo(comp *ical.Component) (*model.CalendarItem, error) {
 		Status:   model.StatusPending,
 	}
 
-	for _, prop := range comp.Props {
-		switch prop.Name {
-		case ical.PropUID:
-			item.UID = prop.Value
-		case ical.PropSummary:
-			item.Title = prop.Value
-		case ical.PropDescription:
-			item.Description = prop.Value
-		case ical.PropDue:
-			dt, _, tz := parseDateTime(prop)
-			item.DueDate = &dt
-			if tz != "" {
-				item.Timezone = tz
-			}
-		case ical.PropDateTimeStart:
-			dt, _, tz := parseDateTime(prop)
-			item.StartTime = &dt
-			if tz != "" {
-				item.Timezone = tz
-			}
-		case ical.PropStatus:
-			item.Status = parseStatus(prop.Value)
-		case ical.PropCompleted:
-			dt, _, _ := parseDateTime(prop)
-			item.CompletionDate = &dt
-		case ical.PropPercentComplete:
-			if prop.Value == "100" && item.Status != model.StatusCompleted {
-				item.Status = model.StatusCompleted
-			}
-		case ical.PropPriority:
-			item.Priority = parsePriority(prop.Value)
-		case ical.PropCategories:
-			item.Tags = parseCategories(prop.Value)
-		case ical.PropRRule:
-			rec, err := parseRRule(prop.Value)
-			if err != nil {
-				return nil, err
-			}
-			item.Recurrence = rec
+	if uid, err := comp.Props.Text("UID"); err == nil {
+		item.UID = uid
+	}
+	if summary, err := comp.Props.Text("SUMMARY"); err == nil {
+		item.Title = summary
+	}
+	if desc, err := comp.Props.Text("DESCRIPTION"); err == nil {
+		item.Description = desc
+	}
+	
+	if due := comp.Props.Get("DUE"); due != nil {
+		dt, _, tz := parseDateTime(due)
+		item.DueDate = &dt
+		if tz != "" {
+			item.Timezone = tz
 		}
+	}
+	
+	if dtstart := comp.Props.Get("DTSTART"); dtstart != nil {
+		dt, _, tz := parseDateTime(dtstart)
+		item.StartTime = &dt
+		if tz != "" {
+			item.Timezone = tz
+		}
+	}
+	
+	if status, err := comp.Props.Text("STATUS"); err == nil {
+		item.Status = parseStatus(status)
+	}
+	
+	if completed := comp.Props.Get("COMPLETED"); completed != nil {
+		dt, _, _ := parseDateTime(completed)
+		item.CompletionDate = &dt
+	}
+	
+	if percent, err := comp.Props.Text("PERCENT-COMPLETE"); err == nil {
+		if percent == "100" && item.Status != model.StatusCompleted {
+			item.Status = model.StatusCompleted
+		}
+	}
+	
+	if priority := comp.Props.Get("PRIORITY"); priority != nil {
+		item.Priority = parsePriority(priority.Value)
+	}
+	
+	if categories, err := comp.Props.Text("CATEGORIES"); err == nil {
+		item.Tags = parseCategories(categories)
+	}
+	
+	if rrule := comp.Props.Get("RRULE"); rrule != nil {
+		rec, err := parseRRule(rrule.Value)
+		if err != nil {
+			return nil, err
+		}
+		item.Recurrence = rec
 	}
 
 	for _, child := range comp.Children {
-		if child.Name == ical.CompAlarm {
+		if child.Name == "VALARM" {
 			reminder := parseAlarm(child)
 			if reminder != nil {
 				item.Reminders = append(item.Reminders, *reminder)
@@ -202,20 +231,21 @@ func (p *Parser) parseJournal(comp *ical.Component) (*model.CalendarItem, error)
 		Status:   model.StatusPending,
 	}
 
-	for _, prop := range comp.Props {
-		switch prop.Name {
-		case ical.PropUID:
-			item.UID = prop.Value
-		case ical.PropSummary:
-			item.Title = prop.Value
-		case ical.PropDescription:
-			item.Description = prop.Value
-		case ical.PropDateTimeStart:
-			dt, _, tz := parseDateTime(prop)
-			item.StartTime = &dt
-			if tz != "" {
-				item.Timezone = tz
-			}
+	if uid, err := comp.Props.Text("UID"); err == nil {
+		item.UID = uid
+	}
+	if summary, err := comp.Props.Text("SUMMARY"); err == nil {
+		item.Title = summary
+	}
+	if desc, err := comp.Props.Text("DESCRIPTION"); err == nil {
+		item.Description = desc
+	}
+	
+	if dtstart := comp.Props.Get("DTSTART"); dtstart != nil {
+		dt, _, tz := parseDateTime(dtstart)
+		item.StartTime = &dt
+		if tz != "" {
+			item.Timezone = tz
 		}
 	}
 
@@ -353,9 +383,10 @@ func parsePriority(value string) model.Priority {
 		return model.PriorityMedium
 	} else if p >= 6 && p <= 7 {
 		return model.PriorityLow
-	} else {
+	} else if p >= 8 && p <= 9 {
 		return model.PriorityLowest
 	}
+	return model.PriorityNone
 }
 
 func parseStatus(value string) model.Status {
@@ -374,19 +405,16 @@ func parseStatus(value string) model.Status {
 func parseAlarm(comp *ical.Component) *model.Reminder {
 	reminder := &model.Reminder{}
 	
-	for _, prop := range comp.Props {
-		switch prop.Name {
-		case ical.PropTrigger:
-			if strings.HasPrefix(prop.Value, "-") || strings.HasPrefix(prop.Value, "+") || strings.HasPrefix(prop.Value, "P") {
-				duration, err := parseDuration(prop.Value)
-				if err == nil {
-					reminder.Offset = &duration
-				}
-			} else {
-				t, err := time.Parse("20060102T150405Z", prop.Value)
-				if err == nil {
-					reminder.AbsoluteTime = &t
-				}
+	if trigger := comp.Props.Get("TRIGGER"); trigger != nil {
+		if strings.HasPrefix(trigger.Value, "-") || strings.HasPrefix(trigger.Value, "+") || strings.HasPrefix(trigger.Value, "P") {
+			duration, err := parseDuration(trigger.Value)
+			if err == nil {
+				reminder.Offset = &duration
+			}
+		} else {
+			t, err := time.Parse("20060102T150405Z", trigger.Value)
+			if err == nil {
+				reminder.AbsoluteTime = &t
 			}
 		}
 	}

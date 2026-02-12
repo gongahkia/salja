@@ -56,38 +56,39 @@ func (w *Writer) Write(collection *model.CalendarCollection, writer io.Writer) e
 }
 
 func (w *Writer) writeEvent(item *model.CalendarItem) *ical.Component {
-	event := ical.NewComponent(ical.CompEvent)
+	event := ical.NewComponent("VEVENT")
 	
-	event.Props.SetText(ical.PropUID, item.UID)
-	event.Props.SetText(ical.PropSummary, item.Title)
+	event.Props.SetText("UID", item.UID)
+	event.Props.SetText("SUMMARY", item.Title)
+	event.Props.SetDateTime("DTSTAMP", time.Now().UTC())
 	
 	if item.Description != "" {
-		event.Props.SetText(ical.PropDescription, item.Description)
+		event.Props.SetText("DESCRIPTION", item.Description)
 	}
 	
 	if item.Location != "" {
-		event.Props.SetText(ical.PropLocation, item.Location)
+		event.Props.SetText("LOCATION", item.Location)
 	}
 	
 	if item.StartTime != nil {
-		w.setDateTime(event.Props, ical.PropDateTimeStart, *item.StartTime, item.IsAllDay, item.Timezone)
+		w.setDateTime(event.Props, "DTSTART", *item.StartTime, item.IsAllDay, item.Timezone)
 	}
 	
 	if item.EndTime != nil {
-		w.setDateTime(event.Props, ical.PropDateTimeEnd, *item.EndTime, item.IsAllDay, item.Timezone)
+		w.setDateTime(event.Props, "DTEND", *item.EndTime, item.IsAllDay, item.Timezone)
 	}
 	
 	if item.Priority > 0 {
-		event.Props.SetText(ical.PropPriority, fmt.Sprintf("%d", exportPriority(item.Priority)))
+		event.Props.SetText("PRIORITY", fmt.Sprintf("%d", exportPriority(item.Priority)))
 	}
 	
 	if len(item.Tags) > 0 {
-		event.Props.SetText(ical.PropCategories, strings.Join(item.Tags, ","))
+		event.Props.SetText("CATEGORIES", strings.Join(item.Tags, ","))
 	}
 	
 	if item.Recurrence != nil {
 		rrule := w.formatRRule(item.Recurrence)
-		event.Props.SetText(ical.PropRRule, rrule)
+		event.Props.SetText("RRULE", rrule)
 		
 		if len(item.Recurrence.ExDates) > 0 {
 			w.setExDates(event.Props, item.Recurrence.ExDates, item.Timezone)
@@ -109,45 +110,46 @@ func (w *Writer) writeEvent(item *model.CalendarItem) *ical.Component {
 }
 
 func (w *Writer) writeTodo(item *model.CalendarItem) *ical.Component {
-	todo := ical.NewComponent(ical.CompToDo)
+	todo := ical.NewComponent("VTODO")
 	
-	todo.Props.SetText(ical.PropUID, item.UID)
-	todo.Props.SetText(ical.PropSummary, item.Title)
+	todo.Props.SetText("UID", item.UID)
+	todo.Props.SetText("SUMMARY", item.Title)
+	todo.Props.SetDateTime("DTSTAMP", time.Now().UTC())
 	
 	if item.Description != "" {
-		todo.Props.SetText(ical.PropDescription, item.Description)
+		todo.Props.SetText("DESCRIPTION", item.Description)
 	}
 	
 	if item.DueDate != nil {
-		w.setDateTime(todo.Props, ical.PropDue, *item.DueDate, false, item.Timezone)
+		w.setDateTime(todo.Props, "DUE", *item.DueDate, false, item.Timezone)
 	}
 	
 	if item.StartTime != nil {
-		w.setDateTime(todo.Props, ical.PropDateTimeStart, *item.StartTime, false, item.Timezone)
+		w.setDateTime(todo.Props, "DTSTART", *item.StartTime, false, item.Timezone)
 	}
 	
 	if item.Status != model.StatusPending {
-		todo.Props.SetText(ical.PropStatus, exportStatus(item.Status))
+		todo.Props.SetText("STATUS", exportStatus(item.Status))
 	}
 	
 	if item.CompletionDate != nil {
-		w.setDateTime(todo.Props, ical.PropCompleted, *item.CompletionDate, false, item.Timezone)
-		todo.Props.SetText(ical.PropPercentComplete, "100")
+		w.setDateTime(todo.Props, "COMPLETED", *item.CompletionDate, false, item.Timezone)
+		todo.Props.SetText("PERCENT-COMPLETE", "100")
 	} else if item.Status == model.StatusCompleted {
-		todo.Props.SetText(ical.PropPercentComplete, "100")
+		todo.Props.SetText("PERCENT-COMPLETE", "100")
 	}
 	
 	if item.Priority > 0 {
-		todo.Props.SetText(ical.PropPriority, fmt.Sprintf("%d", exportPriority(item.Priority)))
+		todo.Props.SetText("PRIORITY", fmt.Sprintf("%d", exportPriority(item.Priority)))
 	}
 	
 	if len(item.Tags) > 0 {
-		todo.Props.SetText(ical.PropCategories, strings.Join(item.Tags, ","))
+		todo.Props.SetText("CATEGORIES", strings.Join(item.Tags, ","))
 	}
 	
 	if item.Recurrence != nil {
 		rrule := w.formatRRule(item.Recurrence)
-		todo.Props.SetText(ical.PropRRule, rrule)
+		todo.Props.SetText("RRULE", rrule)
 	}
 	
 	for _, reminder := range item.Reminders {
@@ -161,31 +163,31 @@ func (w *Writer) writeTodo(item *model.CalendarItem) *ical.Component {
 }
 
 func (w *Writer) writeJournal(item *model.CalendarItem) *ical.Component {
-	journal := ical.NewComponent(ical.CompJournal)
+	journal := ical.NewComponent("VJOURNAL")
 	
-	journal.Props.SetText(ical.PropUID, item.UID)
-	journal.Props.SetText(ical.PropSummary, item.Title)
+	journal.Props.SetText("UID", item.UID)
+	journal.Props.SetText("SUMMARY", item.Title)
 	
 	if item.Description != "" {
-		journal.Props.SetText(ical.PropDescription, item.Description)
+		journal.Props.SetText("DESCRIPTION", item.Description)
 	}
 	
 	if item.StartTime != nil {
-		w.setDateTime(journal.Props, ical.PropDateTimeStart, *item.StartTime, false, item.Timezone)
+		w.setDateTime(journal.Props, "DTSTART", *item.StartTime, false, item.Timezone)
 	}
 	
 	return journal
 }
 
 func (w *Writer) writeAlarm(reminder *model.Reminder) *ical.Component {
-	alarm := ical.NewComponent(ical.CompAlarm)
-	alarm.Props.SetText(ical.PropAction, "DISPLAY")
-	alarm.Props.SetText(ical.PropDescription, "Reminder")
+	alarm := ical.NewComponent("VALARM")
+	alarm.Props.SetText("ACTION", "DISPLAY")
+	alarm.Props.SetText("DESCRIPTION", "Reminder")
 	
 	if reminder.Offset != nil {
-		alarm.Props.SetText(ical.PropTrigger, formatDuration(*reminder.Offset))
+		alarm.Props.SetText("TRIGGER", formatDuration(*reminder.Offset))
 	} else if reminder.AbsoluteTime != nil {
-		alarm.Props.SetDateTime(ical.PropTrigger, *reminder.AbsoluteTime)
+		alarm.Props.SetDateTime("TRIGGER", *reminder.AbsoluteTime)
 	} else {
 		return nil
 	}
@@ -193,19 +195,19 @@ func (w *Writer) writeAlarm(reminder *model.Reminder) *ical.Component {
 	return alarm
 }
 
-func (w *Writer) setDateTime(props *ical.Props, propName string, t time.Time, isAllDay bool, tz string) {
+func (w *Writer) setDateTime(props ical.Props, propName string, t time.Time, isAllDay bool, tz string) {
 	if isAllDay {
 		props.SetText(propName, t.Format("20060102"))
-		props.Get(propName).Params[ical.ParamValue] = []string{"DATE"}
+		props.Get(propName).Params["VALUE"] = []string{"DATE"}
 	} else if tz != "" && tz != "UTC" {
 		props.SetText(propName, t.Format("20060102T150405"))
-		props.Get(propName).Params[ical.ParamTimezoneID] = []string{tz}
+		props.Get(propName).Params["TZID"] = []string{tz}
 	} else {
 		props.SetText(propName, t.UTC().Format("20060102T150405Z"))
 	}
 }
 
-func (w *Writer) setExDates(props *ical.Props, dates []time.Time, tz string) {
+func (w *Writer) setExDates(props ical.Props, dates []time.Time, tz string) {
 	var formatted []string
 	for _, d := range dates {
 		if tz != "" && tz != "UTC" {
@@ -214,13 +216,13 @@ func (w *Writer) setExDates(props *ical.Props, dates []time.Time, tz string) {
 			formatted = append(formatted, d.UTC().Format("20060102T150405Z"))
 		}
 	}
-	props.SetText(ical.PropExDate, strings.Join(formatted, ","))
+	props.SetText("EXDATE", strings.Join(formatted, ","))
 	if tz != "" && tz != "UTC" {
-		props.Get(ical.PropExDate).Params[ical.ParamTimezoneID] = []string{tz}
+		props.Get("EXDATE").Params["TZID"] = []string{tz}
 	}
 }
 
-func (w *Writer) setRDates(props *ical.Props, dates []time.Time, tz string) {
+func (w *Writer) setRDates(props ical.Props, dates []time.Time, tz string) {
 	var formatted []string
 	for _, d := range dates {
 		if tz != "" && tz != "UTC" {
@@ -229,9 +231,9 @@ func (w *Writer) setRDates(props *ical.Props, dates []time.Time, tz string) {
 			formatted = append(formatted, d.UTC().Format("20060102T150405Z"))
 		}
 	}
-	props.SetText(ical.PropRDate, strings.Join(formatted, ","))
+	props.SetText("RDATE", strings.Join(formatted, ","))
 	if tz != "" && tz != "UTC" {
-		props.Get(ical.PropRDate).Params[ical.ParamTimezoneID] = []string{tz}
+		props.Get("RDATE").Params["TZID"] = []string{tz}
 	}
 }
 
