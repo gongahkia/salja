@@ -1,6 +1,0 @@
-CALENDAR CONVERTER CLI: Product Requirements Document (Todo Format)
-Tech Stack: Go CLI (Cobra), ICS parsing (icalendar), AppleScript bridge, REST API clients, Homebrew distribution
-Philosophy: CLI-first, file-first with optional API mode, universal calendar/task interchange with conflict resolution
-================================================================================
-
-All tasks completed.
