@@ -7,21 +7,10 @@ Philosophy: CLI-first, file-first with optional API mode, universal calendar/tas
 
 --- PHASE 2: APP-SPECIFIC PARSERS (FILE-BASED) ---
 
-(A) Implement Outlook CSV parser mapping columns (Subject, Start Date, Start Time, End Date, End Time, All day event, Reminder on/off, Reminder Date, Reminder Time, Categories, Description, Location, Priority) to CalendarItem +outlook
-(A) Implement Outlook CSV writer with correct column headers for Outlook import compatibility +outlook
-(A) Write tests for Outlook CSV parser covering: timed event, all-day event, event with reminder, event with categories +outlook
-(A) Implement Notion CSV parser that reads Notion database exports with configurable column name mapping (Title, Date, Status, Tags, Priority properties) +notion
-(A) Implement Notion CSV writer that outputs Notion-importable CSV with property columns matching target database schema +notion
-(A) Write tests for Notion CSV parser covering: database with date property, multi-select tags, status property, formula/rollup exclusion +notion
 (A) Implement Things 3 SQLite reader that queries ~/Library/Group Containers/JLMPQHK86H.com.culturedcode.ThingsMac/Things Database.thingsdatabase/main.sqlite for tasks, projects, areas, checklists +things
 (A) Implement Things 3 JSON-URL writer that constructs things:///add-json payloads from CalendarItem structs, chunked to respect URL length limits +things
 (A) Implement Things 3 AppleScript writer as fallback for bulk import when URL scheme payload exceeds size limits +things
 (A) Write tests for Things 3 SQLite reader using a fixture database with: inbox task, project with tasks, area, task with checklist, completed task, task with tags and deadline +things
-(A) Implement Trello JSON parser that reads Trello board export JSON mapping cards (name, desc, due, labels, checklists, closed) to CalendarItem +trello
-(A) Implement Trello JSON writer that constructs Trello-importable JSON from CalendarItem structs +trello
-(A) Write tests for Trello JSON parser covering: card with due date, card with checklist, card with labels, archived card +trello
-(A) Implement Asana CSV parser mapping columns (Name, Section, Due Date, Assignee, Description, Tags, Completed) to CalendarItem +asana
-(A) Implement Asana CSV writer with correct column headers for Asana import +asana
 (A) Implement OmniFocus TaskPaper parser that reads OmniFocus TaskPaper export format mapping projects, tasks, tags, defer/due dates, notes to CalendarItem +omnifocus
 (A) Implement OmniFocus TaskPaper writer that serializes CalendarItem structs to OmniFocus-compatible TaskPaper format with @tags, @defer(), @due() annotations +omnifocus
 (A) Write tests for OmniFocus TaskPaper parser covering: project with nested tasks, task with defer and due dates, task with tags, completed task, task with note +omnifocus
