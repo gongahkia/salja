@@ -2,7 +2,10 @@ package commands
 
 import (
 "fmt"
+"sort"
 
+"github.com/gongahkia/salja/internal/registry"
+_ "github.com/gongahkia/salja/internal/registry" // ensure format registration
 "github.com/spf13/cobra"
 )
 
@@ -13,18 +16,31 @@ Short: "List all supported formats with capabilities",
 Run: func(cmd *cobra.Command, args []string) {
 fmt.Println("Format       | Events | Tasks | Recurring | Subtasks")
 fmt.Println("-------------|--------|-------|-----------|--------")
-fmt.Println("ics          |   ✓    |   ✓   |     ✓     |        ")
-fmt.Println("ticktick     |        |   ✓   |     ✓     |   ✓   ")
-fmt.Println("todoist      |        |   ✓   |           |   ✓   ")
-fmt.Println("gcal         |   ✓    |       |           |        ")
-fmt.Println("outlook      |   ✓    |       |           |        ")
-fmt.Println("notion       |        |   ✓   |           |        ")
-fmt.Println("trello       |        |   ✓   |           |   ✓   ")
-fmt.Println("asana        |        |   ✓   |           |        ")
-fmt.Println("omnifocus    |        |   ✓   |           |   ✓   ")
-fmt.Println("apple-cal    |   ✓    |       |     ✓     |        ")
-fmt.Println("apple-remind |        |   ✓   |           |        ")
-fmt.Println("sorted3      |   ✓    |   ✓   |           |        ")
+
+allFormats := registry.AllFormats()
+names := make([]string, 0, len(allFormats))
+for name := range allFormats {
+names = append(names, name)
+}
+sort.Strings(names)
+
+for _, name := range names {
+caps := allFormats[name].Capabilities
+fmt.Printf("%-13s|  %s   |  %s  |    %s    |  %s\n",
+name,
+checkmark(caps.SupportsEvents),
+checkmark(caps.SupportsTasks),
+checkmark(caps.SupportsRecurrence),
+checkmark(caps.SupportsSubtasks),
+)
+}
 },
 }
+}
+
+func checkmark(v bool) string {
+if v {
+return " ✓ "
+}
+return "   "
 }

@@ -7,10 +7,9 @@ import (
 "path/filepath"
 "strings"
 
-"github.com/gongahkia/salja/internal/ics"
 "github.com/gongahkia/salja/internal/model"
-"github.com/gongahkia/salja/internal/parsers"
-"github.com/gongahkia/salja/internal/writers"
+"github.com/gongahkia/salja/internal/registry"
+_ "github.com/gongahkia/salja/internal/registry" // ensure format registration
 "github.com/schollz/progressbar/v3"
 "github.com/spf13/cobra"
 )
@@ -99,32 +98,23 @@ if filePath == "-" {
 return "ics"
 }
 ext := strings.ToLower(filepath.Ext(filePath))
-switch ext {
-case ".ics":
-return "ics"
-case ".csv":
 base := strings.ToLower(filepath.Base(filePath))
-if strings.Contains(base, "ticktick") {
-return "ticktick"
-} else if strings.Contains(base, "todoist") {
-return "todoist"
-} else if strings.Contains(base, "google") || strings.Contains(base, "gcal") {
-return "gcal"
-} else if strings.Contains(base, "outlook") {
-return "outlook"
-} else if strings.Contains(base, "notion") {
-return "notion"
-} else if strings.Contains(base, "asana") {
-return "asana"
+
+// Try filename hint first (for CSV disambiguation)
+if hint := registry.DetectByFilenameHint(base); hint != "" {
+return hint
 }
-return "csv"
-case ".json":
-return "trello"
-case ".taskpaper":
-return "omnifocus"
-default:
+
+// Fall back to extension matching
+matches := registry.DetectByExtension(ext)
+if len(matches) == 1 {
+return matches[0]
+}
+if len(matches) > 1 {
+// Multiple formats share this extension (e.g. .csv); can't disambiguate
+return strings.TrimPrefix(ext, ".")
+}
 return "unknown"
-}
 }
 
 func ReadInput(filePath, format string) (*model.CalendarCollection, error) {
@@ -133,64 +123,14 @@ if filePath == "-" {
 r = os.Stdin
 }
 
-switch format {
-case "ics":
-p := ics.NewParser()
+p, err := registry.GetParser(format)
+if err != nil {
+return nil, err
+}
 if r != nil {
 return p.Parse(r, "stdin")
 }
 return p.ParseFile(filePath)
-case "ticktick":
-p := parsers.NewTickTickParser()
-if r != nil {
-return p.Parse(r, "stdin")
-}
-return p.ParseFile(filePath)
-case "todoist":
-p := parsers.NewTodoistParser()
-if r != nil {
-return p.Parse(r, "stdin")
-}
-return p.ParseFile(filePath)
-case "gcal":
-p := parsers.NewGoogleCalendarParser()
-if r != nil {
-return p.Parse(r, "stdin")
-}
-return p.ParseFile(filePath)
-case "outlook":
-p := parsers.NewOutlookParser()
-if r != nil {
-return p.Parse(r, "stdin")
-}
-return p.ParseFile(filePath)
-case "notion":
-p := parsers.NewNotionParser()
-if r != nil {
-return p.Parse(r, "stdin")
-}
-return p.ParseFile(filePath)
-case "trello":
-p := parsers.NewTrelloParser()
-if r != nil {
-return p.Parse(r, "stdin")
-}
-return p.ParseFile(filePath)
-case "asana":
-p := parsers.NewAsanaParser()
-if r != nil {
-return p.Parse(r, "stdin")
-}
-return p.ParseFile(filePath)
-case "omnifocus":
-p := parsers.NewOmniFocusParser()
-if r != nil {
-return p.Parse(r, "stdin")
-}
-return p.ParseFile(filePath)
-default:
-return nil, fmt.Errorf("unsupported input format: %s", format)
-}
 }
 
 func WriteOutput(collection *model.CalendarCollection, filePath, format string) error {
@@ -199,62 +139,12 @@ if filePath == "-" {
 w = os.Stdout
 }
 
-switch format {
-case "ics":
-wr := ics.NewWriter()
+wr, err := registry.GetWriter(format)
+if err != nil {
+return err
+}
 if w != nil {
 return wr.Write(collection, w)
 }
 return wr.WriteFile(collection, filePath)
-case "ticktick":
-wr := writers.NewTickTickWriter()
-if w != nil {
-return wr.Write(collection, w)
-}
-return wr.WriteFile(collection, filePath)
-case "todoist":
-wr := writers.NewTodoistWriter()
-if w != nil {
-return wr.Write(collection, w)
-}
-return wr.WriteFile(collection, filePath)
-case "gcal":
-wr := writers.NewGoogleCalendarWriter()
-if w != nil {
-return wr.Write(collection, w)
-}
-return wr.WriteFile(collection, filePath)
-case "outlook":
-wr := writers.NewOutlookWriter()
-if w != nil {
-return wr.Write(collection, w)
-}
-return wr.WriteFile(collection, filePath)
-case "notion":
-wr := writers.NewNotionWriter()
-if w != nil {
-return wr.Write(collection, w)
-}
-return wr.WriteFile(collection, filePath)
-case "trello":
-wr := writers.NewTrelloWriter()
-if w != nil {
-return wr.Write(collection, w)
-}
-return wr.WriteFile(collection, filePath)
-case "asana":
-wr := writers.NewAsanaWriter()
-if w != nil {
-return wr.Write(collection, w)
-}
-return wr.WriteFile(collection, filePath)
-case "omnifocus":
-wr := writers.NewOmniFocusWriter()
-if w != nil {
-return wr.Write(collection, w)
-}
-return wr.WriteFile(collection, filePath)
-default:
-return fmt.Errorf("unsupported output format: %s", format)
-}
 }
