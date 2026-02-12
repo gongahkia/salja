@@ -7,20 +7,6 @@ Philosophy: CLI-first, file-first with optional API mode, universal calendar/tas
 
 --- PHASE 2: APP-SPECIFIC PARSERS (FILE-BASED) ---
 
-(A) Implement TickTick CSV parser mapping columns (folder, list, title, tags, content, is_checklist, start_date, due_date, reminder, repeat, priority, status, created_time, completed_time, timezone, is_all_day) to CalendarItem +ticktick
-(A) Implement TickTick CSV checklist content parser that extracts subtask items from the content field when is_checklist is true +ticktick
-(A) Implement TickTick priority mapper: TickTick 0(none)/1(low)/3(medium)/5(high) to unified 1-5 scale +ticktick
-(A) Implement TickTick repeat field parser converting TickTick repeat strings to internal Recurrence struct +ticktick
-(A) Implement TickTick CSV writer that serializes CalendarItem structs to TickTick-compatible CSV format with correct column headers +ticktick
-(A) Write tests for TickTick CSV parser with sample exports covering: simple task, checklist task, recurring task, completed task, task with tags and reminders +ticktick
-(A) Implement Todoist CSV parser mapping columns (TYPE, CONTENT, DESCRIPTION, PRIORITY, INDENT, AUTHOR, RESPONSIBLE, DATE, DATE_LANG, TIMEZONE) to CalendarItem +todoist
-(A) Implement Todoist priority mapper: Todoist 4(highest)/3/2/1(lowest) inverted mapping to unified 1-5 scale +todoist
-(A) Implement Todoist INDENT field parser to reconstruct subtask hierarchy from flat CSV rows using indent levels +todoist
-(A) Implement Todoist CSV writer with case-sensitive TYPE column (task/section/note) and UTF-8 encoding +todoist
-(A) Write tests for Todoist CSV parser covering: tasks with subtasks via indent, sections, notes, priority levels, date formats +todoist
-(A) Implement Google Calendar CSV parser mapping columns (Subject, Start Date, Start Time, End Date, End Time, All Day Event, Description, Location, Private) to CalendarItem +gcal
-(A) Implement Google Calendar CSV writer with English-language headers required by Google Calendar import +gcal
-(A) Write tests for Google Calendar CSV parser covering: timed event, all-day event, multi-day event, event with location and description +gcal
 (A) Implement Outlook CSV parser mapping columns (Subject, Start Date, Start Time, End Date, End Time, All day event, Reminder on/off, Reminder Date, Reminder Time, Categories, Description, Location, Priority) to CalendarItem +outlook
 (A) Implement Outlook CSV writer with correct column headers for Outlook import compatibility +outlook
 (A) Write tests for Outlook CSV parser covering: timed event, all-day event, event with reminder, event with categories +outlook
