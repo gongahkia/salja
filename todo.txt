@@ -1,11 +1,3 @@
 SALJA Evolution Map — Audit-Driven Improvements
 Philosophy: File-based calendar conversion CLI for power users and developers. Data fidelity configurable. Interactive-first.
 ================================================================================
-
---- PHASE: BUILD QUALITY ---
-
-(B) Fix Go version mismatch: update .github/workflows/ci.yml to use the same Go version specified in go.mod instead of hardcoded 1.22 +infra
-(B) Add golangci-lint to .github/workflows/ci.yml lint job instead of only running go vet, using the golangci/golangci-lint-action GitHub Action +infra
-(B) Add go test -race flag to the test job in .github/workflows/ci.yml to catch data races in conflict resolver and token store +infra
-(B) Add test coverage reporting to .github/workflows/ci.yml using go test -coverprofile and upload as a GitHub Actions artifact +infra
-(B) Add a make lint target to Makefile that fails the build if golangci-lint is installed and reports errors, instead of silently skipping +infra
