@@ -28,6 +28,11 @@ func (p *OmniFocusParser) ParseFile(filePath string) (*model.CalendarCollection,
 }
 
 func (p *OmniFocusParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
+	tr, err := transcodeReader(r)
+	if err != nil {
+		return nil, fmt.Errorf("charset detection failed: %w", err)
+	}
+
 	collection := &model.CalendarCollection{
 		Items:            []model.CalendarItem{},
 		SourceApp:        "omnifocus",
@@ -35,7 +40,7 @@ func (p *OmniFocusParser) Parse(r io.Reader, sourcePath string) (*model.Calendar
 		OriginalFilePath: sourcePath,
 	}
 
-	scanner := bufio.NewScanner(r)
+	scanner := bufio.NewScanner(tr)
 	var currentItem *model.CalendarItem
 	_ = 0 // indent tracking reserved for nested support
 

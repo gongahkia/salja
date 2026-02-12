@@ -27,7 +27,11 @@ func (p *NotionParser) ParseFile(filePath string) (*model.CalendarCollection, er
 }
 
 func (p *NotionParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
-	csvReader := csv.NewReader(r)
+	tr, err := transcodeReader(r)
+	if err != nil {
+		return nil, fmt.Errorf("charset detection failed: %w", err)
+	}
+	csvReader := csv.NewReader(tr)
 	records, err := csvReader.ReadAll()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read CSV %s: %w", sourcePath, err)
@@ -95,6 +99,9 @@ func parseNotionRow(row []string, colMap map[string]int) (model.CalendarItem, er
 				item.DueDate = &t
 				break
 			} else if t, err := time.Parse("January 2, 2006", row[idx]); err == nil {
+				item.DueDate = &t
+				break
+			} else if t, err := parseAmbiguousDate(row[idx]); err == nil {
 				item.DueDate = &t
 				break
 			}

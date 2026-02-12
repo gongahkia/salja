@@ -27,7 +27,11 @@ func (p *OutlookParser) ParseFile(filePath string) (*model.CalendarCollection, e
 }
 
 func (p *OutlookParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
-	csvReader := csv.NewReader(r)
+	tr, err := transcodeReader(r)
+	if err != nil {
+		return nil, fmt.Errorf("charset detection failed: %w", err)
+	}
+	csvReader := csv.NewReader(tr)
 	records, err := csvReader.ReadAll()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read CSV %s: %w", sourcePath, err)

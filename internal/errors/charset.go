@@ -18,6 +18,7 @@ const (
 EncodingUTF8 Encoding = iota
 EncodingUTF16LE
 EncodingUTF16BE
+EncodingCP1252
 EncodingLatin1
 )
 
@@ -27,6 +28,8 @@ case EncodingUTF16LE:
 return "UTF-16LE"
 case EncodingUTF16BE:
 return "UTF-16BE"
+case EncodingCP1252:
+return "Windows-1252"
 case EncodingLatin1:
 return "Latin-1"
 default:
@@ -50,7 +53,21 @@ return EncodingUTF8 // UTF-8 BOM
 if utf8.Valid(data) {
 return EncodingUTF8
 }
+// Check for CP1252-specific bytes (0x80-0x9F range) before falling back to Latin-1
+if hasCP1252Bytes(data) {
+return EncodingCP1252
+}
 return EncodingLatin1
+}
+
+// hasCP1252Bytes checks for bytes in 0x80-0x9F that are valid CP1252 but undefined in Latin-1.
+func hasCP1252Bytes(data []byte) bool {
+for _, b := range data {
+if b >= 0x80 && b <= 0x9F {
+return true
+}
+}
+return false
 }
 
 // TranscodeToUTF8 converts data from detected encoding to UTF-8.
@@ -67,6 +84,8 @@ case EncodingUTF16LE:
 return newUTF16Reader(buf, binary.LittleEndian), enc, nil
 case EncodingUTF16BE:
 return newUTF16Reader(buf, binary.BigEndian), enc, nil
+case EncodingCP1252:
+return transform.NewReader(buf, charmap.Windows1252.NewDecoder()), enc, nil
 case EncodingLatin1:
 return transform.NewReader(buf, charmap.ISO8859_1.NewDecoder()), enc, nil
 default:

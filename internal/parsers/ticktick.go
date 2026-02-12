@@ -28,7 +28,11 @@ func (p *TickTickParser) ParseFile(filePath string) (*model.CalendarCollection, 
 }
 
 func (p *TickTickParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
-	csvReader := csv.NewReader(r)
+	tr, err := transcodeReader(r)
+	if err != nil {
+		return nil, fmt.Errorf("charset detection failed: %w", err)
+	}
+	csvReader := csv.NewReader(tr)
 	records, err := csvReader.ReadAll()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read CSV: %w", err)

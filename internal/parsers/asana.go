@@ -27,7 +27,11 @@ func (p *AsanaParser) ParseFile(filePath string) (*model.CalendarCollection, err
 }
 
 func (p *AsanaParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
-	csvReader := csv.NewReader(r)
+	tr, err := transcodeReader(r)
+	if err != nil {
+		return nil, fmt.Errorf("charset detection failed: %w", err)
+	}
+	csvReader := csv.NewReader(tr)
 	records, err := csvReader.ReadAll()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read CSV %s: %w", sourcePath, err)
@@ -82,6 +86,8 @@ func parseAsanaRow(row []string, colMap map[string]int) (model.CalendarItem, err
 
 	if idx, ok := colMap["Due Date"]; ok && idx < len(row) && row[idx] != "" {
 		if t, err := time.Parse("2006-01-02", row[idx]); err == nil {
+			item.DueDate = &t
+		} else if t, err := parseAmbiguousDate(row[idx]); err == nil {
 			item.DueDate = &t
 		}
 	}

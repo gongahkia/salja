@@ -2,12 +2,6 @@ SALJA Evolution Map — Audit-Driven Improvements
 Philosophy: File-based calendar conversion CLI for power users and developers. Data fidelity configurable. Interactive-first.
 ================================================================================
 
---- PHASE: CONFIG HARDENING ---
-
-(B) Add timezone validation in internal/config/config.go validate() that checks default_timezone against time.LoadLocation to verify it is a valid IANA timezone name +feature
-(B) Add API config validation in internal/config/config.go to warn when a service section has client_id set but client_secret is empty +feature
-(B) Add config option conflict_thresholds with sub-fields levenshtein_threshold, min_title_length, date_proximity_hours for tuning conflict detection sensitivity +feature
-
 --- PHASE: CHARSET & DATE ROBUSTNESS ---
 
 (B) Add Windows-1252 (CP1252) encoding detection and transcoding support to internal/errors/charset.go as a fallback before Latin-1 since CP1252 is more common in Windows-exported CSVs +feature

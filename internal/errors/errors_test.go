@@ -70,13 +70,20 @@ t.Errorf("expected 'Hi', got %q", string(out))
 }
 
 func TestCharsetDetectionLatin1(t *testing.T) {
-// Bytes 0x80-0xFF are invalid UTF-8 but valid Latin-1
-data := []byte{0xC4, 0xD6, 0xDC} // ÄÖÜ in Latin-1 but invalid UTF-8 sequence
-// Actually these could form valid UTF-8 start bytes, so use cleaner example
-data = []byte{0x80, 0x81, 0x82}
+// Bytes 0xA0-0xFF are Latin-1 but not CP1252-specific (no 0x80-0x9F bytes)
+data := []byte{0xE4, 0xF6, 0xFC} // äöü in Latin-1, invalid UTF-8
 enc := DetectEncoding(data)
 if enc != EncodingLatin1 {
 t.Errorf("expected Latin-1, got %s", enc)
+}
+}
+
+func TestCharsetDetectionCP1252(t *testing.T) {
+// Bytes 0x80-0x9F are CP1252-specific
+data := []byte{0x80, 0x81, 0x82}
+enc := DetectEncoding(data)
+if enc != EncodingCP1252 {
+t.Errorf("expected Windows-1252, got %s", enc)
 }
 }
 
