@@ -2,17 +2,6 @@ SALJA Evolution Map — Audit-Driven Improvements
 Philosophy: File-based calendar conversion CLI for power users and developers. Data fidelity configurable. Interactive-first.
 ================================================================================
 
---- PHASE: WRITER COMPLETENESS ---
-
-(B) Add subtask-to-description flattening in internal/writers/gcal.go when CalendarItems have subtasks — append checklist as markdown-style text to the Description field +feature
-(B) Add subtask-to-description flattening in internal/writers/outlook.go when CalendarItems have subtasks +feature
-(B) Add subtask-to-description flattening in internal/writers/asana.go when CalendarItems have subtasks +feature
-(B) Add subtask-to-description flattening in internal/writers/notion.go when CalendarItems have subtasks +feature
-(B) Add recurrence-to-description annotation in internal/writers/asana.go when CalendarItems have recurrence rules — append human-readable recurrence summary +feature
-(B) Add recurrence-to-description annotation in internal/writers/notion.go when CalendarItems have recurrence rules +feature
-(B) Add timezone preservation to internal/writers/outlook.go by including timezone info in the Start Date and End Date columns when available +feature
-(B) Make the Trello checklist name in internal/writers/trello.go configurable via config instead of hardcoded "Checklist" string +feature
-
 --- PHASE: CONFLICT DETECTION OPTIMIZATION ---
 
 (B) Add UID-based indexing to internal/conflict/detector.go by building a map[string]int index of target UIDs before comparison to eliminate O(n²) for UID matches +refactor

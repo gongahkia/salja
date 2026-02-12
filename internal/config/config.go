@@ -9,13 +9,20 @@ import (
 )
 
 type Config struct {
-PreferredMode    string            `toml:"preferred_mode"`
-DefaultTimezone  string            `toml:"default_timezone"`
-ConflictStrategy string            `toml:"conflict_strategy"`
-DataLossMode     string            `toml:"data_loss_mode"`
-PriorityMap      map[string]int    `toml:"priority_map"`
-TagMap           map[string]string `toml:"tag_map"`
-API              APIConfig         `toml:"api"`
+PreferredMode       string              `toml:"preferred_mode"`
+DefaultTimezone     string              `toml:"default_timezone"`
+ConflictStrategy    string              `toml:"conflict_strategy"`
+DataLossMode        string              `toml:"data_loss_mode"`
+PriorityMap         map[string]int      `toml:"priority_map"`
+TagMap              map[string]string    `toml:"tag_map"`
+ConflictThresholds  ConflictThresholds  `toml:"conflict_thresholds"`
+API                 APIConfig           `toml:"api"`
+}
+
+type ConflictThresholds struct {
+LevenshteinThreshold int `toml:"levenshtein_threshold"`
+MinTitleLength       int `toml:"min_title_length"`
+DateProximityHours   int `toml:"date_proximity_hours"`
 }
 
 type APIConfig struct {
@@ -41,6 +48,11 @@ ConflictStrategy: "ask",
 DataLossMode:     "warn",
 PriorityMap:      map[string]int{},
 TagMap:           map[string]string{},
+ConflictThresholds: ConflictThresholds{
+LevenshteinThreshold: 3,
+MinTitleLength:       10,
+DateProximityHours:   24,
+},
 }
 }
 

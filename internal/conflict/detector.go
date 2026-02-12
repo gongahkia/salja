@@ -22,8 +22,41 @@ type Match struct {
 func (d *Detector) FindDuplicates(source, target *model.CalendarCollection) []Match {
 	var matches []Match
 
+	// Build UID index for O(1) UID lookups
+	uidIndex := make(map[string]int)
+	for j, tgtItem := range target.Items {
+		if tgtItem.UID != "" {
+			uidIndex[tgtItem.UID] = j
+		}
+	}
+
+	matched := make(map[int]bool)
+
+	// First pass: exact UID matches
 	for i, srcItem := range source.Items {
+		if srcItem.UID != "" {
+			if j, ok := uidIndex[srcItem.UID]; ok {
+				matches = append(matches, Match{
+					SourceIndex: i,
+					TargetIndex: j,
+					Confidence:  d.calculateConfidence(&srcItem, &target.Items[j]),
+				})
+				matched[j] = true
+			}
+		}
+	}
+
+	// Second pass: fuzzy matching for items without UID match
+	for i, srcItem := range source.Items {
+		if srcItem.UID != "" {
+			if _, ok := uidIndex[srcItem.UID]; ok {
+				continue // Already matched by UID
+			}
+		}
 		for j, tgtItem := range target.Items {
+			if matched[j] {
+				continue
+			}
 			if d.isDuplicate(&srcItem, &tgtItem) {
 				matches = append(matches, Match{
 					SourceIndex: i,

@@ -130,11 +130,59 @@ fields = append(fields, "priority:target")
 }
 }
 
+if source.Status != target.Status {
+fmt.Printf("  Status: [s]%s / [t]%s? ", source.Status, target.Status)
+input, _ := r.reader.ReadString('\n')
+if strings.TrimSpace(input) == "t" {
+merged.Status = target.Status
+fields = append(fields, "status:target")
+}
+}
+
+if len(source.Tags) != len(target.Tags) || !tagsEqual(source.Tags, target.Tags) {
+fmt.Printf("  Tags: [s]%v / [t]%v? ", source.Tags, target.Tags)
+input, _ := r.reader.ReadString('\n')
+if strings.TrimSpace(input) == "t" {
+merged.Tags = target.Tags
+fields = append(fields, "tags:target")
+}
+}
+
+if (source.Recurrence == nil) != (target.Recurrence == nil) {
+fmt.Printf("  Recurrence: [s]source / [t]target? ")
+input, _ := r.reader.ReadString('\n')
+if strings.TrimSpace(input) == "t" {
+merged.Recurrence = target.Recurrence
+fields = append(fields, "recurrence:target")
+}
+}
+
+if len(source.Reminders) != len(target.Reminders) {
+fmt.Printf("  Reminders: [s]%d / [t]%d? ", len(source.Reminders), len(target.Reminders))
+input, _ := r.reader.ReadString('\n')
+if strings.TrimSpace(input) == "t" {
+merged.Reminders = target.Reminders
+fields = append(fields, "reminders:target")
+}
+}
+
 r.log(source.Title, target.Title, "merged")
 if len(r.resolutions) > 0 {
 r.resolutions[len(r.resolutions)-1].Fields = fields
 }
 return &merged, nil
+}
+
+func tagsEqual(a, b []string) bool {
+if len(a) != len(b) {
+return false
+}
+for i := range a {
+if a[i] != b[i] {
+return false
+}
+}
+return true
 }
 
 func (r *Resolver) log(sourceTitle, targetTitle, action string) {
