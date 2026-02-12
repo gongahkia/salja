@@ -2,15 +2,6 @@ SALJA Evolution Map — Audit-Driven Improvements
 Philosophy: File-based calendar conversion CLI for power users and developers. Data fidelity configurable. Interactive-first.
 ================================================================================
 
---- PHASE: FORMAT REGISTRY REFACTOR ---
-
-(B) Replace the switch-based parser factory in cmd/salja/commands/convert.go ReadInput() with a map[string]ParserFactory registry in a new file internal/registry/registry.go that maps format names to constructor functions +refactor
-(B) Replace the switch-based writer factory in cmd/salja/commands/convert.go WriteOutput() with a map[string]WriterFactory registry in internal/registry/registry.go that maps format names to constructor functions +refactor
-(B) Define a Parser interface in internal/registry/registry.go with methods Parse(io.Reader, string) (*model.CalendarCollection, error) and ParseFile(string) (*model.CalendarCollection, error) that all parsers implement +refactor
-(B) Define a Writer interface in internal/registry/registry.go with methods Write(*model.CalendarCollection, io.Writer) error and WriteFile(*model.CalendarCollection, string) error that all writers implement +refactor
-(B) Add a FormatCapabilities struct to each registry entry with fields SupportsEvents, SupportsTasks, SupportsRecurrence, SupportsSubtasks bool and use it to auto-generate the list-formats table instead of hardcoding +refactor
-(B) Refactor DetectFormat() in convert.go to use the registry's file extension mappings instead of hardcoded switch with fragile filename substring matching +refactor
-
 --- PHASE: DATA FIDELITY CONFIG ---
 
 (B) Add a config option data_loss_mode = "warn" | "error" | "silent" in internal/config/config.go that controls behavior when target format cannot represent source fields +feature
