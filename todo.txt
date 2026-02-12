@@ -2,12 +2,6 @@ SALJA Evolution Map — Audit-Driven Improvements
 Philosophy: File-based calendar conversion CLI for power users and developers. Data fidelity configurable. Interactive-first.
 ================================================================================
 
---- PHASE: STREAMING & SCALE ---
-
-(B) Add a Close() method to StreamingCSVParser and StreamingICSParser in internal/errors/streaming.go for proper resource cleanup +refactor
-(B) Integrate StreamingCSVParser into CSV parsers as an optional mode triggered when file size exceeds a configurable threshold (default 10MB) in config +feature
-(B) Refactor internal/conflict/detector.go to use sorted-merge or hash-based matching when item count exceeds 1000 to avoid O(n²) degradation +refactor
-
 --- PHASE: PROGRESS & UX ---
 
 (B) Fix the progress bar bug in cmd/salja/commands/convert.go where the bar loop increments without doing actual work — move progress updates to wrap individual item conversion within WriteOutput +refactor

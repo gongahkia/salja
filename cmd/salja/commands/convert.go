@@ -59,6 +59,13 @@ fmt.Printf("  - %s (%s)\n", item.Title, item.ItemType)
 return nil
 }
 
+// Run data fidelity check with progress updates
+cfg, _ := config.Load()
+dataLossMode := "warn"
+if cfg != nil {
+dataLossMode = cfg.DataLossMode
+}
+
 var bar *progressbar.ProgressBar
 if !quiet && len(collection.Items) > 10 {
 bar = progressbar.NewOptions(len(collection.Items),
@@ -67,19 +74,13 @@ progressbar.OptionSetWriter(os.Stderr),
 progressbar.OptionShowCount(),
 progressbar.OptionClearOnFinish(),
 )
-for range collection.Items {
-bar.Add(1)
-}
-bar.Finish()
 }
 
-// Run data fidelity check before writing
-cfg, _ := config.Load()
-dataLossMode := "warn"
-if cfg != nil {
-dataLossMode = cfg.DataLossMode
-}
 warnings := fidelity.Check(collection, toFormat)
+if bar != nil {
+bar.Add(len(collection.Items) / 2)
+}
+
 if len(warnings) > 0 {
 switch dataLossMode {
 case "error":
@@ -98,10 +99,27 @@ if err := WriteOutput(collection, outputFile, toFormat); err != nil {
 return fmt.Errorf("failed to write output: %w", err)
 }
 
+if bar != nil {
+bar.Add(len(collection.Items) - len(collection.Items)/2)
+bar.Finish()
+}
+
+// Print item-count summary
+eventCount, taskCount, warnCount := 0, 0, len(warnings)
+for _, item := range collection.Items {
+switch item.ItemType {
+case model.ItemTypeEvent:
+eventCount++
+default:
+taskCount++
+}
+}
+
 if outputFormat == "json" {
-fmt.Printf("{\"converted\": %d, \"source\": \"%s\", \"target\": \"%s\"}\n", len(collection.Items), fromFormat, toFormat)
+fmt.Printf("{\"converted\": %d, \"events\": %d, \"tasks\": %d, \"warnings\": %d, \"source\": \"%s\", \"target\": \"%s\"}\n",
+len(collection.Items), eventCount, taskCount, warnCount, fromFormat, toFormat)
 } else if !quiet {
-fmt.Fprintf(os.Stderr, "Successfully converted %d items to %s\n", len(collection.Items), outputFile)
+fmt.Fprintf(os.Stderr, "Converted %d events, %d tasks (%d warnings)\n", eventCount, taskCount, warnCount)
 }
 return nil
 },

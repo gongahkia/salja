@@ -1,6 +1,7 @@
 package commands
 
 import (
+"encoding/json"
 "fmt"
 
 "github.com/gongahkia/salja/internal/conflict"
@@ -9,6 +10,7 @@ import (
 
 func NewDiffCmd() *cobra.Command {
 var fromFormat, toFormat string
+var outputFormat string
 
 cmd := &cobra.Command{
 Use:   "diff <file1> <file2>",
@@ -41,39 +43,57 @@ matched1[m.SourceIndex] = true
 matched2[m.TargetIndex] = true
 }
 
+var addedTitles, removedTitles []string
+for j, item := range col2.Items {
+if !matched2[j] {
+addedTitles = append(addedTitles, item.Title)
+}
+}
+for i, item := range col1.Items {
+if !matched1[i] {
+removedTitles = append(removedTitles, item.Title)
+}
+}
+
+switch outputFormat {
+case "json":
+result := map[string]interface{}{
+"file1_count":    len(col1.Items),
+"file2_count":    len(col2.Items),
+"matching_count": len(matches),
+"added_count":    len(addedTitles),
+"removed_count":  len(removedTitles),
+"added":          addedTitles,
+"removed":        removedTitles,
+}
+data, _ := json.MarshalIndent(result, "", "  ")
+fmt.Println(string(data))
+
+case "patch":
+for _, title := range removedTitles {
+fmt.Printf("- %s\n", title)
+}
+for _, title := range addedTitles {
+fmt.Printf("+ %s\n", title)
+}
+
+default: // "table"
 fmt.Printf("File 1: %d items\n", len(col1.Items))
 fmt.Printf("File 2: %d items\n", len(col2.Items))
 fmt.Printf("Matching: %d items\n", len(matches))
+fmt.Printf("Added:   %d items (in file2 only)\n", len(addedTitles))
+fmt.Printf("Removed: %d items (in file1 only)\n", len(removedTitles))
 
-added := 0
-for j := range col2.Items {
-if !matched2[j] {
-added++
-}
-}
-removed := 0
-for i := range col1.Items {
-if !matched1[i] {
-removed++
-}
-}
-
-fmt.Printf("Added:   %d items (in file2 only)\n", added)
-fmt.Printf("Removed: %d items (in file1 only)\n", removed)
-
-if removed > 0 {
+if len(removedTitles) > 0 {
 fmt.Println("\n--- Removed ---")
-for i, item := range col1.Items {
-if !matched1[i] {
-fmt.Printf("  - %s\n", item.Title)
+for _, title := range removedTitles {
+fmt.Printf("  - %s\n", title)
 }
 }
-}
-if added > 0 {
+if len(addedTitles) > 0 {
 fmt.Println("\n--- Added ---")
-for j, item := range col2.Items {
-if !matched2[j] {
-fmt.Printf("  + %s\n", item.Title)
+for _, title := range addedTitles {
+fmt.Printf("  + %s\n", title)
 }
 }
 }
@@ -84,5 +104,6 @@ return nil
 
 cmd.Flags().StringVar(&fromFormat, "from", "", "Format of file1")
 cmd.Flags().StringVar(&toFormat, "to", "", "Format of file2")
+cmd.Flags().StringVar(&outputFormat, "format", "table", "Output format: table, json, or patch")
 return cmd
 }
