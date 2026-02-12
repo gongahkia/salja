@@ -18,12 +18,14 @@ const tickTickBaseURL = "https://api.ticktick.com/open/v1"
 type TickTickClient struct {
 token      *Token
 httpClient *http.Client
+baseURL    string
 }
 
 func NewTickTickClient(token *Token) *TickTickClient {
 return &TickTickClient{
 token:      token,
 httpClient: &http.Client{Timeout: 30 * time.Second},
+baseURL:    tickTickBaseURL,
 }
 }
 
@@ -37,7 +39,7 @@ return nil, 0, err
 reqBody = bytes.NewReader(data)
 }
 
-req, err := http.NewRequestWithContext(ctx, method, tickTickBaseURL+path, reqBody)
+req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, reqBody)
 if err != nil {
 return nil, 0, err
 }
