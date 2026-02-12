@@ -12,6 +12,7 @@ type Config struct {
 PreferredMode    string            `toml:"preferred_mode"`
 DefaultTimezone  string            `toml:"default_timezone"`
 ConflictStrategy string            `toml:"conflict_strategy"`
+DataLossMode     string            `toml:"data_loss_mode"`
 PriorityMap      map[string]int    `toml:"priority_map"`
 TagMap           map[string]string `toml:"tag_map"`
 API              APIConfig         `toml:"api"`
@@ -37,6 +38,7 @@ return &Config{
 PreferredMode:    "file",
 DefaultTimezone:  "UTC",
 ConflictStrategy: "ask",
+DataLossMode:     "warn",
 PriorityMap:      map[string]int{},
 TagMap:           map[string]string{},
 }
@@ -82,6 +84,11 @@ return fmt.Errorf("invalid preferred_mode '%s': must be 'file' or 'api'", cfg.Pr
 validStrategies := map[string]bool{"ask": true, "prefer-source": true, "prefer-target": true, "skip": true, "fail": true}
 if !validStrategies[cfg.ConflictStrategy] {
 return fmt.Errorf("invalid conflict_strategy '%s'", cfg.ConflictStrategy)
+}
+
+validDataLossModes := map[string]bool{"warn": true, "error": true, "silent": true}
+if !validDataLossModes[cfg.DataLossMode] {
+return fmt.Errorf("invalid data_loss_mode '%s': must be 'warn', 'error', or 'silent'", cfg.DataLossMode)
 }
 
 return nil

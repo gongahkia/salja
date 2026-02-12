@@ -7,6 +7,8 @@ import (
 "path/filepath"
 "strings"
 
+"github.com/gongahkia/salja/internal/config"
+"github.com/gongahkia/salja/internal/fidelity"
 "github.com/gongahkia/salja/internal/model"
 "github.com/gongahkia/salja/internal/registry"
 _ "github.com/gongahkia/salja/internal/registry" // ensure format registration
@@ -69,6 +71,27 @@ for range collection.Items {
 bar.Add(1)
 }
 bar.Finish()
+}
+
+// Run data fidelity check before writing
+cfg, _ := config.Load()
+dataLossMode := "warn"
+if cfg != nil {
+dataLossMode = cfg.DataLossMode
+}
+warnings := fidelity.Check(collection, toFormat)
+if len(warnings) > 0 {
+switch dataLossMode {
+case "error":
+for _, w := range warnings {
+fmt.Fprintf(os.Stderr, "ERROR: %s\n", w)
+}
+return fmt.Errorf("aborting due to %d data loss error(s); set data_loss_mode = \"warn\" or \"silent\" to continue", len(warnings))
+case "warn":
+for _, w := range warnings {
+fmt.Fprintf(os.Stderr, "WARNING: %s\n", w)
+}
+}
 }
 
 if err := WriteOutput(collection, outputFile, toFormat); err != nil {
