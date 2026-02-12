@@ -4,18 +4,6 @@ Philosophy: CLI-first, file-first with optional API mode, universal calendar/tas
 ================================================================================
 
 --- PHASE 1: CORE DATA MODEL & ICS ENGINE ---
-(A) Implement ICS parser that reads RFC 5545 .ics files and maps VEVENT components to CalendarItem structs +ics
-(A) Implement ICS parser support for VTODO components mapping DUE, PERCENT-COMPLETE, STATUS to CalendarItem task fields +ics
-(A) Implement ICS parser support for VJOURNAL components as note-type CalendarItems +ics
-(A) Implement VTIMEZONE parser that resolves timezone definitions embedded in ICS files to IANA tz database identifiers +ics
-(A) Implement RRULE parser that converts ICS RRULE strings to internal Recurrence struct with full RFC 5545 compliance +ics
-(A) Implement RRULE flattener that expands recurrence rules into individual CalendarItem instances when target app lacks RRULE support, logging a warning to stderr per flattened item +ics
-(A) Implement EXDATE and RDATE parser to handle recurrence exceptions and additional occurrence dates +ics
-(A) Implement ICS writer that serializes CalendarItem structs back to valid RFC 5545 .ics files with VEVENT and VTODO support +ics
-(A) Implement ICS writer VTIMEZONE emission using IANA tz identifiers and proper UTC offset transition rules +ics
-(A) Implement all-day event handling: DATE vs DATE-TIME distinction, prevent off-by-one-day errors across timezone boundaries +ics
-(A) Write table-driven tests for ICS parser covering: single event, recurring event with EXDATE, VTODO with DUE, all-day event, multi-timezone file, malformed input +ics
-(A) Write table-driven tests for RRULE parser covering: daily, weekly with ByDay, monthly with ByMonthDay, yearly, count-limited, until-limited, complex BySetPos patterns +ics
 
 --- PHASE 2: APP-SPECIFIC PARSERS (FILE-BASED) ---
 
