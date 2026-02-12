@@ -2,21 +2,6 @@ SALJA Evolution Map — Audit-Driven Improvements
 Philosophy: File-based calendar conversion CLI for power users and developers. Data fidelity configurable. Interactive-first.
 ================================================================================
 
---- PHASE: ERROR HANDLING HARDENING ---
-
-(B) Add consistent error wrapping with fmt.Errorf and %w verb to all CSV parser Parse() methods (gcal.go, outlook.go, notion.go, asana.go) to include filename and line context +refactor
-(B) Add CSV header validation to all CSV parsers: after reading headers, verify required columns exist and return a clear ParseError listing missing columns before attempting row parsing +refactor
-(B) Add bounds checking in all CSV parsers to guard against colMap returning index 0 when a column is missing by initializing colMap values to -1 and checking before access +refactor
-(B) Fix silent fmt.Sscanf failures in internal/ics/parser.go parseRRule function (around line 309) by checking the return count and returning an error if expected fields are not parsed +refactor
-(B) Add Unwrap() error method to ConflictError and PermissionError in internal/errors/errors.go for consistency with ParseError, ValidationError, and APIError +refactor
-(B) Fix os.UserHomeDir() error handling in internal/api/oauth.go DefaultTokenStore() by returning an error instead of silently using empty string +refactor
-(B) Fix rand.Read error handling in internal/api/oauth.go generateState() by checking the error return value +refactor
-(B) Add file locking to internal/api/oauth.go TokenStore Load/Save methods using os.OpenFile with O_EXCL or flock to prevent concurrent access races +refactor
-(B) Fix the interactive conflict resolver in internal/conflict/resolver.go to handle EOF on stdin gracefully instead of panicking when run without a TTY +refactor
-(B) Fix unsafe slice access in internal/conflict/resolver.go line 128 by checking len(r.resolutions) > 0 before indexing +refactor
-(B) Fix the conflict log writer in internal/conflict/resolver.go to not silently ignore json.Unmarshal errors when reading existing log file +refactor
-(B) Use config.ConfigDir() in internal/conflict/resolver.go instead of manually constructing ~/.config/salja path for the conflict log location +refactor
-
 --- PHASE: PARSER CORRECTNESS ---
 
 (B) Fix TickTick parser priority mapping inconsistency: parser returns PriorityNone for priority=0 but API mapper returns PriorityLow — unify to same behavior in both internal/parsers/ticktick.go and internal/api/ticktick.go +refactor

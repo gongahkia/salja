@@ -82,13 +82,13 @@ func (p *TickTickParser) parseRow(row []string, colMap map[string]int) model.Cal
 	}
 
 	if idx, ok := colMap["start_date"]; ok && idx < len(row) && row[idx] != "" {
-		if t, err := time.Parse(time.RFC3339, row[idx]); err == nil {
+		if t, err := parseTickTickDateField(row[idx]); err == nil {
 			item.StartTime = &t
 		}
 	}
 
 	if idx, ok := colMap["due_date"]; ok && idx < len(row) && row[idx] != "" {
-		if t, err := time.Parse(time.RFC3339, row[idx]); err == nil {
+		if t, err := parseTickTickDateField(row[idx]); err == nil {
 			item.DueDate = &t
 		}
 	}
@@ -208,4 +208,20 @@ func parseTickTickRepeat(repeat string) *model.Recurrence {
 	}
 
 	return rec
+}
+
+func parseTickTickDateField(s string) (time.Time, error) {
+	formats := []string{
+		time.RFC3339,
+		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04:05",
+		"2006-01-02",
+		"01/02/2006",
+	}
+	for _, f := range formats {
+		if t, err := time.Parse(f, s); err == nil {
+			return t, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("unable to parse date: %s", s)
 }

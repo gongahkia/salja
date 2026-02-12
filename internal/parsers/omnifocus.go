@@ -102,8 +102,21 @@ func parseOmniFocusTags(item *model.CalendarItem, tagStr string) {
 			}
 		case "done":
 			item.Status = model.StatusCompleted
+		case "flagged":
+			item.Priority = model.PriorityHigh
+		case "priority":
+			switch strings.ToLower(tagValue) {
+			case "high", "1":
+				item.Priority = model.PriorityHigh
+			case "medium", "2":
+				item.Priority = model.PriorityMedium
+			case "low", "3":
+				item.Priority = model.PriorityLow
+			}
 		case "tags":
 			item.Tags = append(item.Tags, strings.Split(tagValue, ",")...)
+		case "note", "notes":
+			item.Description += tagValue + "\n"
 		default:
 			item.Tags = append(item.Tags, tagName)
 		}

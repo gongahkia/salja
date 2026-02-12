@@ -7,6 +7,8 @@ import (
 "fmt"
 "io"
 "net/http"
+"strconv"
+"strings"
 "time"
 
 "github.com/gongahkia/salja/internal/model"
@@ -222,8 +224,9 @@ item.EndTime = t
 if len(event.Recurrence) > 0 {
 for _, rule := range event.Recurrence {
 if len(rule) > 6 && rule[:6] == "RRULE:" {
-// Store raw RRULE in description for formats lacking native recurrence
-				item.Description += "\nRRULE: " + rule
+if rec, err := parseRRuleString(rule[6:]); err == nil {
+item.Recurrence = rec
+}
 }
 }
 }
@@ -288,4 +291,36 @@ return &t
 }
 }
 return nil
+}
+
+func parseRRuleString(value string) (*model.Recurrence, error) {
+rec := &model.Recurrence{Interval: 1}
+parts := strings.Split(value, ";")
+for _, part := range parts {
+kv := strings.SplitN(part, "=", 2)
+if len(kv) != 2 {
+continue
+}
+switch kv[0] {
+case "FREQ":
+rec.Freq = model.FreqType(kv[1])
+case "INTERVAL":
+if v, err := strconv.Atoi(kv[1]); err == nil {
+rec.Interval = v
+}
+case "COUNT":
+if v, err := strconv.Atoi(kv[1]); err == nil {
+rec.Count = &v
+}
+case "UNTIL":
+if t, err := time.Parse("20060102T150405Z", kv[1]); err == nil {
+rec.Until = &t
+}
+case "BYDAY":
+for _, d := range strings.Split(kv[1], ",") {
+rec.ByDay = append(rec.ByDay, model.Weekday(strings.TrimSpace(d)))
+}
+}
+}
+return rec, nil
 }

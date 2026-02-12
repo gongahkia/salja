@@ -177,11 +177,22 @@ item.Location = event.Location.DisplayName
 
 if event.Start != nil {
 if t, err := time.Parse("2006-01-02T15:04:05.0000000", event.Start.DateTime); err == nil {
+if event.Start.TimeZone != "" && event.Start.TimeZone != "UTC" {
+if loc, locErr := time.LoadLocation(event.Start.TimeZone); locErr == nil {
+t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
+}
+item.Timezone = event.Start.TimeZone
+}
 item.StartTime = &t
 }
 }
 if event.End != nil {
 if t, err := time.Parse("2006-01-02T15:04:05.0000000", event.End.DateTime); err == nil {
+if event.End.TimeZone != "" && event.End.TimeZone != "UTC" {
+if loc, locErr := time.LoadLocation(event.End.TimeZone); locErr == nil {
+t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
+}
+}
 item.EndTime = &t
 }
 }
@@ -205,15 +216,23 @@ event.Location = &MSGraphLocation{DisplayName: item.Location}
 }
 
 if item.StartTime != nil {
+tz := "UTC"
+if item.Timezone != "" {
+tz = item.Timezone
+}
 event.Start = &MSGraphDateTime{
 DateTime: item.StartTime.Format("2006-01-02T15:04:05.0000000"),
-TimeZone: "UTC",
+TimeZone: tz,
 }
 }
 if item.EndTime != nil {
+tz := "UTC"
+if item.Timezone != "" {
+tz = item.Timezone
+}
 event.End = &MSGraphDateTime{
 DateTime: item.EndTime.Format("2006-01-02T15:04:05.0000000"),
-TimeZone: "UTC",
+TimeZone: tz,
 }
 }
 

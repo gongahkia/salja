@@ -172,13 +172,13 @@ item.Description = task.Desc
 // Priority: TickTick 0=none, 1=low, 3=medium, 5=high
 switch task.Priority {
 case 5:
-item.Priority = model.PriorityHighest
+item.Priority = model.PriorityHigh
 case 3:
 item.Priority = model.PriorityMedium
 case 1:
 item.Priority = model.PriorityLow
 default:
-item.Priority = 0
+item.Priority = model.PriorityNone
 }
 
 // Status: 0=normal, 2=completed

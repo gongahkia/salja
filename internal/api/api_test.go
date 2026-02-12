@@ -73,7 +73,7 @@ item := TickTickToCalendarItem(task)
 if item.Title != "Buy groceries" {
 t.Errorf("title: got %q", item.Title)
 }
-if item.Priority != model.PriorityHighest {
+if item.Priority != model.PriorityHigh {
 t.Errorf("priority: got %d", item.Priority)
 }
 if item.Status != model.StatusCompleted {
