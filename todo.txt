@@ -3,26 +3,4 @@ Tech Stack: Go CLI (Cobra), ICS parsing (icalendar), AppleScript bridge, REST AP
 Philosophy: CLI-first, file-first with optional API mode, universal calendar/task interchange with conflict resolution
 ================================================================================
 
---- PHASE 4: API-BASED CONNECTORS ---
-
-(B) Implement OAuth2 PKCE flow helper for API-based connectors with token storage in ~/.config/calconv/tokens.json +api
-(B) Implement TickTick REST API client with OAuth2 auth supporting: list tasks, create task, update task, delete task +api
-(B) Implement TickTick API-to-CalendarItem mapper using API JSON response fields (id, title, content, desc, startDate, dueDate, priority, status, tags, items) +api
-(B) Implement TickTick CalendarItem-to-API mapper for creating/updating tasks via API with field validation +api
-(B) Implement Todoist REST API client with OAuth2 auth supporting: get tasks, create task, update task, close task, get projects +api
-(B) Implement Todoist Sync API client for incremental sync using sync tokens for efficient bulk reads +api
-(B) Implement Todoist API-to-CalendarItem mapper handling natural language dates, label IDs, section/project hierarchy +api
-(B) Implement Google Calendar API client with OAuth2 auth supporting: list events, insert event, update event, delete event, list calendars +api
-(B) Implement Google Calendar API-to-CalendarItem mapper handling attendees, conferencing, extended properties +api
-(B) Implement Microsoft Graph API client with OAuth2 auth supporting: list events, create event, update event for Outlook calendars +api
-(B) Implement Notion API client with Bearer token auth supporting: query database, create page, update page properties +api
-(B) Implement Notion API-to-CalendarItem mapper with user-configurable property-to-field mapping via config +api
-(B) Write integration tests for each API client using recorded HTTP fixtures (go-vcr or httptest) to avoid live API calls in CI +api
-
---- PHASE 9: BUILD & DISTRIBUTION ---
-
-(A) Create Homebrew formula in a tap repo (homebrew-calconv) with binary download, sha256 verification, and test block +build
-
---- PHASE 10: NAME BRAINSTORMING ---
-
-(A) Brainstorm 10 possible names for this project, noting I prefer names that tend towards japanese or korean or east-asian mythology, with romanised pronounciations being ok
+All tasks completed.
