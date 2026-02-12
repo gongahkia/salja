@@ -2,12 +2,6 @@ SALJA Evolution Map — Audit-Driven Improvements
 Philosophy: File-based calendar conversion CLI for power users and developers. Data fidelity configurable. Interactive-first.
 ================================================================================
 
---- PHASE: CHARSET & DATE ROBUSTNESS ---
-
-(B) Add Windows-1252 (CP1252) encoding detection and transcoding support to internal/errors/charset.go as a fallback before Latin-1 since CP1252 is more common in Windows-exported CSVs +feature
-(B) Integrate TranscodeToUTF8 from internal/errors/charset.go into all CSV parser Parse() methods so charset detection happens automatically on file open +feature
-(B) Integrate AmbiguousDateParser from internal/errors/dateparse.go into CSV parsers that handle date fields so locale-aware date interpretation is used instead of hardcoded format strings +feature
-
 --- PHASE: STREAMING & SCALE ---
 
 (B) Add a Close() method to StreamingCSVParser and StreamingICSParser in internal/errors/streaming.go for proper resource cleanup +refactor

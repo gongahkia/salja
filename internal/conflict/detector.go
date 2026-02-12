@@ -47,10 +47,62 @@ func (d *Detector) FindDuplicates(source, target *model.CalendarCollection) []Ma
 	}
 
 	// Second pass: fuzzy matching for items without UID match
+	// Use title hash index for large collections to avoid O(n²)
+	if len(source.Items) > 1000 || len(target.Items) > 1000 {
+		d.fuzzyMatchWithHash(source, target, matched, &matches)
+	} else {
+		d.fuzzyMatchBrute(source, target, uidIndex, matched, &matches)
+	}
+
+	return matches
+}
+
+// titleHash returns a normalized key for approximate title grouping.
+func titleHash(title string) string {
+	t := strings.ToLower(strings.TrimSpace(title))
+	if len(t) > 8 {
+		t = t[:8]
+	}
+	return t
+}
+
+func (d *Detector) fuzzyMatchWithHash(source, target *model.CalendarCollection, matched map[int]bool, matches *[]Match) {
+	// Build hash buckets of target items
+	buckets := make(map[string][]int)
+	for j, tgtItem := range target.Items {
+		if matched[j] {
+			continue
+		}
+		h := titleHash(tgtItem.Title)
+		buckets[h] = append(buckets[h], j)
+	}
+
+	for i, srcItem := range source.Items {
+		if srcItem.UID != "" {
+			continue // Already handled by UID pass
+		}
+		h := titleHash(srcItem.Title)
+		candidates := buckets[h]
+		for _, j := range candidates {
+			if matched[j] {
+				continue
+			}
+			if d.isDuplicate(&srcItem, &target.Items[j]) {
+				*matches = append(*matches, Match{
+					SourceIndex: i,
+					TargetIndex: j,
+					Confidence:  d.calculateConfidence(&srcItem, &target.Items[j]),
+				})
+			}
+		}
+	}
+}
+
+func (d *Detector) fuzzyMatchBrute(source, target *model.CalendarCollection, uidIndex map[string]int, matched map[int]bool, matches *[]Match) {
 	for i, srcItem := range source.Items {
 		if srcItem.UID != "" {
 			if _, ok := uidIndex[srcItem.UID]; ok {
-				continue // Already matched by UID
+				continue
 			}
 		}
 		for j, tgtItem := range target.Items {
@@ -58,7 +110,7 @@ func (d *Detector) FindDuplicates(source, target *model.CalendarCollection) []Ma
 				continue
 			}
 			if d.isDuplicate(&srcItem, &tgtItem) {
-				matches = append(matches, Match{
+				*matches = append(*matches, Match{
 					SourceIndex: i,
 					TargetIndex: j,
 					Confidence:  d.calculateConfidence(&srcItem, &tgtItem),
@@ -66,8 +118,6 @@ func (d *Detector) FindDuplicates(source, target *model.CalendarCollection) []Ma
 			}
 		}
 	}
-
-	return matches
 }
 
 func (d *Detector) isDuplicate(a, b *model.CalendarItem) bool {

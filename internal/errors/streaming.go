@@ -13,6 +13,7 @@ ical "github.com/emersion/go-ical"
 // StreamingCSVParser reads CSV rows one at a time to handle large files.
 type StreamingCSVParser struct {
 reader  *csv.Reader
+closer  io.Closer
 headers []string
 lineNum int
 }
@@ -32,8 +33,14 @@ for i := range headers {
 headers[i] = strings.TrimSpace(headers[i])
 }
 
+var closer io.Closer
+if c, ok := r.(io.Closer); ok {
+closer = c
+}
+
 return &StreamingCSVParser{
 reader:  cr,
+closer:  closer,
 headers: headers,
 lineNum: 1,
 }, nil
@@ -41,6 +48,14 @@ lineNum: 1,
 
 func (p *StreamingCSVParser) Headers() []string {
 return p.headers
+}
+
+// Close releases any underlying resources.
+func (p *StreamingCSVParser) Close() error {
+if p.closer != nil {
+return p.closer.Close()
+}
+return nil
 }
 
 // Next returns the next row as a map, or io.EOF when done.
@@ -63,15 +78,29 @@ return row, p.lineNum, nil
 // StreamingICSParser reads ICS components one at a time using the decoder.
 type StreamingICSParser struct {
 decoder *ical.Decoder
+closer  io.Closer
 }
 
 func NewStreamingICSParser(r io.Reader) *StreamingICSParser {
+var closer io.Closer
+if c, ok := r.(io.Closer); ok {
+closer = c
+}
 return &StreamingICSParser{
 decoder: ical.NewDecoder(bufio.NewReader(r)),
+closer:  closer,
 }
 }
 
 // Next returns the next calendar component, or io.EOF when done.
 func (p *StreamingICSParser) Next() (*ical.Calendar, error) {
 return p.decoder.Decode()
+}
+
+// Close releases any underlying resources.
+func (p *StreamingICSParser) Close() error {
+if p.closer != nil {
+return p.closer.Close()
+}
+return nil
 }
