@@ -3,15 +3,6 @@ Tech Stack: Go CLI (Cobra), ICS parsing (icalendar), AppleScript bridge, REST AP
 Philosophy: CLI-first, file-first with optional API mode, universal calendar/task interchange with conflict resolution
 ================================================================================
 
---- PHASE 1: CORE DATA MODEL & ICS ENGINE ---
-
---- PHASE 2: APP-SPECIFIC PARSERS (FILE-BASED) ---
-
---- PHASE 3: APPLE BRIDGE (SORTED 3 PATHWAY) ---
-
-(A) Write integration tests for Apple Reminders read/write cycle using a test reminder list that is created and cleaned up +apple
-(A) Write integration tests for Apple Calendar read/write cycle using a test calendar that is created and cleaned up +apple
-
 --- PHASE 4: API-BASED CONNECTORS ---
 
 (B) Implement OAuth2 PKCE flow helper for API-based connectors with token storage in ~/.config/calconv/tokens.json +api
@@ -27,24 +18,6 @@ Philosophy: CLI-first, file-first with optional API mode, universal calendar/tas
 (B) Implement Notion API client with Bearer token auth supporting: query database, create page, update page properties +api
 (B) Implement Notion API-to-CalendarItem mapper with user-configurable property-to-field mapping via config +api
 (B) Write integration tests for each API client using recorded HTTP fixtures (go-vcr or httptest) to avoid live API calls in CI +api
-
---- PHASE 5: CONFLICT RESOLUTION ENGINE ---
-
---- PHASE 6: CLI INTERFACE ---
-
-(A) Implement `calconv sync` command that uses API connectors to pull from source app, diff with local, push to target app with conflict resolution +cli
-(A) Implement progress bar using a terminal UI library for long-running conversions and API syncs +cli
-(A) Write CLI integration tests using Go's exec.Command to verify: convert happy path, format auto-detection, --dry-run output, piped I/O, invalid input error messages +cli
-
---- PHASE 7: CONFIGURATION & SETTINGS ---
-
---- PHASE 8: ERROR HANDLING & EDGE CASES ---
-
-(A) Implement charset detection for CSV files (UTF-8, UTF-16, Latin-1) with automatic transcoding to UTF-8 +errors
-(A) Implement date/time parser that handles ambiguous formats (MM/DD/YYYY vs DD/MM/YYYY) by inferring from locale or prompting user +errors
-(A) Implement graceful handling of oversized files with streaming parser for ICS and CSV instead of loading entire file into memory +errors
-(A) Implement partial failure mode: continue converting valid items when individual items fail, collect errors, report summary at end +errors
-(A) Write tests for error handling covering: malformed CSV row, invalid ICS property, API 429 rate limit, interrupted conversion resume +errors
 
 --- PHASE 9: BUILD & DISTRIBUTION ---
 
