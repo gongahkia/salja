@@ -2,19 +2,6 @@ SALJA Evolution Map — Audit-Driven Improvements
 Philosophy: File-based calendar conversion CLI for power users and developers. Data fidelity configurable. Interactive-first.
 ================================================================================
 
---- PHASE: PARSER CORRECTNESS ---
-
-(B) Fix TickTick parser priority mapping inconsistency: parser returns PriorityNone for priority=0 but API mapper returns PriorityLow — unify to same behavior in both internal/parsers/ticktick.go and internal/api/ticktick.go +refactor
-(B) Add fallback date format parsing to internal/parsers/ticktick.go parseDate to handle ISO 8601, RFC3339, and common TickTick export variants (YYYY-MM-DD, MM/DD/YYYY) +refactor
-(B) Add fallback date format parsing to internal/parsers/outlook.go to handle both 12-hour (3:04:05 PM) and 24-hour (15:04:05) time formats with AM/PM detection +refactor
-(B) Fix ICS flattener in internal/ics/flattener.go advance() to handle BYDAY, BYMONTH, BYMONTHDAY rules instead of only FREQ-based advancement +refactor
-(B) Fix ICS flattener in internal/ics/flattener.go to deduplicate occurrences when RDATE dates overlap with RRULE-generated dates +refactor
-(B) Fix ICS flattener to not mutate the original CalendarItem.Recurrence pointer in place — create a copy before setting Recurrence to nil on instances +refactor
-(B) Fix Todoist parser in internal/parsers/todoist.go to preserve parent priority on subtasks instead of hardcoding priority=1 +refactor
-(B) Fix OmniFocus parser in internal/parsers/omnifocus.go to properly parse priority levels and structured description fields from TaskPaper format +refactor
-(B) Fix Google Calendar API mapper in internal/api/gcal.go to store RRULE in the Recurrence struct instead of appending raw RRULE text to description +refactor
-(B) Fix Microsoft Graph API mapper in internal/api/msgraph.go to preserve source timezone from the event's TimeZone field instead of hardcoding UTC +refactor
-
 --- PHASE: WRITER COMPLETENESS ---
 
 (B) Add subtask-to-description flattening in internal/writers/gcal.go when CalendarItems have subtasks — append checklist as markdown-style text to the Description field +feature
