@@ -2,12 +2,6 @@ SALJA Evolution Map — Audit-Driven Improvements
 Philosophy: File-based calendar conversion CLI for power users and developers. Data fidelity configurable. Interactive-first.
 ================================================================================
 
---- PHASE: PROGRESS & UX ---
-
-(B) Fix the progress bar bug in cmd/salja/commands/convert.go where the bar loop increments without doing actual work — move progress updates to wrap individual item conversion within WriteOutput +refactor
-(B) Add item-count summary to all commands that process files: show "Converted N events, M tasks (K warnings)" at the end of convert, validate, and diff +feature
-(B) Add a --format flag to the diff command in cmd/salja/commands/diff.go that supports "table" (default), "json", and "patch" output styles +feature
-
 --- PHASE: BUILD QUALITY ---
 
 (B) Fix Go version mismatch: update .github/workflows/ci.yml to use the same Go version specified in go.mod instead of hardcoded 1.22 +infra

@@ -14,8 +14,11 @@ test:
 	go test ./... -v
 
 lint:
-	@which golangci-lint > /dev/null 2>&1 || echo "golangci-lint not installed, skipping"
-	@which golangci-lint > /dev/null 2>&1 && golangci-lint run ./... || true
+	@if which golangci-lint > /dev/null 2>&1; then \
+		golangci-lint run ./...; \
+	else \
+		echo "golangci-lint not installed, skipping"; \
+	fi
 
 fmt:
 	gofmt -w .
