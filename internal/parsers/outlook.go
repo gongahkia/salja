@@ -2,7 +2,7 @@ package parsers
 
 import (
 	"encoding/csv"
-	
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -20,7 +20,7 @@ func NewOutlookParser() *OutlookParser {
 func (p *OutlookParser) ParseFile(filePath string) (*model.CalendarCollection, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open Outlook CSV %s: %w", filePath, err)
 	}
 	defer f.Close()
 	return p.Parse(f, filePath)
@@ -30,7 +30,7 @@ func (p *OutlookParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 	csvReader := csv.NewReader(r)
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read CSV %s: %w", sourcePath, err)
 	}
 
 	if len(records) == 0 {
@@ -43,6 +43,11 @@ func (p *OutlookParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 		colMap[col] = i
 	}
 
+	requiredCols := []string{"Subject"}
+	if missing := findMissingColumns(colMap, requiredCols); len(missing) > 0 {
+		return nil, fmt.Errorf("Outlook CSV %s missing required columns: %s", sourcePath, strings.Join(missing, ", "))
+	}
+
 	collection := &model.CalendarCollection{
 		Items:            []model.CalendarItem{},
 		SourceApp:        "outlook",
@@ -51,14 +56,17 @@ func (p *OutlookParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 	}
 
 	for i := 1; i < len(records); i++ {
-		item := parseOutlookRow(records[i], colMap)
+		item, err := parseOutlookRow(records[i], colMap)
+		if err != nil {
+			return nil, fmt.Errorf("%s line %d: %w", sourcePath, i+1, err)
+		}
 		collection.Items = append(collection.Items, item)
 	}
 
 	return collection, nil
 }
 
-func parseOutlookRow(row []string, colMap map[string]int) model.CalendarItem {
+func parseOutlookRow(row []string, colMap map[string]int) (model.CalendarItem, error) {
 	item := model.CalendarItem{
 		ItemType: model.ItemTypeEvent,
 		Status:   model.StatusPending,
@@ -136,5 +144,5 @@ func parseOutlookRow(row []string, colMap map[string]int) model.CalendarItem {
 		}
 	}
 
-	return item
+	return item, nil
 }

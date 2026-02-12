@@ -42,11 +42,14 @@ type ConflictError struct {
 	SourceItem string
 	TargetItem string
 	Message    string
+	Err        error
 }
 
 func (e *ConflictError) Error() string {
 	return fmt.Sprintf("conflict between '%s' and '%s': %s", e.SourceItem, e.TargetItem, e.Message)
 }
+
+func (e *ConflictError) Unwrap() error { return e.Err }
 
 type APIError struct {
 	Service    string
@@ -66,11 +69,14 @@ func (e *APIError) IsRateLimit() bool { return e.StatusCode == 429 }
 type PermissionError struct {
 	Resource string
 	Message  string
+	Err      error
 }
 
 func (e *PermissionError) Error() string {
 	return fmt.Sprintf("permission denied for %s: %s", e.Resource, e.Message)
 }
+
+func (e *PermissionError) Unwrap() error { return e.Err }
 
 type ErrorCollector struct {
 	Errors   []error

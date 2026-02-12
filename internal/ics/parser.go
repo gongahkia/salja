@@ -306,13 +306,23 @@ func parseRRule(value string) (*model.Recurrence, error) {
 		case "FREQ":
 			rec.Freq = model.FreqType(val)
 		case "INTERVAL":
-			fmt.Sscanf(val, "%d", &rec.Interval)
+			if n, err := fmt.Sscanf(val, "%d", &rec.Interval); n != 1 || err != nil {
+				return nil, fmt.Errorf("invalid RRULE INTERVAL value: %q", val)
+			}
 		case "COUNT":
 			var count int
-			fmt.Sscanf(val, "%d", &count)
+			if n, err := fmt.Sscanf(val, "%d", &count); n != 1 || err != nil {
+				return nil, fmt.Errorf("invalid RRULE COUNT value: %q", val)
+			}
 			rec.Count = &count
 		case "UNTIL":
-			until, _ := time.Parse("20060102T150405Z", val)
+			until, err := time.Parse("20060102T150405Z", val)
+			if err != nil {
+				until, err = time.Parse("20060102", val)
+				if err != nil {
+					return nil, fmt.Errorf("invalid RRULE UNTIL value: %q", val)
+				}
+			}
 			rec.Until = &until
 		case "BYDAY":
 			days := strings.Split(val, ",")
@@ -323,21 +333,27 @@ func parseRRule(value string) (*model.Recurrence, error) {
 			months := strings.Split(val, ",")
 			for _, month := range months {
 				var m int
-				fmt.Sscanf(month, "%d", &m)
+				if n, err := fmt.Sscanf(month, "%d", &m); n != 1 || err != nil {
+					return nil, fmt.Errorf("invalid RRULE BYMONTH value: %q", month)
+				}
 				rec.ByMonth = append(rec.ByMonth, m)
 			}
 		case "BYMONTHDAY":
 			days := strings.Split(val, ",")
 			for _, day := range days {
 				var d int
-				fmt.Sscanf(day, "%d", &d)
+				if n, err := fmt.Sscanf(day, "%d", &d); n != 1 || err != nil {
+					return nil, fmt.Errorf("invalid RRULE BYMONTHDAY value: %q", day)
+				}
 				rec.ByMonthDay = append(rec.ByMonthDay, d)
 			}
 		case "BYSETPOS":
 			positions := strings.Split(val, ",")
 			for _, pos := range positions {
 				var p int
-				fmt.Sscanf(pos, "%d", &p)
+				if n, err := fmt.Sscanf(pos, "%d", &p); n != 1 || err != nil {
+					return nil, fmt.Errorf("invalid RRULE BYSETPOS value: %q", pos)
+				}
 				rec.BySetPos = append(rec.BySetPos, p)
 			}
 		}

@@ -2,7 +2,7 @@ package parsers
 
 import (
 	"encoding/csv"
-	
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -20,7 +20,7 @@ func NewAsanaParser() *AsanaParser {
 func (p *AsanaParser) ParseFile(filePath string) (*model.CalendarCollection, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open Asana CSV %s: %w", filePath, err)
 	}
 	defer f.Close()
 	return p.Parse(f, filePath)
@@ -30,7 +30,7 @@ func (p *AsanaParser) Parse(r io.Reader, sourcePath string) (*model.CalendarColl
 	csvReader := csv.NewReader(r)
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read CSV %s: %w", sourcePath, err)
 	}
 
 	if len(records) == 0 {
@@ -43,6 +43,11 @@ func (p *AsanaParser) Parse(r io.Reader, sourcePath string) (*model.CalendarColl
 		colMap[col] = i
 	}
 
+	requiredCols := []string{"Name"}
+	if missing := findMissingColumns(colMap, requiredCols); len(missing) > 0 {
+		return nil, fmt.Errorf("Asana CSV %s missing required columns: %s", sourcePath, strings.Join(missing, ", "))
+	}
+
 	collection := &model.CalendarCollection{
 		Items:            []model.CalendarItem{},
 		SourceApp:        "asana",
@@ -51,14 +56,17 @@ func (p *AsanaParser) Parse(r io.Reader, sourcePath string) (*model.CalendarColl
 	}
 
 	for i := 1; i < len(records); i++ {
-		item := parseAsanaRow(records[i], colMap)
+		item, err := parseAsanaRow(records[i], colMap)
+		if err != nil {
+			return nil, fmt.Errorf("%s line %d: %w", sourcePath, i+1, err)
+		}
 		collection.Items = append(collection.Items, item)
 	}
 
 	return collection, nil
 }
 
-func parseAsanaRow(row []string, colMap map[string]int) model.CalendarItem {
+func parseAsanaRow(row []string, colMap map[string]int) (model.CalendarItem, error) {
 	item := model.CalendarItem{
 		ItemType: model.ItemTypeTask,
 		Status:   model.StatusPending,
@@ -91,5 +99,5 @@ func parseAsanaRow(row []string, colMap map[string]int) model.CalendarItem {
 		}
 	}
 
-	return item
+	return item, nil
 }

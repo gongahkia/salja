@@ -2,7 +2,7 @@ package parsers
 
 import (
 	"encoding/csv"
-	
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -20,7 +20,7 @@ func NewGoogleCalendarParser() *GoogleCalendarParser {
 func (p *GoogleCalendarParser) ParseFile(filePath string) (*model.CalendarCollection, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open Google Calendar CSV %s: %w", filePath, err)
 	}
 	defer f.Close()
 	return p.Parse(f, filePath)
@@ -30,7 +30,7 @@ func (p *GoogleCalendarParser) Parse(r io.Reader, sourcePath string) (*model.Cal
 	csvReader := csv.NewReader(r)
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read CSV %s: %w", sourcePath, err)
 	}
 
 	if len(records) == 0 {
@@ -43,6 +43,11 @@ func (p *GoogleCalendarParser) Parse(r io.Reader, sourcePath string) (*model.Cal
 		colMap[col] = i
 	}
 
+	requiredCols := []string{"Subject"}
+	if missing := findMissingColumns(colMap, requiredCols); len(missing) > 0 {
+		return nil, fmt.Errorf("Google Calendar CSV %s missing required columns: %s", sourcePath, strings.Join(missing, ", "))
+	}
+
 	collection := &model.CalendarCollection{
 		Items:            []model.CalendarItem{},
 		SourceApp:        "gcal",
@@ -51,14 +56,17 @@ func (p *GoogleCalendarParser) Parse(r io.Reader, sourcePath string) (*model.Cal
 	}
 
 	for i := 1; i < len(records); i++ {
-		item := parseGCalRow(records[i], colMap)
+		item, err := parseGCalRow(records[i], colMap)
+		if err != nil {
+			return nil, fmt.Errorf("%s line %d: %w", sourcePath, i+1, err)
+		}
 		collection.Items = append(collection.Items, item)
 	}
 
 	return collection, nil
 }
 
-func parseGCalRow(row []string, colMap map[string]int) model.CalendarItem {
+func parseGCalRow(row []string, colMap map[string]int) (model.CalendarItem, error) {
 	item := model.CalendarItem{
 		ItemType: model.ItemTypeEvent,
 		Status:   model.StatusPending,
@@ -118,5 +126,5 @@ func parseGCalRow(row []string, colMap map[string]int) model.CalendarItem {
 		}
 	}
 
-	return item
+	return item, nil
 }

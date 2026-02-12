@@ -38,21 +38,33 @@ return time.Now().After(t.ExpiresAt)
 }
 
 // DefaultTokenStore returns the XDG-compliant token store path.
-func DefaultTokenStore() *TokenStore {
+func DefaultTokenStore() (*TokenStore, error) {
 dir := os.Getenv("XDG_CONFIG_HOME")
 if dir == "" {
-home, _ := os.UserHomeDir()
+home, err := os.UserHomeDir()
+if err != nil {
+return nil, fmt.Errorf("failed to determine home directory: %w", err)
+}
 dir = filepath.Join(home, ".config")
 }
-return &TokenStore{Path: filepath.Join(dir, "salja", "tokens.json")}
+return &TokenStore{Path: filepath.Join(dir, "salja", "tokens.json")}, nil
 }
 
 func (s *TokenStore) Load() (TokenFile, error) {
-data, err := os.ReadFile(s.Path)
+f, err := os.OpenFile(s.Path, os.O_RDONLY, 0600)
 if err != nil {
 if os.IsNotExist(err) {
 return make(TokenFile), nil
 }
+return nil, err
+}
+defer f.Close()
+if err := lockFile(f, false); err != nil {
+return nil, fmt.Errorf("failed to lock token file: %w", err)
+}
+defer unlockFile(f)
+data, err := os.ReadFile(s.Path)
+if err != nil {
 return nil, err
 }
 var tf TokenFile
@@ -66,6 +78,15 @@ func (s *TokenStore) Save(tf TokenFile) error {
 if err := os.MkdirAll(filepath.Dir(s.Path), 0700); err != nil {
 return err
 }
+f, err := os.OpenFile(s.Path, os.O_WRONLY|os.O_CREATE, 0600)
+if err != nil {
+return err
+}
+defer f.Close()
+if err := lockFile(f, true); err != nil {
+return fmt.Errorf("failed to lock token file: %w", err)
+}
+defer unlockFile(f)
 data, err := json.MarshalIndent(tf, "", "  ")
 if err != nil {
 return err
@@ -152,7 +173,10 @@ if redirectURI == "" {
 redirectURI = fmt.Sprintf("http://127.0.0.1:%d/callback", port)
 }
 
-state := generateState()
+state, err := generateState()
+if err != nil {
+return nil, fmt.Errorf("failed to generate state: %w", err)
+}
 authURL := fmt.Sprintf("%s?client_id=%s&response_type=code&redirect_uri=%s&scope=%s&state=%s&code_challenge=%s&code_challenge_method=S256",
 f.Config.AuthURL,
 url.QueryEscape(f.Config.ClientID),
@@ -292,8 +316,10 @@ ExpiresAt:    time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second),
 }, nil
 }
 
-func generateState() string {
+func generateState() (string, error) {
 b := make([]byte, 16)
-rand.Read(b)
-return base64.RawURLEncoding.EncodeToString(b)
+if _, err := rand.Read(b); err != nil {
+return "", fmt.Errorf("failed to generate random state: %w", err)
+}
+return base64.RawURLEncoding.EncodeToString(b), nil
 }

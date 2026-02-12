@@ -2,15 +2,6 @@ SALJA Evolution Map — Audit-Driven Improvements
 Philosophy: File-based calendar conversion CLI for power users and developers. Data fidelity configurable. Interactive-first.
 ================================================================================
 
---- PHASE: DATA FIDELITY CONFIG ---
-
-(B) Add a config option data_loss_mode = "warn" | "error" | "silent" in internal/config/config.go that controls behavior when target format cannot represent source fields +feature
-(B) Create internal/fidelity/checker.go that compares source CalendarItem fields against target format capabilities from the registry and returns a list of DataLossWarning structs +feature
-(B) Integrate the fidelity checker into cmd/salja/commands/convert.go so it runs before WriteOutput and respects the data_loss_mode config setting +feature
-(B) Add data loss warnings for subtask flattening when converting to formats that lack subtask support (gcal, outlook, asana, notion) +feature
-(B) Add data loss warnings for recurrence rule dropping when converting to formats that lack recurrence support (todoist, notion, trello, asana, omnifocus) +feature
-(B) Add data loss warnings for timezone loss when converting through formats that strip timezone info +feature
-
 --- PHASE: ERROR HANDLING HARDENING ---
 
 (B) Add consistent error wrapping with fmt.Errorf and %w verb to all CSV parser Parse() methods (gcal.go, outlook.go, notion.go, asana.go) to include filename and line context +refactor

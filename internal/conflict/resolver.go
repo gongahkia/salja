@@ -9,6 +9,7 @@ import (
 "strings"
 "time"
 
+"github.com/gongahkia/salja/internal/config"
 "github.com/gongahkia/salja/internal/model"
 )
 
@@ -71,7 +72,12 @@ printDiff(source, target)
 fmt.Println("\nOptions: [s]ource / [t]arget / [m]erge / [k]skip")
 fmt.Print("> ")
 
-input, _ := r.reader.ReadString('\n')
+input, err := r.reader.ReadString('\n')
+if err != nil {
+// EOF or read error: fall back to preferring source
+r.log(source.Title, target.Title, "prefer-source-eof")
+return source, nil
+}
 input = strings.TrimSpace(strings.ToLower(input))
 
 switch input {
@@ -125,7 +131,9 @@ fields = append(fields, "priority:target")
 }
 
 r.log(source.Title, target.Title, "merged")
+if len(r.resolutions) > 0 {
 r.resolutions[len(r.resolutions)-1].Fields = fields
+}
 return &merged, nil
 }
 
@@ -143,19 +151,16 @@ if len(r.resolutions) == 0 {
 return nil
 }
 
-configDir := os.Getenv("XDG_CONFIG_HOME")
-if configDir == "" {
-home, _ := os.UserHomeDir()
-configDir = filepath.Join(home, ".config")
-}
-logDir := filepath.Join(configDir, "salja")
+logDir := config.ConfigDir()
 os.MkdirAll(logDir, 0755)
 
 logPath := filepath.Join(logDir, "conflict-log.json")
 
 var existing []Resolution
 if data, err := os.ReadFile(logPath); err == nil {
-json.Unmarshal(data, &existing)
+if err := json.Unmarshal(data, &existing); err != nil {
+return fmt.Errorf("failed to parse existing conflict log %s: %w", logPath, err)
+}
 }
 
 all := append(existing, r.resolutions...)

@@ -2,7 +2,7 @@ package parsers
 
 import (
 	"encoding/csv"
-	
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -20,7 +20,7 @@ func NewNotionParser() *NotionParser {
 func (p *NotionParser) ParseFile(filePath string) (*model.CalendarCollection, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open Notion CSV %s: %w", filePath, err)
 	}
 	defer f.Close()
 	return p.Parse(f, filePath)
@@ -30,7 +30,7 @@ func (p *NotionParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCol
 	csvReader := csv.NewReader(r)
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read CSV %s: %w", sourcePath, err)
 	}
 
 	if len(records) == 0 {
@@ -43,6 +43,19 @@ func (p *NotionParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCol
 		colMap[col] = i
 	}
 
+	// Notion uses flexible column names; at least one title candidate must exist
+	titleCandidates := []string{"Title", "Name", "Task"}
+	hasTitle := false
+	for _, c := range titleCandidates {
+		if _, ok := colMap[c]; ok {
+			hasTitle = true
+			break
+		}
+	}
+	if !hasTitle {
+		return nil, fmt.Errorf("Notion CSV %s missing a title column (expected one of: Title, Name, Task)", sourcePath)
+	}
+
 	collection := &model.CalendarCollection{
 		Items:            []model.CalendarItem{},
 		SourceApp:        "notion",
@@ -51,14 +64,17 @@ func (p *NotionParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCol
 	}
 
 	for i := 1; i < len(records); i++ {
-		item := parseNotionRow(records[i], colMap)
+		item, err := parseNotionRow(records[i], colMap)
+		if err != nil {
+			return nil, fmt.Errorf("%s line %d: %w", sourcePath, i+1, err)
+		}
 		collection.Items = append(collection.Items, item)
 	}
 
 	return collection, nil
 }
 
-func parseNotionRow(row []string, colMap map[string]int) model.CalendarItem {
+func parseNotionRow(row []string, colMap map[string]int) (model.CalendarItem, error) {
 	item := model.CalendarItem{
 		ItemType: model.ItemTypeTask,
 		Status:   model.StatusPending,
@@ -128,5 +144,5 @@ func parseNotionRow(row []string, colMap map[string]int) model.CalendarItem {
 		}
 	}
 
-	return item
+	return item, nil
 }
