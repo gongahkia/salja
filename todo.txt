@@ -7,14 +7,6 @@ Philosophy: CLI-first, file-first with optional API mode, universal calendar/tas
 
 --- PHASE 2: APP-SPECIFIC PARSERS (FILE-BASED) ---
 
-(A) Implement Things 3 SQLite reader that queries ~/Library/Group Containers/JLMPQHK86H.com.culturedcode.ThingsMac/Things Database.thingsdatabase/main.sqlite for tasks, projects, areas, checklists +things
-(A) Implement Things 3 JSON-URL writer that constructs things:///add-json payloads from CalendarItem structs, chunked to respect URL length limits +things
-(A) Implement Things 3 AppleScript writer as fallback for bulk import when URL scheme payload exceeds size limits +things
-(A) Write tests for Things 3 SQLite reader using a fixture database with: inbox task, project with tasks, area, task with checklist, completed task, task with tags and deadline +things
-(A) Implement OmniFocus TaskPaper parser that reads OmniFocus TaskPaper export format mapping projects, tasks, tags, defer/due dates, notes to CalendarItem +omnifocus
-(A) Implement OmniFocus TaskPaper writer that serializes CalendarItem structs to OmniFocus-compatible TaskPaper format with @tags, @defer(), @due() annotations +omnifocus
-(A) Write tests for OmniFocus TaskPaper parser covering: project with nested tasks, task with defer and due dates, task with tags, completed task, task with note +omnifocus
-
 --- PHASE 3: APPLE BRIDGE (SORTED 3 PATHWAY) ---
 
 (A) Implement AppleScript executor helper that runs osascript commands from Go and parses structured output +apple
