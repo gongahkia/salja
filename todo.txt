@@ -4,14 +4,6 @@ Philosophy: CLI-first, file-first with optional API mode, universal calendar/tas
 ================================================================================
 
 --- PHASE 1: CORE DATA MODEL & ICS ENGINE ---
-
-(A) Define unified internal CalendarItem struct with fields: UID, Title, Description, StartTime, EndTime, DueDate, Priority, Status, Location, Tags, Recurrence, Reminders, Subtasks, CompletionDate, Timezone, IsAllDay, ItemType (event/task/journal) +core
-(A) Define unified Recurrence struct supporting RRULE fields: Freq, Interval, Count, Until, ByDay, ByMonth, ByMonthDay, BySetPos, ExDates, RDates +core
-(A) Define unified Priority type with normalized 1-5 scale and per-app mapping tables (ICS 1-9, TickTick 0-5, Todoist 1-4 inverted, Things none) +core
-(A) Define unified Status enum: pending, in_progress, completed, cancelled, with per-app status mapping tables +core
-(A) Define Subtask struct with Title, Status, SortOrder for apps that support checklists (TickTick, Things, Todoist) +core
-(A) Define Reminder struct with offset Duration and optional AbsoluteTime to normalize reminder differences across apps +core
-(A) Define CalendarCollection struct as ordered slice of CalendarItem with metadata: SourceApp, ExportDate, OriginalFilePath +core
 (A) Implement ICS parser that reads RFC 5545 .ics files and maps VEVENT components to CalendarItem structs +ics
 (A) Implement ICS parser support for VTODO components mapping DUE, PERCENT-COMPLETE, STATUS to CalendarItem task fields +ics
 (A) Implement ICS parser support for VJOURNAL components as note-type CalendarItems +ics
