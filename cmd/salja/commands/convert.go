@@ -1,6 +1,7 @@
 package commands
 
 import (
+"encoding/json"
 "fmt"
 "io"
 "os"
@@ -18,8 +19,8 @@ _ "github.com/gongahkia/salja/internal/registry" // ensure format registration
 
 func NewConvertCmd() *cobra.Command {
 var fromFormat, toFormat string
-var dryRun, quiet bool
-var outputFormat string
+var dryRun, quiet, strict, jsonOutput bool
+var outputFormat, fidelityMode string
 
 cmd := &cobra.Command{
 Use:   "convert <input-file> <output-file>",
@@ -31,14 +32,14 @@ outputFile := args[1]
 
 if fromFormat == "" {
 fromFormat = DetectFormat(inputFile)
-if !quiet {
+if !quiet && !jsonOutput {
 fmt.Fprintf(os.Stderr, "Detected source format: %s\n", fromFormat)
 }
 }
 
 if toFormat == "" {
 toFormat = DetectFormat(outputFile)
-if !quiet {
+if !quiet && !jsonOutput {
 fmt.Fprintf(os.Stderr, "Detected target format: %s\n", toFormat)
 }
 }
@@ -51,7 +52,7 @@ if err != nil {
 return fmt.Errorf("failed to read input: %w", err)
 }
 
-if !quiet {
+if !quiet && !jsonOutput {
 fmt.Fprintf(os.Stderr, "Loaded %d items from %s\n", len(collection.Items), inputFile)
 }
 
@@ -62,14 +63,20 @@ fmt.Printf("  - %s (%s)\n", item.Title, item.ItemType)
 return nil
 }
 
-// Run data fidelity check with progress updates
+// Determine data loss mode: --fidelity flag > --strict flag > config > default
 dataLossMode := "warn"
 if cfg != nil {
 dataLossMode = cfg.DataLossMode
 }
+if fidelityMode != "" {
+dataLossMode = fidelityMode
+}
+if strict {
+dataLossMode = "error"
+}
 
 var bar *progressbar.ProgressBar
-if !quiet && len(collection.Items) > 10 {
+if !quiet && !jsonOutput && len(collection.Items) > 10 {
 bar = progressbar.NewOptions(len(collection.Items),
 progressbar.OptionSetDescription("Converting"),
 progressbar.OptionSetWriter(os.Stderr),
@@ -83,17 +90,24 @@ if bar != nil {
 bar.Add(len(collection.Items) / 2)
 }
 
+// Enforce DataLossMode
 if len(warnings) > 0 {
 switch dataLossMode {
 case "error":
+if !jsonOutput {
 for _, w := range warnings {
 fmt.Fprintf(os.Stderr, "ERROR: %s\n", w)
 }
+}
 return fmt.Errorf("aborting due to %d data loss error(s); set data_loss_mode = \"warn\" or \"silent\" to continue", len(warnings))
 case "warn":
+if !jsonOutput {
 for _, w := range warnings {
 fmt.Fprintf(os.Stderr, "WARNING: %s\n", w)
 }
+}
+case "silent":
+// suppress all fidelity output
 }
 }
 
@@ -106,7 +120,7 @@ bar.Add(len(collection.Items) - len(collection.Items)/2)
 bar.Finish()
 }
 
-// Print item-count summary
+// Compute summary counts
 eventCount, taskCount, warnCount := 0, 0, len(warnings)
 for _, item := range collection.Items {
 switch item.ItemType {
@@ -117,9 +131,23 @@ taskCount++
 }
 }
 
-if outputFormat == "json" {
-fmt.Printf("{\"converted\": %d, \"events\": %d, \"tasks\": %d, \"warnings\": %d, \"source\": \"%s\", \"target\": \"%s\"}\n",
-len(collection.Items), eventCount, taskCount, warnCount, fromFormat, toFormat)
+// Output structured JSON report or human-readable text
+if jsonOutput || outputFormat == "json" {
+warningStrs := make([]string, len(warnings))
+for i, w := range warnings {
+warningStrs[i] = w.String()
+}
+report := convertReport{
+Converted: len(collection.Items),
+Events:    eventCount,
+Tasks:     taskCount,
+Warnings:  warnCount,
+Source:    fromFormat,
+Target:    toFormat,
+Details:   warningStrs,
+}
+data, _ := json.MarshalIndent(report, "", "  ")
+fmt.Println(string(data))
 } else if !quiet {
 fmt.Fprintf(os.Stderr, "Converted %d events, %d tasks (%d warnings)\n", eventCount, taskCount, warnCount)
 }
@@ -132,8 +160,21 @@ cmd.Flags().StringVar(&toFormat, "to", "", "Target format override")
 cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Preview without writing")
 cmd.Flags().BoolVar(&quiet, "quiet", false, "Suppress non-error output")
 cmd.Flags().StringVar(&outputFormat, "output-format", "text", "Output format: text or json")
+cmd.Flags().StringVar(&fidelityMode, "fidelity", "", "Data loss mode override: warn|error|silent")
+cmd.Flags().BoolVar(&strict, "strict", false, "Treat any warning as a fatal error")
+cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output structured JSON conversion report")
 
 return cmd
+}
+
+type convertReport struct {
+Converted int      `json:"converted"`
+Events    int      `json:"events"`
+Tasks     int      `json:"tasks"`
+Warnings  int      `json:"warnings"`
+Source    string   `json:"source"`
+Target    string   `json:"target"`
+Details   []string `json:"details,omitempty"`
 }
 
 func DetectFormat(filePath string) string {

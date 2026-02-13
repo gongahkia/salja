@@ -4,7 +4,6 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 
 --- PHILOSOPHICAL ALIGNMENT ---
 
-(B) Wire the StreamingThresholdMB config value into the convert command so that files exceeding the threshold use StreamingCSVParser and StreamingICSParser from internal/errors/streaming.go instead of loading entire files into memory via ReadAll +feature +performance
 (B) Implement the DataLossMode enforcement in cmd/salja/convert.go so that when mode is "error" the CLI exits non-zero on any DataLossWarning, when "warn" it prints warnings to stderr, and when "silent" it suppresses all fidelity output +feature +fidelity
 (B) Add a --fidelity flag to the convert command that overrides config.DataLossMode per-run with values warn|error|silent +feature +fidelity
 (B) Extend internal/fidelity/check.go to detect and warn about priority mapping collisions (e.g. PriorityLow and PriorityNone both mapping to "1" in Todoist output) per target format +feature +fidelity
