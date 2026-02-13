@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	salerr "github.com/gongahkia/salja/internal/errors"
 	"github.com/gongahkia/salja/internal/model"
 )
 
@@ -49,6 +50,8 @@ func (p *TickTickParser) Parse(r io.Reader, sourcePath string) (*model.CalendarC
 		colMap[col] = i
 	}
 
+	ec := salerr.NewErrorCollector()
+
 	collection := &model.CalendarCollection{
 		Items:            []model.CalendarItem{},
 		SourceApp:        "ticktick",
@@ -56,6 +59,7 @@ func (p *TickTickParser) Parse(r io.Reader, sourcePath string) (*model.CalendarC
 		OriginalFilePath: sourcePath,
 	}
 
+	lineNum := 1
 	for {
 		row, err := csvReader.Read()
 		if err == io.EOF {
@@ -64,8 +68,23 @@ func (p *TickTickParser) Parse(r io.Reader, sourcePath string) (*model.CalendarC
 		if err != nil {
 			return nil, fmt.Errorf("failed to read CSV: %w", err)
 		}
+		lineNum++
+
+		// Skip rows with empty title
+		titleIdx, hasTitle := colMap["title"]
+		if hasTitle && (titleIdx >= len(row) || row[titleIdx] == "") {
+			ec.AddWarning(fmt.Sprintf("%s line %d: skipping row with empty title", sourcePath, lineNum))
+			continue
+		}
+
 		item := p.parseRow(row, colMap)
 		collection.Items = append(collection.Items, item)
+	}
+
+	if len(ec.Warnings) > 0 {
+		for _, w := range ec.Warnings {
+			fmt.Fprintf(os.Stderr, "ticktick parser: %s\n", w)
+		}
 	}
 
 	return collection, nil

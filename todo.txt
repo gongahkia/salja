@@ -18,7 +18,6 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 
 --- STABILITY / SCALING ---
 
-(B) Refactor all CSV parsers in internal/parsers to use csv.NewReader with per-row iteration instead of csvReader.ReadAll so that large files are processed in constant memory +refactor +performance
 (B) Refactor internal/parsers/todoist.go to log skipped rows with non-task TYPE values to the ErrorCollector instead of silently continuing +refactor +errors
 (B) Refactor internal/parsers/ticktick.go to log skipped rows to the ErrorCollector instead of silently continuing +refactor +errors
 (B) Refactor all CSV parsers to report malformed date values as ParseError via ErrorCollector instead of silently using zero-value time.Time +refactor +errors

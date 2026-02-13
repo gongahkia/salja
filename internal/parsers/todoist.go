@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	salerr "github.com/gongahkia/salja/internal/errors"
 	"github.com/gongahkia/salja/internal/model"
 )
 
@@ -49,6 +50,8 @@ func (p *TodoistParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 		colMap[col] = i
 	}
 
+	ec := salerr.NewErrorCollector()
+
 	collection := &model.CalendarCollection{
 		Items:            []model.CalendarItem{},
 		SourceApp:        "todoist",
@@ -61,6 +64,7 @@ func (p *TodoistParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 		indent int
 	}
 
+	lineNum := 1
 	for {
 		row, err := csvReader.Read()
 		if err == io.EOF {
@@ -69,9 +73,11 @@ func (p *TodoistParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 		if err != nil {
 			return nil, fmt.Errorf("failed to read CSV: %w", err)
 		}
+		lineNum++
 
 		typeIdx, hasType := colMap["TYPE"]
 		if hasType && typeIdx < len(row) && row[typeIdx] != "task" {
+			ec.AddWarning(fmt.Sprintf("%s line %d: skipping non-task row (TYPE=%q)", sourcePath, lineNum, row[typeIdx]))
 			continue
 		}
 
@@ -103,6 +109,12 @@ func (p *TodoistParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 			item   *model.CalendarItem
 			indent int
 		}{item: &item, indent: currentIndent})
+	}
+
+	if len(ec.Warnings) > 0 {
+		for _, w := range ec.Warnings {
+			fmt.Fprintf(os.Stderr, "todoist parser: %s\n", w)
+		}
 	}
 
 	return collection, nil
