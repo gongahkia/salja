@@ -19,7 +19,6 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 --- STABILITY / SCALING ---
 
 
-(B) Add a PartialResult return type to the convert command pipeline so that when some items fail parsing but others succeed, the CLI can report N succeeded / M failed with per-item error details +refactor +errors
 (B) Add input validation in the convert command to reject output formats that cannot represent the source item types (e.g. converting tasks to gcal which only supports events) with a clear error message before processing begins +feature +fidelity
 (B) Add conflict detection integration into the convert command with a --merge flag that runs Detector.FindDuplicates when the output file already exists and invokes the Resolver before overwriting +feature +conflict
 (B) Encrypt OAuth tokens at rest in internal/api/oauth.go using OS keyring (keyctl on Linux, Keychain on macOS, Credential Manager on Windows) instead of plaintext JSON +security

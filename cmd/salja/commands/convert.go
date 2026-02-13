@@ -79,6 +79,26 @@ fmt.Printf("  - %s (%s)\n", item.Title, item.ItemType)
 return nil
 }
 
+// Validate that the target format supports the source item types
+caps, hasCaps := registry.GetCapabilities(toFormat)
+if hasCaps {
+hasEvents, hasTasks := false, false
+for _, item := range collection.Items {
+switch item.ItemType {
+case model.ItemTypeEvent:
+hasEvents = true
+case model.ItemTypeTask:
+hasTasks = true
+}
+}
+if hasEvents && !caps.SupportsEvents {
+return fmt.Errorf("target format %q does not support events, but source contains %s; use a format that supports events or filter items first", toFormat, "events")
+}
+if hasTasks && !caps.SupportsTasks {
+return fmt.Errorf("target format %q does not support tasks, but source contains %s; use a format that supports tasks or filter items first", toFormat, "tasks")
+}
+}
+
 // Determine data loss mode: --fidelity flag > --strict flag > config > default
 dataLossMode := "warn"
 if cfg != nil {
