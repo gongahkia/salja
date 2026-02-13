@@ -10,41 +10,21 @@ Each line = one atomic commit. Self-contained enough for any agent to execute wi
 
 --- TUI INTEGRATION ---
 
-feat(tui/test): add unit tests for each TUI model in internal/tui/ verifying Init/Update state transitions, key handling, and View rendering output strings
 
 --- MCP SERVER FOUNDATION ---
 
-feat(deps): add mark3labs/mcp-go SDK dependency to go.mod for MCP JSON-RPC server implementation over stdio transport
-feat(mcp): create cmd/salja-mcp/main.go with MCP server entry point: stdio transport init, tool/resource registration, and graceful shutdown handling
-feat(mcp): create internal/mcp/server.go with Server struct wrapping salja registry, config loader, and API client factory, providing shared context for all tool handlers
 
 --- MCP TOOLS ---
 
-feat(mcp): create internal/mcp/tools/convert.go registering 'convert' MCP tool with params (input_path, output_path, from_format, to_format, conflict_strategy, dry_run) calling internal parsers/writers
-feat(mcp): create internal/mcp/tools/validate.go registering 'validate' MCP tool with param (file_path) returning JSON with item_count, format_detected, field_coverage map, and parse_errors array
-feat(mcp): create internal/mcp/tools/diff.go registering 'diff' MCP tool with params (file_a, file_b, output_format: json|patch|table) returning structured diff result
-feat(mcp): create internal/mcp/tools/list_formats.go registering 'list_formats' MCP tool (no params) returning array of {id, name, extensions, has_parser, has_writer, supported_item_types}
-feat(mcp): create internal/mcp/tools/sync.go registering 'sync_push' and 'sync_pull' MCP tools with params (service, file_path, start_date, end_date, dry_run) calling internal API clients
-feat(mcp): create internal/mcp/tools/auth_status.go registering 'auth_status' MCP tool (no params) returning per-service {service, authenticated, token_expiry} array
 
 --- MCP RESOURCES ---
 
-feat(mcp): create internal/mcp/resources/formats.go exposing salja://formats resource returning static JSON of all registered format metadata from internal/registry
-feat(mcp): create internal/mcp/resources/config.go exposing salja://config resource returning current parsed TOML config values as JSON
-feat(mcp): create internal/mcp/resources/auth.go exposing salja://auth/{service} resource template returning token validity, expiry, and service-specific auth state
 
 --- MCP TESTING ---
 
-feat(mcp/test): add unit tests for each MCP tool handler in internal/mcp/tools/ verifying param validation, error JSON responses, and correct delegation to salja internals
-feat(mcp/test): add integration test in cmd/salja-mcp/ spinning up server over stdio pipe, sending JSON-RPC tool_call requests, and asserting structured response schemas for convert, validate, diff
 
 --- BUILD & RELEASE ---
 
-feat(build): add salja-mcp binary target to Makefile with 'go build' and version-embedding ldflags (-X main.version, -X main.commit, -X main.buildDate) matching existing salja build
-feat(build): add salja-mcp as second build entry in .goreleaser.yml with its own archive, checksum, and binary name alongside existing salja release artifacts
-feat(ci): update .github/workflows/ci.yml to build and test both salja and salja-mcp binaries in the test/build matrix
 
 --- DOCUMENTATION ---
 
-feat(docs): add TUI section to README with launch instructions ('salja' or 'salja tui'), keybinding reference table, and feature overview
-feat(docs): add MCP server section to README documenting available tools/resources, stdio usage, and example Claude Desktop / claude_desktop_config.json snippet
