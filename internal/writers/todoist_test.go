@@ -47,7 +47,7 @@ func TestTodoistWriterPriorityInversion(t *testing.T) {
 		{model.PriorityHighest, "4"},
 		{model.PriorityHigh, "3"},
 		{model.PriorityMedium, "2"},
-		{model.PriorityLow, "1"},
+		{model.PriorityLow, "2"},
 		{model.PriorityNone, "1"},
 	}
 	for _, tc := range tests {

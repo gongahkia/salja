@@ -100,7 +100,7 @@ func exportTodoistPriority(p model.Priority) string {
 	case model.PriorityMedium:
 		return "2"
 	case model.PriorityLow:
-		return "1"
+		return "2"
 	default:
 		return "1"
 	}
