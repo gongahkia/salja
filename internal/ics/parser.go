@@ -30,7 +30,7 @@ func (p *Parser) ParseFile(ctx context.Context, filePath string) (*model.Calenda
 
 func (p *Parser) Parse(ctx context.Context, r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
 	dec := ical.NewDecoder(r)
-	
+
 	collection := &model.CalendarCollection{
 		Items:            []model.CalendarItem{},
 		SourceApp:        "ics",
@@ -92,7 +92,7 @@ func (p *Parser) parseEvent(comp *ical.Component) (*model.CalendarItem, error) {
 	if loc, err := comp.Props.Text("LOCATION"); err == nil {
 		item.Location = loc
 	}
-	
+
 	if dtstart := comp.Props.Get("DTSTART"); dtstart != nil {
 		dt, isAllDay, tz := parseDateTime(dtstart)
 		item.StartTime = &dt
@@ -101,12 +101,12 @@ func (p *Parser) parseEvent(comp *ical.Component) (*model.CalendarItem, error) {
 			item.Timezone = tz
 		}
 	}
-	
+
 	if dtend := comp.Props.Get("DTEND"); dtend != nil {
 		dt, _, _ := parseDateTime(dtend)
 		item.EndTime = &dt
 	}
-	
+
 	if rrule := comp.Props.Get("RRULE"); rrule != nil {
 		rec, err := parseRRule(rrule.Value)
 		if err != nil {
@@ -114,7 +114,7 @@ func (p *Parser) parseEvent(comp *ical.Component) (*model.CalendarItem, error) {
 		}
 		item.Recurrence = rec
 	}
-	
+
 	for _, exdate := range comp.Props.Values("EXDATE") {
 		exdates := parseExDate(&exdate)
 		if item.Recurrence == nil {
@@ -122,7 +122,7 @@ func (p *Parser) parseEvent(comp *ical.Component) (*model.CalendarItem, error) {
 		}
 		item.Recurrence.ExDates = append(item.Recurrence.ExDates, exdates...)
 	}
-	
+
 	for _, rdate := range comp.Props.Values("RDATE") {
 		rdates := parseRDate(&rdate)
 		if item.Recurrence == nil {
@@ -130,11 +130,11 @@ func (p *Parser) parseEvent(comp *ical.Component) (*model.CalendarItem, error) {
 		}
 		item.Recurrence.RDates = append(item.Recurrence.RDates, rdates...)
 	}
-	
+
 	if categories, err := comp.Props.Text("CATEGORIES"); err == nil {
 		item.Tags = parseCategories(categories)
 	}
-	
+
 	if priority := comp.Props.Get("PRIORITY"); priority != nil {
 		item.Priority = parsePriority(priority.Value)
 	}
@@ -166,7 +166,7 @@ func (p *Parser) parseTodo(comp *ical.Component) (*model.CalendarItem, error) {
 	if desc, err := comp.Props.Text("DESCRIPTION"); err == nil {
 		item.Description = desc
 	}
-	
+
 	if due := comp.Props.Get("DUE"); due != nil {
 		dt, _, tz := parseDateTime(due)
 		item.DueDate = &dt
@@ -174,7 +174,7 @@ func (p *Parser) parseTodo(comp *ical.Component) (*model.CalendarItem, error) {
 			item.Timezone = tz
 		}
 	}
-	
+
 	if dtstart := comp.Props.Get("DTSTART"); dtstart != nil {
 		dt, _, tz := parseDateTime(dtstart)
 		item.StartTime = &dt
@@ -182,30 +182,30 @@ func (p *Parser) parseTodo(comp *ical.Component) (*model.CalendarItem, error) {
 			item.Timezone = tz
 		}
 	}
-	
+
 	if status, err := comp.Props.Text("STATUS"); err == nil {
 		item.Status = parseStatus(status)
 	}
-	
+
 	if completed := comp.Props.Get("COMPLETED"); completed != nil {
 		dt, _, _ := parseDateTime(completed)
 		item.CompletionDate = &dt
 	}
-	
+
 	if percent, err := comp.Props.Text("PERCENT-COMPLETE"); err == nil {
 		if percent == "100" && item.Status != model.StatusCompleted {
 			item.Status = model.StatusCompleted
 		}
 	}
-	
+
 	if priority := comp.Props.Get("PRIORITY"); priority != nil {
 		item.Priority = parsePriority(priority.Value)
 	}
-	
+
 	if categories, err := comp.Props.Text("CATEGORIES"); err == nil {
 		item.Tags = parseCategories(categories)
 	}
-	
+
 	if rrule := comp.Props.Get("RRULE"); rrule != nil {
 		rec, err := parseRRule(rrule.Value)
 		if err != nil {
@@ -241,7 +241,7 @@ func (p *Parser) parseJournal(comp *ical.Component) (*model.CalendarItem, error)
 	if desc, err := comp.Props.Text("DESCRIPTION"); err == nil {
 		item.Description = desc
 	}
-	
+
 	if dtstart := comp.Props.Get("DTSTART"); dtstart != nil {
 		dt, _, tz := parseDateTime(dtstart)
 		item.StartTime = &dt
@@ -389,7 +389,7 @@ func parseCategories(value string) []string {
 func parsePriority(value string) model.Priority {
 	var p int
 	fmt.Sscanf(value, "%d", &p)
-	
+
 	if p == 0 {
 		return model.PriorityNone
 	} else if p >= 1 && p <= 2 {
@@ -421,7 +421,7 @@ func parseStatus(value string) model.Status {
 
 func parseAlarm(comp *ical.Component) *model.Reminder {
 	reminder := &model.Reminder{}
-	
+
 	if trigger := comp.Props.Get("TRIGGER"); trigger != nil {
 		if strings.HasPrefix(trigger.Value, "-") || strings.HasPrefix(trigger.Value, "+") || strings.HasPrefix(trigger.Value, "P") {
 			duration, err := parseDuration(trigger.Value)
@@ -435,23 +435,23 @@ func parseAlarm(comp *ical.Component) *model.Reminder {
 			}
 		}
 	}
-	
+
 	if reminder.Offset == nil && reminder.AbsoluteTime == nil {
 		return nil
 	}
-	
+
 	return reminder
 }
 
 func parseDuration(value string) (time.Duration, error) {
 	value = strings.TrimPrefix(value, "-")
 	value = strings.TrimPrefix(value, "+")
-	
+
 	isNegative := strings.HasPrefix(value, "-")
 	value = strings.TrimPrefix(value, "P")
-	
+
 	var duration time.Duration
-	
+
 	if strings.Contains(value, "W") {
 		var weeks int
 		fmt.Sscanf(value, "%dW", &weeks)
@@ -471,10 +471,10 @@ func parseDuration(value string) (time.Duration, error) {
 			duration += time.Duration(hours)*time.Hour + time.Duration(minutes)*time.Minute + time.Duration(seconds)*time.Second
 		}
 	}
-	
+
 	if isNegative {
 		duration = -duration
 	}
-	
+
 	return duration, nil
 }

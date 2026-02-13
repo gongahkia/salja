@@ -20,9 +20,9 @@ var (
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:   "salja",
-		Short: "Universal calendar and task converter",
-		Long:  "Convert between calendar and task management formats with conflict resolution",
+		Use:     "salja",
+		Short:   "Universal calendar and task converter",
+		Long:    "Convert between calendar and task management formats with conflict resolution",
 		Version: fmt.Sprintf("%s (commit: %s, built: %s)", version, commit, buildDate),
 	}
 

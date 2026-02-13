@@ -3,7 +3,7 @@ package writers
 import (
 	"context"
 	"encoding/csv"
-	
+
 	"io"
 	"os"
 	"strings"

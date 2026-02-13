@@ -205,16 +205,16 @@ func parseTickTickChecklist(content string) []model.Subtask {
 	var subtasks []model.Subtask
 	lines := strings.Split(content, "\n")
 	sortOrder := 0
-	
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
-		
+
 		status := model.StatusPending
 		title := line
-		
+
 		if strings.HasPrefix(line, "- [x] ") {
 			status = model.StatusCompleted
 			title = strings.TrimPrefix(line, "- [x] ")
@@ -224,7 +224,7 @@ func parseTickTickChecklist(content string) []model.Subtask {
 		} else if strings.HasPrefix(line, "- ") {
 			title = strings.TrimPrefix(line, "- ")
 		}
-		
+
 		subtasks = append(subtasks, model.Subtask{
 			Title:     title,
 			Status:    status,
@@ -232,7 +232,7 @@ func parseTickTickChecklist(content string) []model.Subtask {
 		})
 		sortOrder++
 	}
-	
+
 	return subtasks
 }
 

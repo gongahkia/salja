@@ -157,7 +157,7 @@ func (d *Detector) isDuplicate(a, b *model.CalendarItem) bool {
 func (d *Detector) fuzzyTitleMatch(a, b string) bool {
 	a = strings.ToLower(strings.TrimSpace(a))
 	b = strings.ToLower(strings.TrimSpace(b))
-	
+
 	if a == b {
 		return true
 	}
@@ -236,5 +236,3 @@ func levenshteinDistance(a, b string) int {
 
 	return matrix[len(a)][len(b)]
 }
-
-

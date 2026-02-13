@@ -1,75 +1,75 @@
 package apple
 
 import (
-"fmt"
-"strings"
-"time"
+	"fmt"
+	"strings"
+	"time"
 
-"github.com/gongahkia/salja/internal/model"
+	"github.com/gongahkia/salja/internal/model"
 )
 
 type CalendarWriter struct{}
 
 func NewCalendarWriter() *CalendarWriter {
-return &CalendarWriter{}
+	return &CalendarWriter{}
 }
 
 func (w *CalendarWriter) Write(items []model.CalendarItem, calendarName string) error {
-for _, item := range items {
-if err := w.createEvent(item, calendarName); err != nil {
-return fmt.Errorf("failed to create event '%s': %w", item.Title, err)
-}
-}
-return nil
+	for _, item := range items {
+		if err := w.createEvent(item, calendarName); err != nil {
+			return fmt.Errorf("failed to create event '%s': %w", item.Title, err)
+		}
+	}
+	return nil
 }
 
 func (w *CalendarWriter) createEvent(item model.CalendarItem, calendarName string) error {
-if item.StartTime == nil {
-return fmt.Errorf("event '%s' has no start time", item.Title)
-}
+	if item.StartTime == nil {
+		return fmt.Errorf("event '%s' has no start time", item.Title)
+	}
 
-startStr := item.StartTime.Format("January 2, 2006 3:04:05 PM")
-endStr := startStr
-if item.EndTime != nil {
-endStr = item.EndTime.Format("January 2, 2006 3:04:05 PM")
-}
+	startStr := item.StartTime.Format("January 2, 2006 3:04:05 PM")
+	endStr := startStr
+	if item.EndTime != nil {
+		endStr = item.EndTime.Format("January 2, 2006 3:04:05 PM")
+	}
 
-var scriptParts []string
-scriptParts = append(scriptParts, `tell application "Calendar"`)
-scriptParts = append(scriptParts, fmt.Sprintf(`  tell calendar "%s"`, calendarName))
+	var scriptParts []string
+	scriptParts = append(scriptParts, `tell application "Calendar"`)
+	scriptParts = append(scriptParts, fmt.Sprintf(`  tell calendar "%s"`, calendarName))
 
-props := []string{
-fmt.Sprintf(`summary:"%s"`, escapeAS(item.Title)),
-fmt.Sprintf(`start date:date "%s"`, startStr),
-fmt.Sprintf(`end date:date "%s"`, endStr),
-}
+	props := []string{
+		fmt.Sprintf(`summary:"%s"`, escapeAS(item.Title)),
+		fmt.Sprintf(`start date:date "%s"`, startStr),
+		fmt.Sprintf(`end date:date "%s"`, endStr),
+	}
 
-if item.Description != "" {
-props = append(props, fmt.Sprintf(`description:"%s"`, escapeAS(item.Description)))
-}
-if item.Location != "" {
-props = append(props, fmt.Sprintf(`location:"%s"`, escapeAS(item.Location)))
-}
-if item.IsAllDay {
-props = append(props, `allday event:true`)
-}
+	if item.Description != "" {
+		props = append(props, fmt.Sprintf(`description:"%s"`, escapeAS(item.Description)))
+	}
+	if item.Location != "" {
+		props = append(props, fmt.Sprintf(`location:"%s"`, escapeAS(item.Location)))
+	}
+	if item.IsAllDay {
+		props = append(props, `allday event:true`)
+	}
 
-scriptParts = append(scriptParts, fmt.Sprintf(`    make new event with properties {%s}`, strings.Join(props, ", ")))
-scriptParts = append(scriptParts, `  end tell`)
-scriptParts = append(scriptParts, `end tell`)
+	scriptParts = append(scriptParts, fmt.Sprintf(`    make new event with properties {%s}`, strings.Join(props, ", ")))
+	scriptParts = append(scriptParts, `  end tell`)
+	scriptParts = append(scriptParts, `end tell`)
 
-_, err := scriptRunnerFn(strings.Join(scriptParts, "\n"))
-return err
+	_, err := scriptRunnerFn(strings.Join(scriptParts, "\n"))
+	return err
 }
 
 type CalendarReader struct{}
 
 func NewCalendarReader() *CalendarReader {
-return &CalendarReader{}
+	return &CalendarReader{}
 }
 
 func (r *CalendarReader) Read(calendarName string, startDate, endDate time.Time) (*model.CalendarCollection, error) {
-script := fmt.Sprintf(`tell application "Calendar"
+	script := fmt.Sprintf(`tell application "Calendar"
 set output to ""
 set startD to date "%s"
 set endD to date "%s"
@@ -92,43 +92,43 @@ end repeat
 end tell
 return output
 end tell`,
-startDate.Format("January 2, 2006"),
-endDate.Format("January 2, 2006"),
-calendarName,
-)
+		startDate.Format("January 2, 2006"),
+		endDate.Format("January 2, 2006"),
+		calendarName,
+	)
 
-output, err := scriptRunnerFn(script)
-if err != nil {
-return nil, err
-}
+	output, err := scriptRunnerFn(script)
+	if err != nil {
+		return nil, err
+	}
 
-collection := &model.CalendarCollection{
-Items:      []model.CalendarItem{},
-SourceApp:  "apple-calendar",
-ExportDate: time.Now(),
-}
+	collection := &model.CalendarCollection{
+		Items:      []model.CalendarItem{},
+		SourceApp:  "apple-calendar",
+		ExportDate: time.Now(),
+	}
 
-lines := strings.Split(output, "\n")
-for _, line := range lines {
-line = strings.TrimSpace(line)
-if line == "" {
-continue
-}
-parts := strings.Split(line, "|||")
-if len(parts) < 5 {
-continue
-}
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		parts := strings.Split(line, "|||")
+		if len(parts) < 5 {
+			continue
+		}
 
-item := model.CalendarItem{
-ItemType:    model.ItemTypeEvent,
-Status:      model.StatusPending,
-Title:       parts[0],
-Description: parts[3],
-Location:    parts[4],
-}
+		item := model.CalendarItem{
+			ItemType:    model.ItemTypeEvent,
+			Status:      model.StatusPending,
+			Title:       parts[0],
+			Description: parts[3],
+			Location:    parts[4],
+		}
 
-collection.Items = append(collection.Items, item)
-}
+		collection.Items = append(collection.Items, item)
+	}
 
-return collection, nil
+	return collection, nil
 }

@@ -1,8 +1,8 @@
 package writers
 
 import (
-	"context"
 	"bytes"
+	"context"
 	"encoding/json"
 	"strings"
 	"testing"

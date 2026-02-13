@@ -115,7 +115,7 @@ func parseGCalRow(row []string, colMap map[string]int, ec *salerr.ErrorCollector
 	if startDateIdx, ok := colMap["Start Date"]; ok && startDateIdx < len(row) && row[startDateIdx] != "" {
 		var start time.Time
 		var err error
-		
+
 		if isAllDay {
 			start, err = time.Parse("01/02/2006", row[startDateIdx])
 		} else if startTimeIdx, ok := colMap["Start Time"]; ok && startTimeIdx < len(row) && row[startTimeIdx] != "" {
@@ -125,7 +125,7 @@ func parseGCalRow(row []string, colMap map[string]int, ec *salerr.ErrorCollector
 				start, err = time.Parse("01/02/2006 15:04", dateTime)
 			}
 		}
-		
+
 		if err == nil {
 			item.StartTime = &start
 		} else if err != nil {
@@ -140,7 +140,7 @@ func parseGCalRow(row []string, colMap map[string]int, ec *salerr.ErrorCollector
 	if endDateIdx, ok := colMap["End Date"]; ok && endDateIdx < len(row) && row[endDateIdx] != "" {
 		var end time.Time
 		var err error
-		
+
 		if isAllDay {
 			end, err = time.Parse("01/02/2006", row[endDateIdx])
 		} else if endTimeIdx, ok := colMap["End Time"]; ok && endTimeIdx < len(row) && row[endTimeIdx] != "" {
@@ -150,7 +150,7 @@ func parseGCalRow(row []string, colMap map[string]int, ec *salerr.ErrorCollector
 				end, err = time.Parse("01/02/2006 15:04", dateTime)
 			}
 		}
-		
+
 		if err == nil {
 			item.EndTime = &end
 		} else if err != nil {

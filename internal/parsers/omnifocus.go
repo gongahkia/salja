@@ -47,7 +47,7 @@ func (p *OmniFocusParser) Parse(ctx context.Context, r io.Reader, sourcePath str
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		
+
 		currentIndent := 0
 		for strings.HasPrefix(line, "\t") {
 			currentIndent++

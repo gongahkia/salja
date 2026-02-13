@@ -25,15 +25,15 @@ END:VCALENDAR`
 
 	parser := NewParser()
 	collection, err := parser.Parse(context.Background(), strings.NewReader(icsData), "test.ics")
-	
+
 	if err != nil {
 		t.Fatalf("Failed to parse ICS: %v", err)
 	}
-	
+
 	if len(collection.Items) != 1 {
 		t.Fatalf("Expected 1 item, got %d", len(collection.Items))
 	}
-	
+
 	item := collection.Items[0]
 	if item.Title != "Team Meeting" {
 		t.Errorf("Expected title 'Team Meeting', got '%s'", item.Title)
@@ -64,11 +64,11 @@ END:VCALENDAR`
 
 	parser := NewParser()
 	collection, err := parser.Parse(context.Background(), strings.NewReader(icsData), "test.ics")
-	
+
 	if err != nil {
 		t.Fatalf("Failed to parse ICS: %v", err)
 	}
-	
+
 	item := collection.Items[0]
 	if item.Recurrence == nil {
 		t.Fatal("Expected recurrence, got nil")
@@ -99,11 +99,11 @@ END:VCALENDAR`
 
 	parser := NewParser()
 	collection, err := parser.Parse(context.Background(), strings.NewReader(icsData), "test.ics")
-	
+
 	if err != nil {
 		t.Fatalf("Failed to parse ICS: %v", err)
 	}
-	
+
 	item := collection.Items[0]
 	if item.ItemType != model.ItemTypeTask {
 		t.Errorf("Expected ItemType task, got %s", item.ItemType)
@@ -135,11 +135,11 @@ END:VCALENDAR`
 
 	parser := NewParser()
 	collection, err := parser.Parse(context.Background(), strings.NewReader(icsData), "test.ics")
-	
+
 	if err != nil {
 		t.Fatalf("Failed to parse ICS: %v", err)
 	}
-	
+
 	item := collection.Items[0]
 	if !item.IsAllDay {
 		t.Error("Expected IsAllDay to be true")
@@ -168,15 +168,15 @@ END:VCALENDAR`
 
 	parser := NewParser()
 	collection, err := parser.Parse(context.Background(), strings.NewReader(icsData), "test.ics")
-	
+
 	if err != nil {
 		t.Fatalf("Failed to parse ICS: %v", err)
 	}
-	
+
 	if len(collection.Items) != 2 {
 		t.Fatalf("Expected 2 items, got %d", len(collection.Items))
 	}
-	
+
 	if collection.Items[0].Timezone != "America/New_York" {
 		t.Errorf("Expected timezone America/New_York, got %s", collection.Items[0].Timezone)
 	}
@@ -194,7 +194,7 @@ END:VEVENT`
 
 	parser := NewParser()
 	_, err := parser.Parse(context.Background(), strings.NewReader(icsData), "test.ics")
-	
+
 	if err == nil {
 		t.Error("Expected error for malformed input, got nil")
 	}
@@ -205,7 +205,7 @@ func TestRRuleParserDaily(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to parse RRULE: %v", err)
 	}
-	
+
 	if rec.Freq != model.FreqDaily {
 		t.Errorf("Expected DAILY, got %s", rec.Freq)
 	}
@@ -222,7 +222,7 @@ func TestRRuleParserWeeklyWithByDay(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to parse RRULE: %v", err)
 	}
-	
+
 	if rec.Freq != model.FreqWeekly {
 		t.Errorf("Expected WEEKLY, got %s", rec.Freq)
 	}
@@ -236,7 +236,7 @@ func TestRRuleParserMonthlyWithByMonthDay(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to parse RRULE: %v", err)
 	}
-	
+
 	if rec.Freq != model.FreqMonthly {
 		t.Errorf("Expected MONTHLY, got %s", rec.Freq)
 	}
@@ -251,7 +251,7 @@ func TestRRuleParserYearly(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to parse RRULE: %v", err)
 	}
-	
+
 	if rec.Freq != model.FreqYearly {
 		t.Errorf("Expected YEARLY, got %s", rec.Freq)
 	}
@@ -265,7 +265,7 @@ func TestRRuleParserCountLimited(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to parse RRULE: %v", err)
 	}
-	
+
 	if *rec.Count != 30 {
 		t.Errorf("Expected count 30, got %d", *rec.Count)
 	}
@@ -276,7 +276,7 @@ func TestRRuleParserUntilLimited(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to parse RRULE: %v", err)
 	}
-	
+
 	if rec.Until == nil {
 		t.Fatal("Expected Until, got nil")
 	}
@@ -287,7 +287,7 @@ func TestRRuleParserComplexBySetPos(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to parse RRULE: %v", err)
 	}
-	
+
 	if len(rec.BySetPos) != 1 || rec.BySetPos[0] != -1 {
 		t.Errorf("Expected BySetPos [-1], got %v", rec.BySetPos)
 	}
@@ -296,7 +296,7 @@ func TestRRuleParserComplexBySetPos(t *testing.T) {
 func TestWriterRoundTrip(t *testing.T) {
 	start := time.Date(2024, 1, 15, 14, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 1, 15, 15, 0, 0, 0, time.UTC)
-	
+
 	original := model.CalendarCollection{
 		Items: []model.CalendarItem{
 			{
@@ -311,24 +311,24 @@ func TestWriterRoundTrip(t *testing.T) {
 		},
 		SourceApp: "test",
 	}
-	
+
 	writer := NewWriter()
 	var buf strings.Builder
 	err := writer.Write(context.Background(), &original, &buf)
 	if err != nil {
 		t.Fatalf("Failed to write ICS: %v", err)
 	}
-	
+
 	parser := NewParser()
 	parsed, err := parser.Parse(context.Background(), strings.NewReader(buf.String()), "test.ics")
 	if err != nil {
 		t.Fatalf("Failed to parse written ICS: %v", err)
 	}
-	
+
 	if len(parsed.Items) != 1 {
 		t.Fatalf("Expected 1 item, got %d", len(parsed.Items))
 	}
-	
+
 	item := parsed.Items[0]
 	if item.Title != "Test Event" {
 		t.Errorf("Expected title 'Test Event', got '%s'", item.Title)

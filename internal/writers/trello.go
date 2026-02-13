@@ -3,7 +3,7 @@ package writers
 import (
 	"context"
 	"encoding/json"
-	
+
 	"io"
 	"os"
 

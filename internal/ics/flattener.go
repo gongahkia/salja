@@ -23,7 +23,7 @@ func (f *Flattener) FlattenRecurrence(item *model.CalendarItem, maxOccurrences i
 
 	instances := []model.CalendarItem{}
 	rec := item.Recurrence
-	
+
 	current := item.StartTime
 	if current == nil && item.DueDate != nil {
 		current = item.DueDate
@@ -47,7 +47,7 @@ func (f *Flattener) FlattenRecurrence(item *model.CalendarItem, maxOccurrences i
 		instance := *item
 		// Copy recurrence to avoid mutating the original
 		instance.Recurrence = nil
-		
+
 		if isExDate(*current, rec.ExDates) {
 			current = f.advance(current, rec)
 			continue

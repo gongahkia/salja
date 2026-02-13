@@ -83,7 +83,7 @@ func (p *TodoistParser) Parse(ctx context.Context, r io.Reader, sourcePath strin
 		}
 
 		item := p.parseRow(row, colMap, ec, sourcePath, lineNum)
-		
+
 		indentIdx, hasIndent := colMap["INDENT"]
 		currentIndent := 0
 		if hasIndent && indentIdx < len(row) {

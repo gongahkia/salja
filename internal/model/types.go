@@ -27,11 +27,11 @@ const (
 type Priority int
 
 const (
-	PriorityNone   Priority = 0
-	PriorityLowest Priority = 1
-	PriorityLow    Priority = 2
-	PriorityMedium Priority = 3
-	PriorityHigh   Priority = 4
+	PriorityNone    Priority = 0
+	PriorityLowest  Priority = 1
+	PriorityLow     Priority = 2
+	PriorityMedium  Priority = 3
+	PriorityHigh    Priority = 4
 	PriorityHighest Priority = 5
 )
 

@@ -18,18 +18,18 @@ func NewTrelloParser() *TrelloParser {
 }
 
 type TrelloBoard struct {
-	Name  string        `json:"name"`
-	Cards []TrelloCard  `json:"cards"`
-	Lists []TrelloList  `json:"lists"`
+	Name  string       `json:"name"`
+	Cards []TrelloCard `json:"cards"`
+	Lists []TrelloList `json:"lists"`
 }
 
 type TrelloCard struct {
-	Name       string             `json:"name"`
-	Desc       string             `json:"desc"`
-	Due        string             `json:"due"`
-	Closed     bool               `json:"closed"`
-	Labels     []TrelloLabel      `json:"labels"`
-	Checklists []TrelloChecklist  `json:"checklists"`
+	Name       string            `json:"name"`
+	Desc       string            `json:"desc"`
+	Due        string            `json:"due"`
+	Closed     bool              `json:"closed"`
+	Labels     []TrelloLabel     `json:"labels"`
+	Checklists []TrelloChecklist `json:"checklists"`
 }
 
 type TrelloLabel struct {
