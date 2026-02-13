@@ -173,4 +173,8 @@ $ docker run --rm -i --entrypoint salja-mcp salja # install via docker
 
 ## Reference
 
-The name `Salja` is in reference to...
+The name `Salja` is in reference to *살자*, which roughly translates to "let's live" in Korean. It also acts as an extended reference to the [Jeoseung Saja](https://villains.fandom.com/wiki/Jeoseung_Saja) (저승사자), who acted as the Messengers of the Afterlife in service of [King Yeomra](https://are-you-afraid-of-the-dark-universe.fandom.com/wiki/King_Yeomra) (염라대왕), the ruler of the underworld. Also, [Saja Boys](https://kpop-demon-hunters.fandom.com/wiki/Saja_Boys).
+
+<div align="center">
+    <img src="./asset/logo/saja.jpg" width="50%">
+</div>
