@@ -503,7 +503,7 @@ func pullFromNotion(ctx context.Context, token *api.Token, timeout time.Duration
 	for {
 		result, err := client.QueryDatabase(ctx, databaseID, cursor)
 		if err != nil {
-			return nil, fmt.Errorf("Notion API error: %w", err)
+			return nil, fmt.Errorf("notion API error: %w", err)
 		}
 		for _, page := range result.Results {
 			collection.Items = append(collection.Items, api.NotionToCalendarItem(page, pm))

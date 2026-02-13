@@ -52,7 +52,7 @@ func (p *AsanaParser) Parse(ctx context.Context, r io.Reader, sourcePath string)
 
 	requiredCols := []string{"Name"}
 	if missing := findMissingColumns(colMap, requiredCols); len(missing) > 0 {
-		return nil, fmt.Errorf("Asana CSV %s missing required columns: %s", sourcePath, strings.Join(missing, ", "))
+		return nil, fmt.Errorf("asana CSV %s missing required columns: %s", sourcePath, strings.Join(missing, ", "))
 	}
 
 	ec := salerr.NewErrorCollector()

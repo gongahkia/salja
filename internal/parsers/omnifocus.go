@@ -24,7 +24,7 @@ func (p *OmniFocusParser) ParseFile(ctx context.Context, filePath string) (*mode
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	return p.Parse(ctx, f, filePath)
 }
 

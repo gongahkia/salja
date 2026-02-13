@@ -24,7 +24,7 @@ func (p *GoogleCalendarParser) ParseFile(ctx context.Context, filePath string) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to open Google Calendar CSV %s: %w", filePath, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	return p.Parse(ctx, f, filePath)
 }
 

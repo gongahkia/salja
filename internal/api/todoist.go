@@ -198,7 +198,7 @@ func (c *TodoistSyncClient) Sync(ctx context.Context, resourceTypes []string) (*
 
 	if resp.StatusCode != 200 {
 		respBody, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("Todoist Sync API error (HTTP %d): %s", resp.StatusCode, respBody)
+		return nil, fmt.Errorf("todoist sync API error (HTTP %d): %s", resp.StatusCode, respBody)
 	}
 
 	var syncResp TodoistSyncResponse
