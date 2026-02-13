@@ -7,12 +7,10 @@ Universal CLI for converting between calendar and task management formats — IC
 
 ## Stack
 
-* [Go 1.25](https://go.dev/) — core language
-* [Cobra](https://github.com/spf13/cobra) — CLI framework
-* [go-ical](https://github.com/emersion/go-ical) — RFC 5545 ICS parsing/writing
-* [TOML](https://github.com/BurntSushi/toml) — configuration
-* [go-keyring](https://github.com/zalando/go-keyring) — secure token storage
-* [GoReleaser](https://goreleaser.com/) — cross-platform release builds
+* *Scripting*: [Go](https://go.dev/), [Cobra](https://github.com/spf13/cobra), [go-keyring](https://github.com/zalando/go-keyring) 
+* *Parsing*: [go-ical](https://github.com/emersion/go-ical) 
+* *Config files*: [TOML](https://github.com/BurntSushi/toml) 
+* *Build*: [GoReleaser](https://goreleaser.com/) 
 
 ## What `Salja` can do *([currently](https://github.com/gongahkia/salja/issues))*
 
