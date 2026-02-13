@@ -224,7 +224,7 @@ func (f *PKCEFlow) Authorize(ctx context.Context) (*Token, error) {
 		}
 		if errMsg := r.URL.Query().Get("error"); errMsg != "" {
 			errCh <- fmt.Errorf("auth error: %s — %s", errMsg, r.URL.Query().Get("error_description"))
-			fmt.Fprintf(w, "Authorization failed: %s", errMsg)
+			_, _ = fmt.Fprintf(w, "Authorization failed: %s", errMsg)
 			return
 		}
 		code := r.URL.Query().Get("code")

@@ -86,8 +86,8 @@ func NewDiffCmd() *cobra.Command {
 
 			case "patch":
 				// Valid unified diff format
-				fmt.Fprintf(out, "--- %s\n", args[0])
-				fmt.Fprintf(out, "+++ %s\n", args[1])
+				_, _ = fmt.Fprintf(out, "--- %s\n", args[0])
+				_, _ = fmt.Fprintf(out, "+++ %s\n", args[1])
 				if len(removedTitles) > 0 || len(addedTitles) > 0 {
 					fmt.Fprintf(out, "@@ -%d,0 +%d,0 @@\n", len(col1.Items), len(col2.Items))
 					for _, title := range removedTitles {
