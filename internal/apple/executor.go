@@ -4,10 +4,18 @@ import (
 "bytes"
 "fmt"
 "os/exec"
+"runtime"
 "strings"
 )
 
+// ErrNotMacOS is returned when Apple-specific features are used on non-macOS systems.
+var ErrNotMacOS = fmt.Errorf("this feature requires macOS (current platform: %s/%s)", runtime.GOOS, runtime.GOARCH)
+
 func RunAppleScript(script string) (string, error) {
+if runtime.GOOS != "darwin" {
+return "", ErrNotMacOS
+}
+
 cmd := exec.Command("osascript", "-e", script)
 var stdout, stderr bytes.Buffer
 cmd.Stdout = &stdout
@@ -26,6 +34,9 @@ return strings.TrimSpace(stdout.String()), nil
 }
 
 func CheckPermissions() error {
+if runtime.GOOS != "darwin" {
+return ErrNotMacOS
+}
 _, err := RunAppleScript(`tell application "System Events" to return name of first process`)
 if err != nil {
 return fmt.Errorf("AppleScript permissions not granted. Go to System Preferences > Security & Privacy > Privacy > Automation and grant access to Terminal/your IDE. Detail: %w", err)
