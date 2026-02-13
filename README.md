@@ -12,7 +12,8 @@ Universal CLI for converting between calendar and task management formats — IC
 * *MCP*: [mcp-go](https://github.com/mark3labs/mcp-go)
 * *Parsing*: [go-ical](https://github.com/emersion/go-ical) 
 * *Config files*: [TOML](https://github.com/BurntSushi/toml) 
-* *Build*: [GoReleaser](https://goreleaser.com/) 
+* *Build*: [GoReleaser](https://goreleaser.com/), [Docker](https://www.docker.com/)
+* *Lint*: [golangci-lint](https://golangci-lint.run/)
 
 ## What `Salja` can do *([currently](https://github.com/gongahkia/salja/issues))*
 
@@ -75,6 +76,10 @@ nix build .#salja
 # docker
 docker build -t salja .
 docker run --rm salja convert input.ics output.csv --to gcal
+
+# docker compose
+docker compose run --rm salja convert input.ics output.csv --to gcal
+docker compose run --rm salja-mcp
 
 # arch linux
 makepkg -si
