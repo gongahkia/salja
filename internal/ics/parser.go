@@ -388,7 +388,7 @@ func parseCategories(value string) []string {
 
 func parsePriority(value string) model.Priority {
 	var p int
-	fmt.Sscanf(value, "%d", &p)
+	_, _ = fmt.Sscanf(value, "%d", &p)
 
 	if p == 0 {
 		return model.PriorityNone
@@ -454,20 +454,20 @@ func parseDuration(value string) (time.Duration, error) {
 
 	if strings.Contains(value, "W") {
 		var weeks int
-		fmt.Sscanf(value, "%dW", &weeks)
+		_, _ = fmt.Sscanf(value, "%dW", &weeks)
 		duration = time.Duration(weeks) * 7 * 24 * time.Hour
 	} else {
 		parts := strings.Split(value, "T")
 		if len(parts) > 0 {
 			datePart := parts[0]
 			var days int
-			fmt.Sscanf(datePart, "%dD", &days)
+			_, _ = fmt.Sscanf(datePart, "%dD", &days)
 			duration += time.Duration(days) * 24 * time.Hour
 		}
 		if len(parts) > 1 {
 			timePart := parts[1]
 			var hours, minutes, seconds int
-			fmt.Sscanf(timePart, "%dH%dM%dS", &hours, &minutes, &seconds)
+			_, _ = fmt.Sscanf(timePart, "%dH%dM%dS", &hours, &minutes, &seconds)
 			duration += time.Duration(hours)*time.Hour + time.Duration(minutes)*time.Minute + time.Duration(seconds)*time.Second
 		}
 	}

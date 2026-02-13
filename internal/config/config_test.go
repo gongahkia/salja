@@ -25,7 +25,7 @@ func TestMissingFileDefaults(t *testing.T) {
 func TestPartialConfigMerge(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.toml")
-	os.WriteFile(path, []byte(`default_timezone = "America/New_York"`), 0644)
+	_ = os.WriteFile(path, []byte(`default_timezone = "America/New_York"`), 0644)
 
 	cfg, err := LoadFrom(path)
 	if err != nil {
@@ -42,7 +42,7 @@ func TestPartialConfigMerge(t *testing.T) {
 func TestInvalidTOMLSyntax(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.toml")
-	os.WriteFile(path, []byte(`not valid toml [[[`), 0644)
+	_ = os.WriteFile(path, []byte(`not valid toml [[[`), 0644)
 
 	_, err := LoadFrom(path)
 	if err == nil {
@@ -53,7 +53,7 @@ func TestInvalidTOMLSyntax(t *testing.T) {
 func TestUnknownKeyWarning(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.toml")
-	os.WriteFile(path, []byte(`unknown_setting = "value"`), 0644)
+	_ = os.WriteFile(path, []byte(`unknown_setting = "value"`), 0644)
 
 	cfg, err := LoadFrom(path)
 	if err != nil {

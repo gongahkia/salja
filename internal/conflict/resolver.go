@@ -201,7 +201,7 @@ func (r *Resolver) WriteLog() error {
 	}
 
 	logDir := config.ConfigDir()
-	os.MkdirAll(logDir, 0755)
+	_ = os.MkdirAll(logDir, 0755)
 
 	logPath := filepath.Join(logDir, "conflict-log.json")
 

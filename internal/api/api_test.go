@@ -48,7 +48,7 @@ func TestTickTickListTasks(t *testing.T) {
 		if r.Header.Get("Authorization") != "Bearer test-token" {
 			t.Error("missing auth header")
 		}
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"tasks": []TickTickTask{
 				{ID: "t1", Title: "Test Task", Priority: 5, Status: 0, Tags: []string{"work"}},
 			},
@@ -72,7 +72,7 @@ func TestTickTickListTasks(t *testing.T) {
 	var result struct {
 		Tasks []TickTickTask `json:"tasks"`
 	}
-	json.Unmarshal(data, &result)
+	_ = json.Unmarshal(data, &result)
 	if len(result.Tasks) != 1 || result.Tasks[0].Title != "Test Task" {
 		t.Error("unexpected task data")
 	}
@@ -281,7 +281,7 @@ func TestTokenStoreRoundTrip(t *testing.T) {
 func TestAPIError429(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(429)
-		w.Write([]byte(`{"message":"rate limited"}`))
+		_, _ = w.Write([]byte(`{"message":"rate limited"}`))
 	}))
 	defer server.Close()
 
@@ -318,7 +318,7 @@ func TestTodoistGetTasks(t *testing.T) {
 		if r.Header.Get("Authorization") != "Bearer test-token" {
 			t.Error("missing or wrong auth header")
 		}
-		json.NewEncoder(w).Encode(tasks)
+		_ = json.NewEncoder(w).Encode(tasks)
 	}))
 	defer ts.Close()
 
@@ -354,9 +354,9 @@ func TestTodoistCreateTask(t *testing.T) {
 			t.Errorf("expected POST, got %s", r.Method)
 		}
 		var incoming TodoistTask
-		json.NewDecoder(r.Body).Decode(&incoming)
+		_ = json.NewDecoder(r.Body).Decode(&incoming)
 		incoming.ID = "new-123"
-		json.NewEncoder(w).Encode(incoming)
+		_ = json.NewEncoder(w).Encode(incoming)
 	}))
 	defer ts.Close()
 
@@ -382,7 +382,7 @@ func TestTodoistCreateTask(t *testing.T) {
 func TestTodoistGetTasksNon200(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
-		w.Write([]byte(`{"error":"internal server error"}`))
+		_, _ = w.Write([]byte(`{"error":"internal server error"}`))
 	}))
 	defer ts.Close()
 
@@ -414,7 +414,7 @@ func TestNotionQueryDatabase(t *testing.T) {
 
 		call := atomic.AddInt32(&callCount, 1)
 		if call == 1 {
-			json.NewEncoder(w).Encode(NotionQueryResult{
+			_ = json.NewEncoder(w).Encode(NotionQueryResult{
 				Results: []NotionPage{
 					{ID: "page-1", Properties: map[string]NotionProperty{
 						"Name": {Type: "title", Title: []NotionRichText{{PlainText: "First"}}},
@@ -430,7 +430,7 @@ func TestNotionQueryDatabase(t *testing.T) {
 			if body["start_cursor"] != "cursor-abc" {
 				t.Errorf("expected start_cursor 'cursor-abc', got %v", body["start_cursor"])
 			}
-			json.NewEncoder(w).Encode(NotionQueryResult{
+			_ = json.NewEncoder(w).Encode(NotionQueryResult{
 				Results: []NotionPage{
 					{ID: "page-2", Properties: map[string]NotionProperty{
 						"Name": {Type: "title", Title: []NotionRichText{{PlainText: "Second"}}},
@@ -486,7 +486,7 @@ func TestNotionCreatePage(t *testing.T) {
 		if !strings.HasSuffix(r.URL.Path, "/pages") {
 			t.Errorf("unexpected path %s", r.URL.Path)
 		}
-		json.NewEncoder(w).Encode(NotionPage{
+		_ = json.NewEncoder(w).Encode(NotionPage{
 			ID: "created-page-1",
 			Properties: map[string]NotionProperty{
 				"Name": {Type: "title", Title: []NotionRichText{{PlainText: "New Task"}}},
