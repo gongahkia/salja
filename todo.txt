@@ -12,8 +12,7 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 
 
 
-(B) Make the diff command patch output format produce valid unified diff with proper --- +++ file headers and @@ hunk markers instead of the current custom +/- prefix format +refactor
-(B) Add a --output flag to the diff command to write results to a file instead of only stdout +feature
+
 (B) Add shell completion generation for bash, zsh, fish, and powershell via cobra's built-in completion subcommand +feature +dx
 (B) Add a salja version command that prints version, commit SHA, build date, Go version, and OS/arch in a structured format +feature +dx
 (B) Add runtime platform detection in internal/apple/ so that on non-macOS systems, Apple-specific commands log a clear error message explaining the feature requires macOS instead of failing with cryptic osascript errors +feature +platform
