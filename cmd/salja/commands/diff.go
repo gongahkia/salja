@@ -24,11 +24,11 @@ if toFormat == "" {
 toFormat = DetectFormat(args[1])
 }
 
-col1, err := ReadInput(args[0], fromFormat)
+col1, err := ReadInput(args[0], fromFormat, nil)
 if err != nil {
 return fmt.Errorf("failed to read file1: %w", err)
 }
-col2, err := ReadInput(args[1], toFormat)
+col2, err := ReadInput(args[1], toFormat, nil)
 if err != nil {
 return fmt.Errorf("failed to read file2: %w", err)
 }

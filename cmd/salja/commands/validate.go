@@ -22,7 +22,7 @@ if format == "" {
 format = DetectFormat(filePath)
 }
 
-collection, err := ReadInput(filePath, format)
+collection, err := ReadInput(filePath, format, nil)
 if err != nil {
 fmt.Fprintf(os.Stderr, "Validation failed: %v\n", err)
 return err

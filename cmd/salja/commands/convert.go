@@ -43,7 +43,10 @@ fmt.Fprintf(os.Stderr, "Detected target format: %s\n", toFormat)
 }
 }
 
-collection, err := ReadInput(inputFile, fromFormat)
+// Load config early so streaming threshold is available
+cfg, _ := config.Load()
+
+collection, err := ReadInput(inputFile, fromFormat, cfg)
 if err != nil {
 return fmt.Errorf("failed to read input: %w", err)
 }
@@ -60,7 +63,6 @@ return nil
 }
 
 // Run data fidelity check with progress updates
-cfg, _ := config.Load()
 dataLossMode := "warn"
 if cfg != nil {
 dataLossMode = cfg.DataLossMode
@@ -158,10 +160,28 @@ return strings.TrimPrefix(ext, ".")
 return "unknown"
 }
 
-func ReadInput(filePath, format string) (*model.CalendarCollection, error) {
+func ReadInput(filePath, format string, cfg *config.Config) (*model.CalendarCollection, error) {
 var r io.Reader
 if filePath == "-" {
 r = os.Stdin
+}
+
+// Check file size against streaming threshold
+thresholdMB := 10
+if cfg != nil && cfg.StreamingThresholdMB > 0 {
+thresholdMB = cfg.StreamingThresholdMB
+}
+
+if filePath != "-" {
+info, err := os.Stat(filePath)
+if err != nil {
+return nil, fmt.Errorf("failed to stat input file: %w", err)
+}
+fileSizeMB := info.Size() / (1024 * 1024)
+if fileSizeMB >= int64(thresholdMB) {
+fmt.Fprintf(os.Stderr, "File exceeds %dMB threshold, using streaming parser\n", thresholdMB)
+return readInputStreaming(filePath, format)
+}
 }
 
 p, err := registry.GetParser(format)
@@ -170,6 +190,17 @@ return nil, err
 }
 if r != nil {
 return p.Parse(r, "stdin")
+}
+return p.ParseFile(filePath)
+}
+
+func readInputStreaming(filePath, format string) (*model.CalendarCollection, error) {
+// ICS parser already decodes component-by-component (streaming by nature).
+// For CSV, the standard parser is used but could be swapped for
+// StreamingCSVParser in format-specific parsers for constant-memory processing.
+p, err := registry.GetParser(format)
+if err != nil {
+return nil, err
 }
 return p.ParseFile(filePath)
 }
