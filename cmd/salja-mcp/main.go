@@ -12,11 +12,7 @@ import (
 	mcpserver "github.com/gongahkia/salja/internal/mcp"
 )
 
-var (
-	version   = "dev"
-	commit    = "none"
-	buildDate = "unknown"
-)
+var version = "dev"
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

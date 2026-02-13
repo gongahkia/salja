@@ -9,14 +9,6 @@ import (
 )
 
 type conflictStrategy int
-
-const (
-	stratPreferSource conflictStrategy = iota
-	stratPreferTarget
-	stratSkip
-	stratMergeManual
-)
-
 var strategyLabels = []string{"prefer-source", "prefer-target", "skip", "merge-manual"}
 
 // ConflictModel presents interactive conflict resolution UI.
