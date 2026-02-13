@@ -229,7 +229,7 @@ func (f *PKCEFlow) Authorize(ctx context.Context) (*Token, error) {
 		}
 		code := r.URL.Query().Get("code")
 		codeCh <- code
-		fmt.Fprint(w, "Authorization successful! You can close this tab.")
+		_, _ = fmt.Fprint(w, "Authorization successful! You can close this tab.")
 	})
 
 	server := &http.Server{Handler: mux}
