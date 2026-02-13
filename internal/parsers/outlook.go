@@ -32,16 +32,17 @@ func (p *OutlookParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 		return nil, fmt.Errorf("charset detection failed: %w", err)
 	}
 	csvReader := csv.NewReader(tr)
-	records, err := csvReader.ReadAll()
+	csvReader.FieldsPerRecord = -1
+	csvReader.LazyQuotes = true
+
+	header, err := csvReader.Read()
+	if err == io.EOF {
+		return &model.CalendarCollection{Items: []model.CalendarItem{}, SourceApp: "outlook"}, nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to read CSV %s: %w", sourcePath, err)
 	}
 
-	if len(records) == 0 {
-		return &model.CalendarCollection{Items: []model.CalendarItem{}, SourceApp: "outlook"}, nil
-	}
-
-	header := records[0]
 	colMap := make(map[string]int)
 	for i, col := range header {
 		colMap[col] = i
@@ -59,10 +60,19 @@ func (p *OutlookParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 		OriginalFilePath: sourcePath,
 	}
 
-	for i := 1; i < len(records); i++ {
-		item, err := parseOutlookRow(records[i], colMap)
+	lineNum := 1
+	for {
+		row, err := csvReader.Read()
+		if err == io.EOF {
+			break
+		}
 		if err != nil {
-			return nil, fmt.Errorf("%s line %d: %w", sourcePath, i+1, err)
+			return nil, fmt.Errorf("failed to read CSV %s: %w", sourcePath, err)
+		}
+		lineNum++
+		item, err := parseOutlookRow(row, colMap)
+		if err != nil {
+			return nil, fmt.Errorf("%s line %d: %w", sourcePath, lineNum, err)
 		}
 		collection.Items = append(collection.Items, item)
 	}

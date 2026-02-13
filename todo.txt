@@ -14,8 +14,7 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 
 
 
-(B) Add runtime platform detection in internal/apple/ so that on non-macOS systems, Apple-specific commands log a clear error message explaining the feature requires macOS instead of failing with cryptic osascript errors +feature +platform
-(B) Guard the convert command's Apple Calendar/Reminders writer behind a runtime.GOOS == "darwin" check and return a descriptive error on Linux/Windows +feature +platform
+
 
 --- STABILITY / SCALING ---
 

@@ -33,16 +33,17 @@ func (p *TickTickParser) Parse(r io.Reader, sourcePath string) (*model.CalendarC
 		return nil, fmt.Errorf("charset detection failed: %w", err)
 	}
 	csvReader := csv.NewReader(tr)
-	records, err := csvReader.ReadAll()
+	csvReader.FieldsPerRecord = -1
+	csvReader.LazyQuotes = true
+
+	header, err := csvReader.Read()
+	if err == io.EOF {
+		return &model.CalendarCollection{Items: []model.CalendarItem{}, SourceApp: "ticktick"}, nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to read CSV: %w", err)
 	}
 
-	if len(records) == 0 {
-		return &model.CalendarCollection{Items: []model.CalendarItem{}, SourceApp: "ticktick"}, nil
-	}
-
-	header := records[0]
 	colMap := make(map[string]int)
 	for i, col := range header {
 		colMap[col] = i
@@ -55,8 +56,14 @@ func (p *TickTickParser) Parse(r io.Reader, sourcePath string) (*model.CalendarC
 		OriginalFilePath: sourcePath,
 	}
 
-	for i := 1; i < len(records); i++ {
-		row := records[i]
+	for {
+		row, err := csvReader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to read CSV: %w", err)
+		}
 		item := p.parseRow(row, colMap)
 		collection.Items = append(collection.Items, item)
 	}
