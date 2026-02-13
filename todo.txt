@@ -4,30 +4,12 @@ Each line = one atomic commit. Self-contained enough for any agent to execute wi
 
 --- TUI FOUNDATION ---
 
-feat(deps): add charmbracelet/bubbletea, charmbracelet/lipgloss, and charmbracelet/bubbles TUI dependencies to go.mod
-feat(tui): create internal/tui/styles.go with lipgloss theme constants (colors, borders, padding, text styles) reused across all TUI views
-feat(tui): create internal/tui/keys.go with bubbles/key.Map defining global keybindings (q=quit, ?=help, esc=back, tab=cycle, enter=select)
-feat(tui): create internal/tui/app.go with root bubbletea Model implementing Init/Update/View, top-level view routing enum, and keyboard dispatch to child views
 
 --- TUI VIEWS ---
 
-feat(tui): create internal/tui/views/home.go with main menu listing all salja commands (convert, validate, diff, sync, auth, config, list-formats) as a bubbles/list selection
-feat(tui): create internal/tui/views/format_picker.go with filterable list of all supported formats via bubbles/list, returning selected format ID to parent
-feat(tui): create internal/tui/views/file_picker.go with filesystem browser using bubbles/filepicker for selecting input/output file paths
-feat(tui): create internal/tui/views/convert.go with multi-step conversion workflow: file_picker(input) -> format_picker(from) -> file_picker(output) -> format_picker(to) -> progress bar -> result summary
-feat(tui): create internal/tui/views/validate.go with file validation view displaying parsed item count, field coverage percentages, detected format, and any parse errors in a styled table
-feat(tui): create internal/tui/views/diff.go with side-by-side diff viewer comparing two calendar/task files, color-coded additions (green) and deletions (red), scrollable
-feat(tui): create internal/tui/views/conflict.go with interactive conflict resolution UI showing paired items side-by-side and strategy picker (prefer-source, prefer-target, skip, merge-manual)
-feat(tui): create internal/tui/views/sync.go with cloud sync dashboard: per-service auth status indicators, push/pull action buttons, date range inputs, and real-time transfer progress
-feat(tui): create internal/tui/views/auth.go with OAuth login/logout/status view per service (google, microsoft, todoist, ticktick, notion), showing token expiry and refresh state
-feat(tui): create internal/tui/views/config.go with read-only TOML config viewer showing current settings grouped by section, with 'e' key to open $EDITOR
-feat(tui): create internal/tui/views/help.go with keybinding reference overlay modal toggled by '?' showing all global and context-specific shortcuts
-feat(tui): create internal/tui/views/error.go with reusable error display component rendering salja custom error types (ParseError, ValidationError, APIError) with styled formatting and exit code
 
 --- TUI INTEGRATION ---
 
-feat(cmd): add 'tui' subcommand in cmd/salja/commands/tui.go that initializes bubbletea program with fullscreen alt-screen and runs the root TUI app model
-feat(cmd): modify cmd/salja/main.go to launch TUI when salja is invoked with zero arguments (no subcommand), preserving existing CLI behavior when args are provided
 feat(tui/test): add unit tests for each TUI model in internal/tui/ verifying Init/Update state transitions, key handling, and View rendering output strings
 
 --- MCP SERVER FOUNDATION ---
