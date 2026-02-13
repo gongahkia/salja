@@ -3,7 +3,7 @@
 
 # `Salja`
 
-Universal CLI for converting between calendar and task management formats — ICS, Google Calendar, Outlook, Todoist, TickTick, Notion, Asana, Trello, OmniFocus, and Apple Calendar/Reminders — with conflict detection, fidelity checking, and cloud sync.
+[All-in-one](https://www.collinsdictionary.com/us/dictionary/english/all-in-one#:~:text=All-in-one%20means%20having,blend%20of%20stocks%20and%20bonds.) converter between [calendar and task management apps](#support) with [native cloud sync](#architecture) and [conflict detection](#architecture), served as a [CLI tool](#architecture) *(now also available as an [**MCP server**](#mcp-server))*.
 
 ## Stack
 
@@ -12,12 +12,10 @@ Universal CLI for converting between calendar and task management formats — IC
 * *MCP*: [mcp-go](https://github.com/mark3labs/mcp-go)
 * *Parsing*: [go-ical](https://github.com/emersion/go-ical) 
 * *Config files*: [TOML](https://github.com/BurntSushi/toml) 
-* *Build*: [GoReleaser](https://goreleaser.com/), [Docker](https://www.docker.com/)
 * *Lint*: [golangci-lint](https://golangci-lint.run/)
+* *Build*: [GoReleaser](https://goreleaser.com/), [Docker](https://www.docker.com/)
 
-## What `Salja` can do *([currently](https://github.com/gongahkia/salja/issues))*
-
-### Format Conversion
+## Support
 
 | Format | Extension | Events | Tasks | Recurrence | Subtasks |
 |---|---|---|---|---|---|
@@ -33,185 +31,121 @@ Universal CLI for converting between calendar and task management formats — IC
 | **Apple Calendar** | native | yes | no | no | no |
 | **Apple Reminders** | native | no | yes | no | no |
 
-### Cloud Sync (OAuth)
+## What `Salja` can do *([at the moment](https://github.com/gongahkia/salja/issues))*
 
-Push/pull to Google Calendar, Microsoft Outlook, Todoist, TickTick, and Notion via authenticated API calls with PKCE OAuth2 flow, token refresh, and secure keyring storage.
-
-### Conflict Detection
-
-Fuzzy duplicate detection using UID matching, Levenshtein title distance, and date proximity heuristics. Configurable resolution strategies: `ask`, `prefer-source`, `prefer-target`, `skip-conflicts`, `fail-on-conflict`.
-
-### Fidelity Checking
-
-Pre-conversion warnings when the target format can't represent source data (subtasks, recurrence rules, reminders, timezones). Modes: `warn` (default), `error`, `silent`.
-
-### Other
-
-* Streaming CSV/ICS parsing for large files (constant memory)
-* Locale-aware date parsing (`--locale`)
-* Charset auto-detection (UTF-8, UTF-16, Shift-JIS, etc.)
-* Partial success mode (some items fail, rest convert)
-* Dry-run and JSON output for scripting
-* Shell completion (bash/zsh)
-* Apple Calendar/Reminders via native AppleScript (macOS only)
+1. **Cloud Sync (OAuth)**: Push/pull to Google Calendar, Microsoft Outlook, Todoist, TickTick, and Notion via authenticated API calls with PKCE OAuth2 flow, token refresh, and secure keyring storage.
+2. **Conflict Detection**: Fuzzy duplicate detection using UID matching, Levenshtein title distance, and date proximity heuristics. Configurable resolution strategies: `ask`, `prefer-source`, `prefer-target`, `skip-conflicts`, `fail-on-conflict`.
+3. **Fidelity Checking**: Pre-conversion warnings when the target format can't represent source data (subtasks, recurrence rules, reminders, timezones). Modes: `warn` (default), `error`, `silent`.
+4. **Streaming CSV/ICS parsing**: 
+5. **Locale-aware date parsing**: 
+6. **Shell completion**: 
+7. **Native AppleScript**:
 
 ## Usage
 
-### Install
+1. First run any of the below commands to get `Salja` on your local machine.
+    1. Homebrew
 
-```sh
-# homebrew
-brew install gongahkia/salja/salja
+    ```console
+    $ brew install gongahkia/salja/salja
+    ```
 
-# go install
-go install github.com/gongahkia/salja/cmd/salja@latest
+    2. Go install
 
-# from source
-git clone https://github.com/gongahkia/salja.git
-cd salja && make install
+    ```console
+    $ go install github.com/gongahkia/salja/cmd/salja@latest
+    ```
 
-# nix
-nix build .#salja
+    3. Build from source
 
-# docker
-docker build -t salja .
-docker run --rm salja convert input.ics output.csv --to gcal
+    ```console
+    $ git clone https://github.com/gongahkia/salja.git
+    $ cd salja && make install
+    ```
 
-# docker compose
-docker compose run --rm salja convert input.ics output.csv --to gcal
-docker compose run --rm salja-mcp
+    4. Nix build
 
-# arch linux
-makepkg -si
+    ```console
+    $ nix build .#salja
+    ```
+
+    5. Docker
+
+    ```console
+    $ docker build -t salja .
+    $ docker run --rm salja convert input.ics output.csv --to gcal
+    $ docker compose run --rm salja convert input.ics output.csv --to gcal
+    $ docker compose run --rm salja-mcp
+    ```
+
+    6. Arch linux
+
+    ```console
+    # arch linux
+    $ makepkg -si
+    ```
+
+2. Then execute the below commands for calendar/task conversion.
+
+```console
+$ salja convert calendar.ics tasks.csv --to todoist # auto-detect formats from file extensions
+$ salja convert data.csv output.ics --from gcal --to ics # explicit formats
+$ salja convert input.ics output.csv --to gcal --dry-run # dry-run preview
+$ salja convert input.ics output.csv --to todoist --fidelity error # strict mode (fail on data loss)
+$ salja convert new.ics existing.ics --merge # merge with conflict detection
+$ salja convert tasks.ics output --to apple-calendar --calendar "Work" # apple calendar (macOS)
 ```
 
-### Convert
+4. Alernatively use the below commands for cloud sync.
 
-```sh
-# auto-detect formats from file extensions
-salja convert calendar.ics tasks.csv --to todoist
+```console
+$ salja auth login google # authenticate with google
+$ salja auth login notion # authenticate with notion
 
-# explicit formats
-salja convert data.csv output.ics --from gcal --to ics
+$ salja sync push calendar.ics --to google # push local file to google cloud
+$ salja sync push tasks.csv --to todoist --dry-run # push local file to todoist cloud
 
-# dry-run preview
-salja convert input.ics output.csv --to gcal --dry-run
+$ salja sync pull --from google --output calendar.ics # pull from google cloud to local file
+$ salja sync pull --from todoist --output tasks.csv --start 2026-01-01 --end 2026-06-01 # pull from todoist cloud
 
-# strict mode (fail on data loss)
-salja convert input.ics output.csv --to todoist --fidelity error
-
-# merge with conflict detection
-salja convert new.ics existing.ics --merge
-
-# apple calendar (macOS)
-salja convert tasks.ics output --to apple-calendar --calendar "Work"
+$ salja auth status # check auth status
 ```
 
-### Cloud Sync
+5. Additionally run any of the below commands.
 
-```sh
-# authenticate
-salja auth login google
-salja auth login notion
+```console
+$ salja list-formats # list supported formats
 
-# push local file to cloud
-salja sync push calendar.ics --to google
-salja sync push tasks.csv --to todoist --dry-run
+$ salja validate calendar.ics # validate a file
 
-# pull from cloud to local file
-salja sync pull --from google --output calendar.ics
-salja sync pull --from todoist --output tasks.csv --start 2026-01-01 --end 2026-06-01
+$ salja diff old.ics new.ics --format table # diff two files
 
-# check auth status
-salja auth status
+$ salja config init # config initialisation
+$ salja config path # config path
+
+$ source <(salja completion bash) # shell completion for bash
+$ salja completion zsh > ~/.zfunc/_salja # shell completion for zsh
 ```
 
-### Other Commands
+6. Finally run `Salja`'s TUI with the following command.
 
-```sh
-# list supported formats
-salja list-formats
-
-# validate a file
-salja validate calendar.ics
-
-# diff two files
-salja diff old.ics new.ics --format table
-
-# config
-salja config init
-salja config path
-
-# shell completion
-source <(salja completion bash)
-salja completion zsh > ~/.zfunc/_salja
+```console
+$ salja # launches TUI
+$ salja tui # does the same thing as above
 ```
-
-### Configuration
-
-Config lives at `$XDG_CONFIG_HOME/salja/config.toml` (default `~/.config/salja/config.toml`).
-
-```toml
-preferred_mode = "file"
-default_timezone = "UTC"
-conflict_strategy = "ask"
-data_loss_mode = "warn"
-streaming_threshold_mb = 10
-api_timeout_seconds = 30
-
-[conflict_thresholds]
-levenshtein_threshold = 3
-min_title_length = 10
-date_proximity_hours = 24
-
-[api.google]
-client_id = ""
-client_secret = ""
-redirect_uri = ""
-```
-
-## Interactive TUI
-
-Launch the full-screen terminal UI by running `salja` with no arguments, or explicitly with `salja tui`.
-
-```sh
-salja       # launches TUI
-salja tui   # same thing
-```
-
-### Keybindings
-
-| Key | Action |
-|---|---|
-| `q` / `Ctrl+C` | Quit |
-| `?` | Toggle help overlay |
-| `Esc` | Back / close |
-| `Tab` | Cycle focus |
-| `Enter` | Select / confirm |
-| `↑` / `k` | Move up |
-| `↓` / `j` | Move down |
-| `←` / `h` | Move left |
-| `→` / `l` | Move right |
-| `e` | Open `$EDITOR` (config view) |
-| `p` | Push (sync view) |
-| `l` | Pull (sync view) |
-
-The TUI provides views for conversion, validation, diffing, cloud sync, authentication management, and configuration viewing — all accessible from the main menu.
 
 ## MCP Server
 
-`salja-mcp` is an [MCP](https://modelcontextprotocol.io/) server that exposes salja's capabilities to AI assistants over stdio.
+`salja-mcp` is `Salja`'s [MCP server](https://modelcontextprotocol.io/) that exposes `Salja`'s capabilities to your AI agent via *stdio*.
 
-### Install
+1. Run the below to install `salja-mcp`.
 
-```sh
-go install github.com/gongahkia/salja/cmd/salja-mcp@latest
-
-# or via docker
-docker run --rm -i --entrypoint salja-mcp salja
+```console
+$ go install github.com/gongahkia/salja/cmd/salja-mcp@latest # install via go install
+$ docker run --rm -i --entrypoint salja-mcp salja # install via docker
 ```
 
-### Tools
+2. Your AI agent then has access to the following skills.
 
 | Tool | Description |
 |---|---|
@@ -230,21 +164,6 @@ docker run --rm -i --entrypoint salja-mcp salja
 | `salja://formats` | All registered format metadata |
 | `salja://config` | Current configuration values |
 | `salja://auth/{service}` | Auth state for a specific service |
-
-### Claude Desktop Configuration
-
-Add to `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "salja": {
-      "command": "salja-mcp",
-      "args": []
-    }
-  }
-}
-```
 
 ## Architecture
 
