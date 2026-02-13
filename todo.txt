@@ -10,10 +10,7 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 
 --- DX / UTILITY ---
 
-(B) Implement Google Calendar OAuth2 login flow in cmd/salja/auth.go using the existing TokenStore and GCalClient from internal/api so that salja auth login google opens a browser-based OAuth consent flow, receives the callback, and persists the token via DefaultTokenStore +feature +api
-(B) Implement Microsoft Outlook OAuth2 login flow in cmd/salja/auth.go using the existing TokenStore and MSGraphClient from internal/api so that salja auth login microsoft opens a browser-based OAuth consent flow, receives the callback, and persists the token via DefaultTokenStore +feature +api
-(B) Implement salja auth logout <service> in cmd/salja/auth.go to remove the stored token for a given service from the TokenStore file +feature +api
-(B) Implement salja auth status in cmd/salja/auth.go to display which services have valid non-expired tokens by reading DefaultTokenStore and checking Token.IsExpired +feature +api
+
 (B) Implement salja sync push <file> --to google in cmd/salja/sync.go that parses the local file, authenticates via TokenStore, and creates events via GCalClient.CreateEvent for each CalendarItem +feature +api
 (B) Implement salja sync push <file> --to microsoft in cmd/salja/sync.go that parses the local file, authenticates via TokenStore, and creates events via MSGraphClient.CreateEvent for each CalendarItem +feature +api
 (B) Implement salja sync pull --from google --output <file> in cmd/salja/sync.go that fetches events via GCalClient.ListEvents and writes them to the specified output file using the appropriate writer +feature +api
