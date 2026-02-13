@@ -173,4 +173,4 @@ redirect_uri = ""
 
 ## Reference
 
-The name `Salja` comes from the Swedish word *salja* meaning "to sell/trade", reflecting the tool's purpose of trading data between calendar and task formats.
+The name `Salja` is in reference to...
