@@ -11,6 +11,7 @@ import (
 "strings"
 "time"
 
+salerr "github.com/gongahkia/salja/internal/errors"
 "github.com/gongahkia/salja/internal/model"
 )
 
@@ -30,30 +31,43 @@ httpClient: &http.Client{Timeout: 30 * time.Second},
 }
 
 func (c *GCalClient) doRequest(ctx context.Context, method, url string, body interface{}) ([]byte, int, error) {
+var respBody []byte
+var statusCode int
+
+err := salerr.Retry(salerr.DefaultRetryConfig(), func() error {
 var reqBody io.Reader
 if body != nil {
 data, err := json.Marshal(body)
 if err != nil {
-return nil, 0, err
+return err
 }
 reqBody = bytes.NewReader(data)
 }
 
 req, err := http.NewRequestWithContext(ctx, method, url, reqBody)
 if err != nil {
-return nil, 0, err
+return err
 }
 req.Header.Set("Authorization", "Bearer "+c.token.AccessToken)
 req.Header.Set("Content-Type", "application/json")
 
 resp, err := c.httpClient.Do(req)
 if err != nil {
-return nil, 0, err
+return err
 }
 defer resp.Body.Close()
 
-respBody, err := io.ReadAll(resp.Body)
-return respBody, resp.StatusCode, err
+respBody, err = io.ReadAll(resp.Body)
+statusCode = resp.StatusCode
+
+if resp.StatusCode == 429 || resp.StatusCode >= 500 {
+return &salerr.APIError{Service: "google-calendar", StatusCode: resp.StatusCode, Message: string(respBody)}
+}
+
+return err
+})
+
+return respBody, statusCode, err
 }
 
 // GCalEvent represents a Google Calendar event.
