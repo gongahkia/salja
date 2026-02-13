@@ -1,3 +1,60 @@
 SALJA Evolution Map — Audit-Driven Improvements
 Philosophy: File-based calendar conversion CLI for power users and developers. Data fidelity configurable. Interactive-first.
 ================================================================================
+
+--- PHILOSOPHICAL ALIGNMENT ---
+
+(B) Wire the StreamingThresholdMB config value into the convert command so that files exceeding the threshold use StreamingCSVParser and StreamingICSParser from internal/errors/streaming.go instead of loading entire files into memory via ReadAll +feature +performance
+(B) Implement the DataLossMode enforcement in cmd/salja/convert.go so that when mode is "error" the CLI exits non-zero on any DataLossWarning, when "warn" it prints warnings to stderr, and when "silent" it suppresses all fidelity output +feature +fidelity
+(B) Add a --fidelity flag to the convert command that overrides config.DataLossMode per-run with values warn|error|silent +feature +fidelity
+(B) Extend internal/fidelity/check.go to detect and warn about priority mapping collisions (e.g. PriorityLow and PriorityNone both mapping to "1" in Todoist output) per target format +feature +fidelity
+(B) Extend internal/fidelity/check.go to warn when subtask priority will be dropped during conversion because the Subtask model struct lacks a Priority field +feature +fidelity
+(B) Extend internal/fidelity/check.go to warn when reminders will be lost converting from ICS to any CSV-based format since no CSV parser extracts reminder data +feature +fidelity
+(B) Add a --json flag to the convert command that outputs a structured JSON conversion report to stdout including item counts, warnings, errors, and skipped items instead of human-readable text +feature
+(B) Surface ErrorCollector warnings and per-item errors in the CLI output of the convert command so partial parse failures are visible to the user instead of silently accumulated +feature +errors
+(B) Add a --strict flag to the convert command that treats any ErrorCollector warning as a fatal error and exits non-zero +feature +errors
+
+--- DX / UTILITY ---
+
+(B) Implement Google Calendar OAuth2 login flow in cmd/salja/auth.go using the existing TokenStore and GCalClient from internal/api so that salja auth login google opens a browser-based OAuth consent flow, receives the callback, and persists the token via DefaultTokenStore +feature +api
+(B) Implement Microsoft Outlook OAuth2 login flow in cmd/salja/auth.go using the existing TokenStore and MSGraphClient from internal/api so that salja auth login microsoft opens a browser-based OAuth consent flow, receives the callback, and persists the token via DefaultTokenStore +feature +api
+(B) Implement salja auth logout <service> in cmd/salja/auth.go to remove the stored token for a given service from the TokenStore file +feature +api
+(B) Implement salja auth status in cmd/salja/auth.go to display which services have valid non-expired tokens by reading DefaultTokenStore and checking Token.IsExpired +feature +api
+(B) Implement salja sync push <file> --to google in cmd/salja/sync.go that parses the local file, authenticates via TokenStore, and creates events via GCalClient.CreateEvent for each CalendarItem +feature +api
+(B) Implement salja sync push <file> --to microsoft in cmd/salja/sync.go that parses the local file, authenticates via TokenStore, and creates events via MSGraphClient.CreateEvent for each CalendarItem +feature +api
+(B) Implement salja sync pull --from google --output <file> in cmd/salja/sync.go that fetches events via GCalClient.ListEvents and writes them to the specified output file using the appropriate writer +feature +api
+(B) Implement salja sync pull --from microsoft --output <file> in cmd/salja/sync.go that fetches events via MSGraphClient.ListEvents and writes them to the specified output file using the appropriate writer +feature +api
+(B) Add token refresh logic in internal/api/oauth.go so that when a stored token is expired but has a refresh_token, GCalClient and MSGraphClient automatically request a new access_token before making API calls +feature +api
+(B) Implement retry logic with exponential backoff in internal/api/gcal.go and internal/api/msgraph.go using the existing RetryConfig from internal/errors for rate-limited or transient HTTP failures +feature +api
+(B) Add a --dry-run flag to the sync push command that shows which items would be created/updated/skipped without making any API calls +feature +api
+(B) Make the diff command patch output format produce valid unified diff with proper --- +++ file headers and @@ hunk markers instead of the current custom +/- prefix format +refactor
+(B) Add a --output flag to the diff command to write results to a file instead of only stdout +feature
+(B) Add shell completion generation for bash, zsh, fish, and powershell via cobra's built-in completion subcommand +feature +dx
+(B) Add a salja version command that prints version, commit SHA, build date, Go version, and OS/arch in a structured format +feature +dx
+(B) Add runtime platform detection in internal/apple/ so that on non-macOS systems, Apple-specific commands log a clear error message explaining the feature requires macOS instead of failing with cryptic osascript errors +feature +platform
+(B) Guard the convert command's Apple Calendar/Reminders writer behind a runtime.GOOS == "darwin" check and return a descriptive error on Linux/Windows +feature +platform
+
+--- STABILITY / SCALING ---
+
+(B) Refactor all CSV parsers in internal/parsers to use csv.NewReader with per-row iteration instead of csvReader.ReadAll so that large files are processed in constant memory +refactor +performance
+(B) Refactor internal/parsers/todoist.go to log skipped rows with non-task TYPE values to the ErrorCollector instead of silently continuing +refactor +errors
+(B) Refactor internal/parsers/ticktick.go to log skipped rows to the ErrorCollector instead of silently continuing +refactor +errors
+(B) Refactor all CSV parsers to report malformed date values as ParseError via ErrorCollector instead of silently using zero-value time.Time +refactor +errors
+(B) Add a Priority field to the Subtask struct in internal/model/model.go and update all parsers and writers that handle subtasks to preserve subtask-level priority +refactor +fidelity
+
+(B) Replace the unused ParseError type in internal/errors/errors.go with actual usage in all parsers — each parser should wrap format-specific parse failures in ParseError with the relevant field and line number context +refactor +errors
+(B) Replace the unused ValidationError type in internal/errors/errors.go with actual usage in config validation, model Validate, and writer output validation +refactor +errors
+(B) Use ConflictError from internal/errors in internal/conflict/resolver.go when conflict resolution fails instead of returning plain error strings +refactor +errors
+(B) Use PermissionError from internal/errors in internal/apple/ when AppleScript permission checks fail instead of returning plain error strings +refactor +errors
+(B) Use APIError from internal/errors in internal/api/gcal.go and internal/api/msgraph.go for all HTTP error responses so callers can use IsRateLimit for retry logic +refactor +errors
+(B) Add a PartialResult return type to the convert command pipeline so that when some items fail parsing but others succeed, the CLI can report N succeeded / M failed with per-item error details +refactor +errors
+(B) Add input validation in the convert command to reject output formats that cannot represent the source item types (e.g. converting tasks to gcal which only supports events) with a clear error message before processing begins +feature +fidelity
+(B) Add conflict detection integration into the convert command with a --merge flag that runs Detector.FindDuplicates when the output file already exists and invokes the Resolver before overwriting +feature +conflict
+(B) Encrypt OAuth tokens at rest in internal/api/oauth.go using OS keyring (keyctl on Linux, Keychain on macOS, Credential Manager on Windows) instead of plaintext JSON +security
+(B) Add a file size pre-check in the convert command that warns when the input file exceeds StreamingThresholdMB and confirms the user wants to proceed in non-streaming mode if streaming is not yet triggered +feature +performance
+(B) Add context.Context propagation through all parser and writer interfaces so that long-running conversions can be cancelled via Ctrl+C through the existing SignalHandler +refactor +stability
+(B) Add timeout configuration for API calls in internal/api so that GCalClient and MSGraphClient respect a configurable timeout from Config instead of hardcoded 30 seconds +feature +api
+(B) Add rate limiting awareness to sync push commands so that batch event creation respects Google Calendar API quota (calendar.events.insert: 10 QPS) and Microsoft Graph limits +feature +api
+(B) Add integration tests for the convert command that verify round-trip conversion ICS→CSV→ICS preserves all fields that both formats support +infra +testing
+(B) Add integration tests for the convert command that verify round-trip conversion between every pair of registered formats and assert that DataLossWarnings match expected field losses +infra +testing
+(B) Add benchmark tests for CSV and ICS parsers with 10000-item files to establish baseline performance and detect regressions +infra +testing

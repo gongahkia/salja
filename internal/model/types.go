@@ -75,6 +75,7 @@ type Reminder struct {
 type Subtask struct {
 	Title     string
 	Status    Status
+	Priority  Priority
 	SortOrder int
 }
 

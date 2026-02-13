@@ -78,7 +78,7 @@ func (w *TodoistWriter) itemToRows(item *model.CalendarItem, indent int) [][]str
 		subtaskRow[0] = "task"
 		subtaskRow[1] = subtask.Title
 		subtaskRow[2] = ""
-		subtaskRow[3] = "1"
+		subtaskRow[3] = exportTodoistPriority(subtask.Priority)
 		subtaskRow[4] = fmt.Sprintf("%d", indent+1)
 		subtaskRow[5] = ""
 		subtaskRow[6] = ""

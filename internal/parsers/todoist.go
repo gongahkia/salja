@@ -82,15 +82,10 @@ func (p *TodoistParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 
 		if len(taskStack) > 0 && currentIndent > taskStack[len(taskStack)-1].indent {
 			parent := taskStack[len(taskStack)-1].item
-			// Preserve parent priority if subtask has default/no priority
-			subtaskPriority := item.Priority
-			if subtaskPriority == model.PriorityNone || subtaskPriority == model.PriorityLow {
-				subtaskPriority = parent.Priority
-			}
-			_ = subtaskPriority // Subtask struct lacks Priority field; priority preserved on parent
 			parent.Subtasks = append(parent.Subtasks, model.Subtask{
 				Title:     item.Title,
 				Status:    item.Status,
+				Priority:  item.Priority,
 				SortOrder: len(parent.Subtasks),
 			})
 		} else {
