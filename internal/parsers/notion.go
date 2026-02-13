@@ -60,7 +60,7 @@ func (p *NotionParser) Parse(ctx context.Context, r io.Reader, sourcePath string
 		}
 	}
 	if !hasTitle {
-		return nil, fmt.Errorf("Notion CSV %s missing a title column (expected one of: Title, Name, Task)", sourcePath)
+		return nil, fmt.Errorf("notion CSV %s missing a title column (expected one of: Title, Name, Task)", sourcePath)
 	}
 
 	ec := salerr.NewErrorCollector()

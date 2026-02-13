@@ -52,7 +52,7 @@ func (p *GoogleCalendarParser) Parse(ctx context.Context, r io.Reader, sourcePat
 
 	requiredCols := []string{"Subject"}
 	if missing := findMissingColumns(colMap, requiredCols); len(missing) > 0 {
-		return nil, fmt.Errorf("Google Calendar CSV %s missing required columns: %s", sourcePath, strings.Join(missing, ", "))
+		return nil, fmt.Errorf("google calendar CSV %s missing required columns: %s", sourcePath, strings.Join(missing, ", "))
 	}
 
 	ec := salerr.NewErrorCollector()
