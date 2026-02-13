@@ -14,6 +14,7 @@ import (
 salerr "github.com/gongahkia/salja/internal/errors"
 "github.com/gongahkia/salja/internal/fidelity"
 "github.com/gongahkia/salja/internal/model"
+"github.com/gongahkia/salja/internal/parsers"
 "github.com/gongahkia/salja/internal/registry"
 _ "github.com/gongahkia/salja/internal/registry" // ensure format registration
 "github.com/schollz/progressbar/v3"
@@ -23,7 +24,7 @@ _ "github.com/gongahkia/salja/internal/registry" // ensure format registration
 func NewConvertCmd() *cobra.Command {
 var fromFormat, toFormat string
 var dryRun, quiet, strict, jsonOutput, merge bool
-var outputFormat, fidelityMode string
+var outputFormat, fidelityMode, locale string
 
 cmd := &cobra.Command{
 Use:   "convert <input-file> <output-file>",
@@ -49,6 +50,10 @@ fmt.Fprintf(os.Stderr, "Detected target format: %s\n", toFormat)
 
 // Load config early so streaming threshold is available
 cfg, _ := config.Load()
+
+if locale != "" {
+parsers.SetLocale(locale)
+}
 
 ctx, cancel := context.WithCancel(context.Background())
 defer cancel()
@@ -283,6 +288,7 @@ cmd.Flags().StringVar(&fidelityMode, "fidelity", "", "Data loss mode override: w
 cmd.Flags().BoolVar(&strict, "strict", false, "Treat any warning as a fatal error")
 cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output structured JSON conversion report")
 cmd.Flags().BoolVar(&merge, "merge", false, "Detect duplicates and resolve conflicts when output file exists")
+cmd.Flags().StringVar(&locale, "locale", "", "Locale for ambiguous date parsing (e.g. en-gb, de, ja)")
 
 return cmd
 }

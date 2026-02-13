@@ -1,11 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
 
 	"github.com/gongahkia/salja/cmd/salja/commands"
+	"github.com/gongahkia/salja/internal/config"
+	salerr "github.com/gongahkia/salja/internal/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -26,6 +29,13 @@ func main() {
 	rootCmd.PersistentFlags().Bool("verbose", false, "Enable verbose output")
 	rootCmd.PersistentFlags().String("config", "", "Config file path")
 
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if cfgPath, _ := cmd.Flags().GetString("config"); cfgPath != "" {
+			config.SetOverridePath(cfgPath)
+		}
+		return nil
+	}
+
 	rootCmd.AddCommand(commands.NewConvertCmd())
 	rootCmd.AddCommand(commands.NewListFormatsCmd())
 	rootCmd.AddCommand(commands.NewValidateCmd())
@@ -38,7 +48,19 @@ func main() {
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		var parseErr *salerr.ParseError
+		var validErr *salerr.ValidationError
+		var conflictErr *salerr.ConflictError
+		switch {
+		case errors.As(err, &parseErr):
+			os.Exit(1)
+		case errors.As(err, &validErr):
+			os.Exit(2)
+		case errors.As(err, &conflictErr):
+			os.Exit(3)
+		default:
+			os.Exit(1)
+		}
 	}
 }
 

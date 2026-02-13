@@ -62,9 +62,19 @@ DateProximityHours:   24,
 }
 }
 
+var overridePath string
+
+// SetOverridePath sets a custom config file path, overriding the default.
+func SetOverridePath(path string) {
+	overridePath = path
+}
+
 func Load() (*Config, error) {
-configPath := ConfigPath()
-return LoadFrom(configPath)
+	if overridePath != "" {
+		return LoadFrom(overridePath)
+	}
+	configPath := ConfigPath()
+	return LoadFrom(configPath)
 }
 
 func LoadFrom(path string) (*Config, error) {

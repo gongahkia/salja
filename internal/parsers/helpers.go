@@ -30,3 +30,8 @@ var defaultDateParser = salerr.NewAmbiguousDateParser("")
 func parseAmbiguousDate(s string) (time.Time, error) {
 	return defaultDateParser.Parse(s)
 }
+
+// SetLocale updates the date parser with the given locale.
+func SetLocale(locale string) {
+	defaultDateParser = salerr.NewAmbiguousDateParser(locale)
+}

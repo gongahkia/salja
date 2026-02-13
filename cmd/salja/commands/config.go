@@ -5,6 +5,8 @@ import (
 "os"
 "path/filepath"
 
+"github.com/BurntSushi/toml"
+"github.com/gongahkia/salja/internal/config"
 "github.com/spf13/cobra"
 )
 
@@ -39,6 +41,14 @@ defaultConfig := `# salja configuration
 preferred_mode = "file"
 default_timezone = "UTC"
 conflict_strategy = "ask"
+data_loss_mode = "warn"
+streaming_threshold_mb = 10
+api_timeout_seconds = 30
+
+[conflict_thresholds]
+levenshtein_threshold = 3
+min_title_length = 10
+date_proximity_hours = 24
 
 [priority_map]
 
@@ -72,6 +82,20 @@ return nil
 })
 
 return cmd
+}
+
+func newConfigShowCmd() *cobra.Command {
+return &cobra.Command{
+Use:   "show",
+Short: "Print current configuration as TOML",
+RunE: func(cmd *cobra.Command, args []string) error {
+cfg, err := config.Load()
+if err != nil {
+return fmt.Errorf("failed to load config: %w", err)
+}
+return toml.NewEncoder(os.Stdout).Encode(cfg)
+},
+}
 }
 
 func getConfigDir() string {

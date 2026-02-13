@@ -22,8 +22,7 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 
 --- DX / UTILITY ---
 
-(B) Fix .github/workflows/ci.yml to trigger on branches: [main] instead of [master] on both push and pull_request events — current default branch is main so CI never triggers +infra
-(B) Delete the DataLossChecker struct and its Check method from internal/conflict/resolver.go (lines 238-278) — this duplicates internal/fidelity/checker.go and is unused by any caller +refactor
+
 (B) Wire config.ConflictThresholds into conflict.Detector by adding a Config field to Detector struct, passing thresholds from config.Load() in convert.go, and replacing hardcoded values: levenshtein < 3 with cfg.LevenshteinThreshold, len > 10 with cfg.MinTitleLength, day-level timeMatch with cfg.DateProximityHours +refactor
 (B) Wire config.APITimeoutSeconds into TodoistClient, TickTickClient, and NotionClient by adding a WithTimeout constructor variant (like GCalClientWithTimeout) that sets httpClient.Timeout = time.Duration(cfg.APITimeoutSeconds) * time.Second +refactor
 (B) Add missing fields to `config init` template in cmd/salja/commands/config.go: data_loss_mode = "warn", streaming_threshold_mb = 10, api_timeout_seconds = 30, [conflict_thresholds] section with levenshtein_threshold = 3, min_title_length = 10, date_proximity_hours = 24 +infra
@@ -39,7 +38,7 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 (B) Add unit tests for apple/executor.go by extracting RunAppleScript into an interface (ScriptRunner) with a mock implementation, then test CalendarWriter.createEvent and RemindersWriter.createReminder with mock runner +testing +apple
 (B) Add httptest-based unit tests for TodoistClient.GetTasks and CreateTask in internal/api/api_test.go — mock server returns JSON tasks, verify mapping and error handling for non-200 status codes +testing
 (B) Add httptest-based unit tests for NotionClient.QueryDatabase and CreatePage in internal/api/api_test.go — mock server returns paginated NotionQueryResult, verify cursor following and 429 handling +testing
-(B) Remove custom min function from internal/conflict/detector.go (lines 226-234) — Go 1.21+ has builtin min(); go.mod specifies go 1.25.7 so this shadows the builtin +refactor
+
 (B) Add Dockerfile to project root: multi-stage build (FROM golang:1.25 AS builder, COPY go.mod go.sum, RUN go mod download, COPY . ., RUN CGO_ENABLED=0 go build -o /salja ./cmd/salja, FROM scratch, COPY --from=builder /salja /salja, ENTRYPOINT ["/salja"]) +infra
 (B) Add flake.nix to project root using buildGoModule with vendorHash, src = ./., subPackages = ["cmd/salja"], meta.mainProgram = "salja" +infra
 (B) Add PKGBUILD file for AUR: pkgname=salja, source from GitHub releases tarball, build() { go build -o salja ./cmd/salja }, package() { install -Dm755 salja "$pkgdir/usr/bin/salja" } +infra
