@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"github.com/gongahkia/salja/internal/apple"
 	"github.com/gongahkia/salja/internal/ics"
 	"github.com/gongahkia/salja/internal/parsers"
 	"github.com/gongahkia/salja/internal/writers"
@@ -127,6 +128,32 @@ func init() {
 			SupportsTasks:      true,
 			SupportsRecurrence: false,
 			SupportsSubtasks:   true,
+		},
+	})
+
+	Register(&FormatEntry{
+		Name:       "apple-calendar",
+		Extensions: []string{},
+		NewParser:  func() Parser { return apple.NewCalendarParserAdapter() },
+		NewWriter:  func() Writer { return apple.NewCalendarWriterAdapter() },
+		Capabilities: FormatCapabilities{
+			SupportsEvents:     true,
+			SupportsTasks:      false,
+			SupportsRecurrence: false,
+			SupportsSubtasks:   false,
+		},
+	})
+
+	Register(&FormatEntry{
+		Name:       "apple-reminders",
+		Extensions: []string{},
+		NewParser:  func() Parser { return apple.NewRemindersParserAdapter() },
+		NewWriter:  func() Writer { return apple.NewRemindersWriterAdapter() },
+		Capabilities: FormatCapabilities{
+			SupportsEvents:     false,
+			SupportsTasks:      true,
+			SupportsRecurrence: false,
+			SupportsSubtasks:   false,
 		},
 	})
 }

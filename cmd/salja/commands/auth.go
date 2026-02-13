@@ -3,6 +3,7 @@ package commands
 import (
 "context"
 "fmt"
+"os"
 "time"
 
 "github.com/gongahkia/salja/internal/api"
@@ -64,8 +65,43 @@ TokenURL:    "https://login.microsoftonline.com/common/oauth2/v2.0/token",
 RedirectURI: cfg.API.Microsoft.RedirectURI,
 Scopes:      []string{"Calendars.ReadWrite", "offline_access"},
 }
+case "todoist":
+if cfg.API.Todoist.ClientID == "" {
+return fmt.Errorf("configure api.todoist.client_id in %s first", config.ConfigPath())
+}
+pkceConfig = api.PKCEConfig{
+ClientID:    cfg.API.Todoist.ClientID,
+AuthURL:     "https://todoist.com/oauth/authorize",
+TokenURL:    "https://todoist.com/oauth/access_token",
+RedirectURI: cfg.API.Todoist.RedirectURI,
+Scopes:      []string{"data:read_write"},
+}
+case "ticktick":
+if cfg.API.TickTick.ClientID == "" {
+return fmt.Errorf("configure api.ticktick.client_id in %s first", config.ConfigPath())
+}
+pkceConfig = api.PKCEConfig{
+ClientID:    cfg.API.TickTick.ClientID,
+AuthURL:     "https://ticktick.com/oauth/authorize",
+TokenURL:    "https://ticktick.com/oauth/token",
+RedirectURI: cfg.API.TickTick.RedirectURI,
+Scopes:      []string{"tasks:read", "tasks:write"},
+}
+case "notion":
+var input string
+fmt.Fprint(os.Stderr, "Enter your Notion integration token: ")
+fmt.Fscanln(os.Stdin, &input)
+if input == "" {
+return fmt.Errorf("token cannot be empty")
+}
+token := &api.Token{AccessToken: input, ExpiresAt: time.Now().AddDate(10, 0, 0)}
+if err := store.Set("notion", token); err != nil {
+return fmt.Errorf("failed to save token: %w", err)
+}
+fmt.Fprintf(cmd.ErrOrStderr(), "✓ Stored Notion integration token\n")
+return nil
 default:
-return fmt.Errorf("unsupported service %q; supported: google, microsoft", service)
+return fmt.Errorf("unsupported service %q; supported: google, microsoft, todoist, ticktick, notion", service)
 }
 
 ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)

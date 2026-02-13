@@ -17,14 +17,12 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 (B) Add `sync push --to notion` case in cmd/salja/commands/sync.go that creates a NotionClient with token, prompts for database_id, iterates items, calls CalendarItemToNotion and client.CreatePage +feature +sync
 (B) Add `sync pull --from notion` case in cmd/salja/commands/sync.go that calls NotionClient.QueryDatabase with pagination (follow HasMore/NextCursor), maps via NotionToCalendarItem, writes output +feature +sync
 (B) Add `--start` and `--end` flags to `sync pull` command (default: -1mo/+3mo) to replace hardcoded date range in newSyncPullCmd at sync.go:113-115 +feature +sync
-(B) Add interactive format picker when DetectFormat returns "unknown" in convert.go — present registered formats via fmt.Fprintf(os.Stderr) numbered list, read selection from stdin +feature +ux
-(B) Add ANSI color helper (internal/ui/color.go) with functions Red/Yellow/Green/Bold that check os.Getenv("NO_COLOR") and isatty, then use it in convert.go warnings (yellow), errors (red), success (green) +feature +ux
+
 
 --- DX / UTILITY ---
 
 
-(B) Wire config.ConflictThresholds into conflict.Detector by adding a Config field to Detector struct, passing thresholds from config.Load() in convert.go, and replacing hardcoded values: levenshtein < 3 with cfg.LevenshteinThreshold, len > 10 with cfg.MinTitleLength, day-level timeMatch with cfg.DateProximityHours +refactor
-(B) Wire config.APITimeoutSeconds into TodoistClient, TickTickClient, and NotionClient by adding a WithTimeout constructor variant (like GCalClientWithTimeout) that sets httpClient.Timeout = time.Duration(cfg.APITimeoutSeconds) * time.Second +refactor
+
 
 
 --- STABILITY / SCALING ---

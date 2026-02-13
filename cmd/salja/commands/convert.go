@@ -26,6 +26,7 @@ func NewConvertCmd() *cobra.Command {
 var fromFormat, toFormat string
 var dryRun, quiet, strict, jsonOutput, merge bool
 var outputFormat, fidelityMode, locale string
+var appleCalendar, appleList string
 
 cmd := &cobra.Command{
 Use:   "convert <input-file> <output-file>",
@@ -58,6 +59,14 @@ cfg, _ := config.Load()
 
 if locale != "" {
 parsers.SetLocale(locale)
+}
+
+// Validate apple-specific flags
+if (fromFormat == "apple-calendar" || toFormat == "apple-calendar") && appleCalendar == "" {
+return fmt.Errorf("--calendar flag is required when using apple-calendar format")
+}
+if (fromFormat == "apple-reminders" || toFormat == "apple-reminders") && appleList == "" {
+return fmt.Errorf("--list flag is required when using apple-reminders format")
 }
 
 ctx, cancel := context.WithCancel(context.Background())
@@ -299,6 +308,8 @@ cmd.Flags().BoolVar(&strict, "strict", false, "Treat any warning as a fatal erro
 cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output structured JSON conversion report")
 cmd.Flags().BoolVar(&merge, "merge", false, "Detect duplicates and resolve conflicts when output file exists")
 cmd.Flags().StringVar(&locale, "locale", "", "Locale for ambiguous date parsing (e.g. en-gb, de, ja)")
+cmd.Flags().StringVar(&appleCalendar, "calendar", "", "Apple Calendar name (required for apple-calendar format)")
+cmd.Flags().StringVar(&appleList, "list", "", "Apple Reminders list name (required for apple-reminders format)")
 
 return cmd
 }
