@@ -3,6 +3,7 @@ package commands
 import (
 "encoding/json"
 "fmt"
+"os"
 
 "github.com/gongahkia/salja/internal/conflict"
 "github.com/spf13/cobra"
@@ -11,6 +12,7 @@ import (
 func NewDiffCmd() *cobra.Command {
 var fromFormat, toFormat string
 var outputFormat string
+var outputFile string
 
 cmd := &cobra.Command{
 Use:   "diff <file1> <file2>",
@@ -55,6 +57,17 @@ removedTitles = append(removedTitles, item.Title)
 }
 }
 
+var out *os.File
+if outputFile != "" {
+out, err = os.Create(outputFile)
+if err != nil {
+return fmt.Errorf("failed to create output file: %w", err)
+}
+defer out.Close()
+} else {
+out = os.Stdout
+}
+
 switch outputFormat {
 case "json":
 result := map[string]interface{}{
@@ -67,33 +80,39 @@ result := map[string]interface{}{
 "removed":        removedTitles,
 }
 data, _ := json.MarshalIndent(result, "", "  ")
-fmt.Println(string(data))
+fmt.Fprintln(out, string(data))
 
 case "patch":
+// Valid unified diff format
+fmt.Fprintf(out, "--- %s\n", args[0])
+fmt.Fprintf(out, "+++ %s\n", args[1])
+if len(removedTitles) > 0 || len(addedTitles) > 0 {
+fmt.Fprintf(out, "@@ -%d,0 +%d,0 @@\n", len(col1.Items), len(col2.Items))
 for _, title := range removedTitles {
-fmt.Printf("- %s\n", title)
+fmt.Fprintf(out, "-%s\n", title)
 }
 for _, title := range addedTitles {
-fmt.Printf("+ %s\n", title)
+fmt.Fprintf(out, "+%s\n", title)
+}
 }
 
 default: // "table"
-fmt.Printf("File 1: %d items\n", len(col1.Items))
-fmt.Printf("File 2: %d items\n", len(col2.Items))
-fmt.Printf("Matching: %d items\n", len(matches))
-fmt.Printf("Added:   %d items (in file2 only)\n", len(addedTitles))
-fmt.Printf("Removed: %d items (in file1 only)\n", len(removedTitles))
+fmt.Fprintf(out, "File 1: %d items\n", len(col1.Items))
+fmt.Fprintf(out, "File 2: %d items\n", len(col2.Items))
+fmt.Fprintf(out, "Matching: %d items\n", len(matches))
+fmt.Fprintf(out, "Added:   %d items (in file2 only)\n", len(addedTitles))
+fmt.Fprintf(out, "Removed: %d items (in file1 only)\n", len(removedTitles))
 
 if len(removedTitles) > 0 {
-fmt.Println("\n--- Removed ---")
+fmt.Fprintln(out, "\n--- Removed ---")
 for _, title := range removedTitles {
-fmt.Printf("  - %s\n", title)
+fmt.Fprintf(out, "  - %s\n", title)
 }
 }
 if len(addedTitles) > 0 {
-fmt.Println("\n--- Added ---")
+fmt.Fprintln(out, "\n--- Added ---")
 for _, title := range addedTitles {
-fmt.Printf("  + %s\n", title)
+fmt.Fprintf(out, "  + %s\n", title)
 }
 }
 }
@@ -105,5 +124,6 @@ return nil
 cmd.Flags().StringVar(&fromFormat, "from", "", "Format of file1")
 cmd.Flags().StringVar(&toFormat, "to", "", "Format of file2")
 cmd.Flags().StringVar(&outputFormat, "format", "table", "Output format: table, json, or patch")
+cmd.Flags().StringVar(&outputFile, "output", "", "Write results to file instead of stdout")
 return cmd
 }

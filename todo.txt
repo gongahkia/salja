@@ -12,7 +12,6 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 
 
 
-(B) Implement retry logic with exponential backoff in internal/api/gcal.go and internal/api/msgraph.go using the existing RetryConfig from internal/errors for rate-limited or transient HTTP failures +feature +api
 (B) Make the diff command patch output format produce valid unified diff with proper --- +++ file headers and @@ hunk markers instead of the current custom +/- prefix format +refactor
 (B) Add a --output flag to the diff command to write results to a file instead of only stdout +feature
 (B) Add shell completion generation for bash, zsh, fish, and powershell via cobra's built-in completion subcommand +feature +dx
