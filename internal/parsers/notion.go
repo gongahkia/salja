@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -18,16 +19,16 @@ func NewNotionParser() *NotionParser {
 	return &NotionParser{}
 }
 
-func (p *NotionParser) ParseFile(filePath string) (*model.CalendarCollection, error) {
+func (p *NotionParser) ParseFile(ctx context.Context, filePath string) (*model.CalendarCollection, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open Notion CSV %s: %w", filePath, err)
 	}
 	defer f.Close()
-	return p.Parse(f, filePath)
+	return p.Parse(ctx, f, filePath)
 }
 
-func (p *NotionParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
+func (p *NotionParser) Parse(ctx context.Context, r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
 	tr, err := transcodeReader(r)
 	if err != nil {
 		return nil, fmt.Errorf("charset detection failed: %w", err)

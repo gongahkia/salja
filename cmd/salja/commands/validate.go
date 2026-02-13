@@ -1,6 +1,7 @@
 package commands
 
 import (
+"context"
 "fmt"
 "os"
 
@@ -22,7 +23,8 @@ if format == "" {
 format = DetectFormat(filePath)
 }
 
-collection, err := ReadInput(filePath, format, nil)
+ctx := context.Background()
+collection, err := ReadInput(ctx, filePath, format, nil)
 if err != nil {
 fmt.Fprintf(os.Stderr, "Validation failed: %v\n", err)
 return err

@@ -1,6 +1,7 @@
 package writers
 
 import (
+	"context"
 	"encoding/csv"
 	
 	"io"
@@ -15,16 +16,16 @@ func NewGoogleCalendarWriter() *GoogleCalendarWriter {
 	return &GoogleCalendarWriter{}
 }
 
-func (w *GoogleCalendarWriter) WriteFile(collection *model.CalendarCollection, filePath string) error {
+func (w *GoogleCalendarWriter) WriteFile(ctx context.Context, collection *model.CalendarCollection, filePath string) error {
 	f, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	return w.Write(collection, f)
+	return w.Write(ctx, collection, f)
 }
 
-func (w *GoogleCalendarWriter) Write(collection *model.CalendarCollection, writer io.Writer) error {
+func (w *GoogleCalendarWriter) Write(ctx context.Context, collection *model.CalendarCollection, writer io.Writer) error {
 	csvWriter := csv.NewWriter(writer)
 	defer csvWriter.Flush()
 

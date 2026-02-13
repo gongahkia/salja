@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -12,7 +13,7 @@ func TestTodoistFlatTask(t *testing.T) {
 task,Buy milk,From the store,4,0,2024-01-15,America/New_York`
 
 	p := NewTodoistParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -51,7 +52,7 @@ task,Child 1,,1,1,,
 task,Child 2,,1,1,,`
 
 	p := NewTodoistParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -89,7 +90,7 @@ func TestTodoistDateWithTimezone(t *testing.T) {
 task,Meeting,2024-06-15T14:00:00Z,Europe/London`
 
 	p := NewTodoistParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -109,7 +110,7 @@ note,Not A Task,1,0
 task,Another Task,1,0`
 
 	p := NewTodoistParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -127,7 +128,7 @@ task,Another Task,1,0`
 func TestTodoistSourceApp(t *testing.T) {
 	csv := "TYPE,CONTENT\ntask,Test\n"
 	p := NewTodoistParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -138,7 +139,7 @@ func TestTodoistSourceApp(t *testing.T) {
 
 func TestTodoistEmptyInput(t *testing.T) {
 	p := NewTodoistParser()
-	col, err := p.Parse(strings.NewReader(""), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(""), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

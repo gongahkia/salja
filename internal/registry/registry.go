@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"fmt"
 	"io"
 
@@ -8,13 +9,13 @@ import (
 )
 
 type Parser interface {
-	Parse(io.Reader, string) (*model.CalendarCollection, error)
-	ParseFile(string) (*model.CalendarCollection, error)
+	Parse(context.Context, io.Reader, string) (*model.CalendarCollection, error)
+	ParseFile(context.Context, string) (*model.CalendarCollection, error)
 }
 
 type Writer interface {
-	Write(*model.CalendarCollection, io.Writer) error
-	WriteFile(*model.CalendarCollection, string) error
+	Write(context.Context, *model.CalendarCollection, io.Writer) error
+	WriteFile(context.Context, *model.CalendarCollection, string) error
 }
 
 type ParserFactory func() Parser

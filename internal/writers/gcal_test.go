@@ -1,6 +1,7 @@
 package writers
 
 import (
+	"context"
 	"bytes"
 	"encoding/csv"
 	"strings"
@@ -16,14 +17,14 @@ func TestGCalWriterRoundtrip(t *testing.T) {
 Meeting,01/15/2024,2:00 PM,01/15/2024,3:00 PM,False,Team sync,Room 101`
 
 	p := parsers.NewGoogleCalendarParser()
-	col, err := p.Parse(strings.NewReader(input), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(input), "test.csv")
 	if err != nil {
 		t.Fatalf("parse error: %v", err)
 	}
 
 	var buf bytes.Buffer
 	w := NewGoogleCalendarWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -55,7 +56,7 @@ func TestGCalWriterAllDayDateFormat(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewGoogleCalendarWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -96,7 +97,7 @@ func TestGCalWriterSubtaskFlattening(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewGoogleCalendarWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -132,7 +133,7 @@ func TestGCalWriterTimedEvent(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewGoogleCalendarWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -152,7 +153,7 @@ func TestGCalWriterHeader(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewGoogleCalendarWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 

@@ -1,6 +1,7 @@
 package writers
 
 import (
+	"context"
 	"bytes"
 	"encoding/csv"
 	"strings"
@@ -16,14 +17,14 @@ func TestTodoistWriterRoundtrip(t *testing.T) {
 task,Buy milk,From the store,4,0,2024-01-15,America/New_York`
 
 	p := parsers.NewTodoistParser()
-	col, err := p.Parse(strings.NewReader(input), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(input), "test.csv")
 	if err != nil {
 		t.Fatalf("parse error: %v", err)
 	}
 
 	var buf bytes.Buffer
 	w := NewTodoistWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -74,7 +75,7 @@ func TestTodoistWriterSubtasksAsIndent(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewTodoistWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -115,7 +116,7 @@ func TestTodoistWriterDateFormat(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewTodoistWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -133,7 +134,7 @@ func TestTodoistWriterTimezone(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewTodoistWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -147,7 +148,7 @@ func TestTodoistWriterHeader(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewTodoistWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 

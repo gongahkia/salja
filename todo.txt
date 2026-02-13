@@ -19,7 +19,6 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 --- STABILITY / SCALING ---
 
 
-(B) Add a file size pre-check in the convert command that warns when the input file exceeds StreamingThresholdMB and confirms the user wants to proceed in non-streaming mode if streaming is not yet triggered +feature +performance
 (B) Add context.Context propagation through all parser and writer interfaces so that long-running conversions can be cancelled via Ctrl+C through the existing SignalHandler +refactor +stability
 (B) Add timeout configuration for API calls in internal/api so that GCalClient and MSGraphClient respect a configurable timeout from Config instead of hardcoded 30 seconds +feature +api
 (B) Add rate limiting awareness to sync push commands so that batch event creation respects Google Calendar API quota (calendar.events.insert: 10 QPS) and Microsoft Graph limits +feature +api

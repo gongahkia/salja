@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -18,16 +19,16 @@ func NewGoogleCalendarParser() *GoogleCalendarParser {
 	return &GoogleCalendarParser{}
 }
 
-func (p *GoogleCalendarParser) ParseFile(filePath string) (*model.CalendarCollection, error) {
+func (p *GoogleCalendarParser) ParseFile(ctx context.Context, filePath string) (*model.CalendarCollection, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open Google Calendar CSV %s: %w", filePath, err)
 	}
 	defer f.Close()
-	return p.Parse(f, filePath)
+	return p.Parse(ctx, f, filePath)
 }
 
-func (p *GoogleCalendarParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
+func (p *GoogleCalendarParser) Parse(ctx context.Context, r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
 	tr, err := transcodeReader(r)
 	if err != nil {
 		return nil, fmt.Errorf("charset detection failed: %w", err)

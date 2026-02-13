@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -12,7 +13,7 @@ func TestTickTickBasicTask(t *testing.T) {
 Buy groceries,Milk and eggs,"food, errands",2024-01-15T09:00:00Z,2024-01-16T09:00:00Z,5,0,America/New_York,false,false,,`
 
 	p := NewTickTickParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -56,7 +57,7 @@ func TestTickTickChecklist(t *testing.T) {
 	csv := "title,content,is_checklist\nParent Task,\"- [x] Sub 1\n- [ ] Sub 2\n- Sub 3\",true\n"
 
 	p := NewTickTickParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -111,7 +112,7 @@ func TestTickTickRepeatRules(t *testing.T) {
 	for _, tc := range tests {
 		csv := "title,repeat\nTask," + tc.input + "\n"
 		p := NewTickTickParser()
-		col, err := p.Parse(strings.NewReader(csv), "test.csv")
+		col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 		if err != nil {
 			t.Fatalf("unexpected error for %s: %v", tc.input, err)
 		}
@@ -140,7 +141,7 @@ func TestTickTickEmptyFields(t *testing.T) {
 	csv := "title,content,tags,start_date,due_date,priority,status\nMinimal,,,,,,\n"
 
 	p := NewTickTickParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -185,7 +186,7 @@ func TestTickTickCompletedTask(t *testing.T) {
 	csv := "title,status,completed_time\nDone Task,2,2024-06-01T12:00:00Z\n"
 
 	p := NewTickTickParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -201,7 +202,7 @@ func TestTickTickCompletedTask(t *testing.T) {
 func TestTickTickSourceApp(t *testing.T) {
 	csv := "title\nTest\n"
 	p := NewTickTickParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -213,7 +214,7 @@ func TestTickTickSourceApp(t *testing.T) {
 func TestTickTickIsAllDay(t *testing.T) {
 	csv := "title,is_all_day\nAll Day,true\nNot All Day,false\n"
 	p := NewTickTickParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -18,16 +19,16 @@ func NewOutlookParser() *OutlookParser {
 	return &OutlookParser{}
 }
 
-func (p *OutlookParser) ParseFile(filePath string) (*model.CalendarCollection, error) {
+func (p *OutlookParser) ParseFile(ctx context.Context, filePath string) (*model.CalendarCollection, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open Outlook CSV %s: %w", filePath, err)
 	}
 	defer f.Close()
-	return p.Parse(f, filePath)
+	return p.Parse(ctx, f, filePath)
 }
 
-func (p *OutlookParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
+func (p *OutlookParser) Parse(ctx context.Context, r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
 	tr, err := transcodeReader(r)
 	if err != nil {
 		return nil, fmt.Errorf("charset detection failed: %w", err)

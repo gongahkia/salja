@@ -1,6 +1,7 @@
 package commands
 
 import (
+"context"
 "encoding/json"
 "fmt"
 "os"
@@ -26,11 +27,12 @@ if toFormat == "" {
 toFormat = DetectFormat(args[1])
 }
 
-col1, err := ReadInput(args[0], fromFormat, nil)
+ctx := context.Background()
+col1, err := ReadInput(ctx, args[0], fromFormat, nil)
 if err != nil {
 return fmt.Errorf("failed to read file1: %w", err)
 }
-col2, err := ReadInput(args[1], toFormat, nil)
+col2, err := ReadInput(ctx, args[1], toFormat, nil)
 if err != nil {
 return fmt.Errorf("failed to read file2: %w", err)
 }

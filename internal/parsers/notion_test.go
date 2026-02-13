@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -12,7 +13,7 @@ func TestNotionAllColumns(t *testing.T) {
 Buy groceries,2024-01-15,Done,"food, errands",High`
 
 	p := NewNotionParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -45,7 +46,7 @@ func TestNotionNameColumnVariant(t *testing.T) {
 My Task,In Progress`
 
 	p := NewNotionParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -63,7 +64,7 @@ func TestNotionTaskColumnVariant(t *testing.T) {
 Another Task,Low`
 
 	p := NewNotionParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -81,7 +82,7 @@ func TestNotionMissingTitleError(t *testing.T) {
 Done,2024-01-01`
 
 	p := NewNotionParser()
-	_, err := p.Parse(strings.NewReader(csv), "test.csv")
+	_, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err == nil {
 		t.Fatal("expected error for missing title column")
 	}
@@ -95,7 +96,7 @@ func TestNotionMissingColumnsGraceful(t *testing.T) {
 Just a title`
 
 	p := NewNotionParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -124,7 +125,7 @@ Task5,Cancelled
 Task6,Not Started`
 
 	p := NewNotionParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -146,7 +147,7 @@ Task6,Not Started`
 func TestNotionSourceApp(t *testing.T) {
 	csv := "Title\nTest\n"
 	p := NewNotionParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -160,7 +161,7 @@ func TestNotionAlternateDateFormat(t *testing.T) {
 	csv := "Title,Date\nTask,\"January 15, 2024\"\n"
 
 	p := NewNotionParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

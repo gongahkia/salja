@@ -1,6 +1,7 @@
 package writers
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -17,17 +18,17 @@ func NewTickTickWriter() *TickTickWriter {
 	return &TickTickWriter{}
 }
 
-func (w *TickTickWriter) WriteFile(collection *model.CalendarCollection, filePath string) error {
+func (w *TickTickWriter) WriteFile(ctx context.Context, collection *model.CalendarCollection, filePath string) error {
 	f, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create TickTick CSV: %w", err)
 	}
 	defer f.Close()
 
-	return w.Write(collection, f)
+	return w.Write(ctx, collection, f)
 }
 
-func (w *TickTickWriter) Write(collection *model.CalendarCollection, writer io.Writer) error {
+func (w *TickTickWriter) Write(ctx context.Context, collection *model.CalendarCollection, writer io.Writer) error {
 	csvWriter := csv.NewWriter(writer)
 	defer csvWriter.Flush()
 

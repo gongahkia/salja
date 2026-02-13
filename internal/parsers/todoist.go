@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -18,17 +19,17 @@ func NewTodoistParser() *TodoistParser {
 	return &TodoistParser{}
 }
 
-func (p *TodoistParser) ParseFile(filePath string) (*model.CalendarCollection, error) {
+func (p *TodoistParser) ParseFile(ctx context.Context, filePath string) (*model.CalendarCollection, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open Todoist CSV: %w", err)
 	}
 	defer f.Close()
 
-	return p.Parse(f, filePath)
+	return p.Parse(ctx, f, filePath)
 }
 
-func (p *TodoistParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
+func (p *TodoistParser) Parse(ctx context.Context, r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
 	tr, err := transcodeReader(r)
 	if err != nil {
 		return nil, fmt.Errorf("charset detection failed: %w", err)

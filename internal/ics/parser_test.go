@@ -1,6 +1,7 @@
 package ics
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -23,7 +24,7 @@ END:VEVENT
 END:VCALENDAR`
 
 	parser := NewParser()
-	collection, err := parser.Parse(strings.NewReader(icsData), "test.ics")
+	collection, err := parser.Parse(context.Background(), strings.NewReader(icsData), "test.ics")
 	
 	if err != nil {
 		t.Fatalf("Failed to parse ICS: %v", err)
@@ -62,7 +63,7 @@ END:VEVENT
 END:VCALENDAR`
 
 	parser := NewParser()
-	collection, err := parser.Parse(strings.NewReader(icsData), "test.ics")
+	collection, err := parser.Parse(context.Background(), strings.NewReader(icsData), "test.ics")
 	
 	if err != nil {
 		t.Fatalf("Failed to parse ICS: %v", err)
@@ -97,7 +98,7 @@ END:VTODO
 END:VCALENDAR`
 
 	parser := NewParser()
-	collection, err := parser.Parse(strings.NewReader(icsData), "test.ics")
+	collection, err := parser.Parse(context.Background(), strings.NewReader(icsData), "test.ics")
 	
 	if err != nil {
 		t.Fatalf("Failed to parse ICS: %v", err)
@@ -133,7 +134,7 @@ END:VEVENT
 END:VCALENDAR`
 
 	parser := NewParser()
-	collection, err := parser.Parse(strings.NewReader(icsData), "test.ics")
+	collection, err := parser.Parse(context.Background(), strings.NewReader(icsData), "test.ics")
 	
 	if err != nil {
 		t.Fatalf("Failed to parse ICS: %v", err)
@@ -166,7 +167,7 @@ END:VEVENT
 END:VCALENDAR`
 
 	parser := NewParser()
-	collection, err := parser.Parse(strings.NewReader(icsData), "test.ics")
+	collection, err := parser.Parse(context.Background(), strings.NewReader(icsData), "test.ics")
 	
 	if err != nil {
 		t.Fatalf("Failed to parse ICS: %v", err)
@@ -192,7 +193,7 @@ THIS IS NOT VALID
 END:VEVENT`
 
 	parser := NewParser()
-	_, err := parser.Parse(strings.NewReader(icsData), "test.ics")
+	_, err := parser.Parse(context.Background(), strings.NewReader(icsData), "test.ics")
 	
 	if err == nil {
 		t.Error("Expected error for malformed input, got nil")
@@ -313,13 +314,13 @@ func TestWriterRoundTrip(t *testing.T) {
 	
 	writer := NewWriter()
 	var buf strings.Builder
-	err := writer.Write(&original, &buf)
+	err := writer.Write(context.Background(), &original, &buf)
 	if err != nil {
 		t.Fatalf("Failed to write ICS: %v", err)
 	}
 	
 	parser := NewParser()
-	parsed, err := parser.Parse(strings.NewReader(buf.String()), "test.ics")
+	parsed, err := parser.Parse(context.Background(), strings.NewReader(buf.String()), "test.ics")
 	if err != nil {
 		t.Fatalf("Failed to parse written ICS: %v", err)
 	}

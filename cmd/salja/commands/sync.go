@@ -34,7 +34,10 @@ RunE: func(cmd *cobra.Command, args []string) error {
 filePath := args[0]
 format := DetectFormat(filePath)
 
-collection, err := ReadInput(filePath, format, nil)
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+defer cancel()
+
+collection, err := ReadInput(ctx, filePath, format, nil)
 if err != nil {
 return fmt.Errorf("failed to read input: %w", err)
 }
@@ -52,9 +55,6 @@ return err
 if token.IsExpired() {
 return fmt.Errorf("token for %s is expired; run: salja auth login %s", to, to)
 }
-
-ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-defer cancel()
 
 switch to {
 case "google":
@@ -115,7 +115,7 @@ return err
 }
 
 outFormat := DetectFormat(output)
-if err := WriteOutput(collection, output, outFormat); err != nil {
+if err := WriteOutput(ctx, collection, output, outFormat); err != nil {
 return fmt.Errorf("failed to write output: %w", err)
 }
 

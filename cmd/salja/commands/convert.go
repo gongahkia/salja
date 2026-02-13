@@ -1,6 +1,7 @@
 package commands
 
 import (
+"context"
 "encoding/json"
 "fmt"
 "io"
@@ -49,6 +50,11 @@ fmt.Fprintf(os.Stderr, "Detected target format: %s\n", toFormat)
 // Load config early so streaming threshold is available
 cfg, _ := config.Load()
 
+ctx, cancel := context.WithCancel(context.Background())
+defer cancel()
+handler := salerr.NewSignalHandler(cancel)
+handler.Start()
+
 // File size pre-check: warn if file exceeds streaming threshold
 if inputFile != "-" {
 thresholdMB := 10
@@ -69,7 +75,7 @@ return fmt.Errorf("aborted by user")
 }
 }
 
-collection, err := ReadInput(inputFile, fromFormat, cfg)
+collection, err := ReadInput(ctx, inputFile, fromFormat, cfg)
 if err != nil {
 return fmt.Errorf("failed to read input: %w", err)
 }
@@ -171,7 +177,7 @@ case "silent":
 // Merge with existing output file when --merge is set
 if merge {
 if _, statErr := os.Stat(outputFile); statErr == nil {
-existing, readErr := ReadInput(outputFile, toFormat, cfg)
+existing, readErr := ReadInput(ctx, outputFile, toFormat, cfg)
 if readErr != nil {
 return fmt.Errorf("--merge: failed to read existing output file: %w", readErr)
 }
@@ -214,7 +220,7 @@ collection.Items = append(collection.Items, existing.Items...)
 }
 }
 
-if err := WriteOutput(collection, outputFile, toFormat); err != nil {
+if err := WriteOutput(ctx, collection, outputFile, toFormat); err != nil {
 return fmt.Errorf("failed to write output: %w", err)
 }
 
@@ -317,7 +323,7 @@ return strings.TrimPrefix(ext, ".")
 return "unknown"
 }
 
-func ReadInput(filePath, format string, cfg *config.Config) (*model.CalendarCollection, error) {
+func ReadInput(ctx context.Context, filePath, format string, cfg *config.Config) (*model.CalendarCollection, error) {
 var r io.Reader
 if filePath == "-" {
 r = os.Stdin
@@ -337,7 +343,7 @@ return nil, fmt.Errorf("failed to stat input file: %w", err)
 fileSizeMB := info.Size() / (1024 * 1024)
 if fileSizeMB >= int64(thresholdMB) {
 fmt.Fprintf(os.Stderr, "File exceeds %dMB threshold, using streaming parser\n", thresholdMB)
-return readInputStreaming(filePath, format)
+return readInputStreaming(ctx, filePath, format)
 }
 }
 
@@ -346,12 +352,12 @@ if err != nil {
 return nil, err
 }
 if r != nil {
-return p.Parse(r, "stdin")
+return p.Parse(ctx, r, "stdin")
 }
-return p.ParseFile(filePath)
+return p.ParseFile(ctx, filePath)
 }
 
-func readInputStreaming(filePath, format string) (*model.CalendarCollection, error) {
+func readInputStreaming(ctx context.Context, filePath, format string) (*model.CalendarCollection, error) {
 // ICS parser already decodes component-by-component (streaming by nature).
 // For CSV, the standard parser is used but could be swapped for
 // StreamingCSVParser in format-specific parsers for constant-memory processing.
@@ -359,10 +365,10 @@ p, err := registry.GetParser(format)
 if err != nil {
 return nil, err
 }
-return p.ParseFile(filePath)
+return p.ParseFile(ctx, filePath)
 }
 
-func WriteOutput(collection *model.CalendarCollection, filePath, format string) error {
+func WriteOutput(ctx context.Context, collection *model.CalendarCollection, filePath, format string) error {
 var w io.Writer
 if filePath == "-" {
 w = os.Stdout
@@ -373,7 +379,7 @@ if err != nil {
 return err
 }
 if w != nil {
-return wr.Write(collection, w)
+return wr.Write(ctx, collection, w)
 }
-return wr.WriteFile(collection, filePath)
+return wr.WriteFile(ctx, collection, filePath)
 }

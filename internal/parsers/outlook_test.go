@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -12,7 +13,7 @@ func TestOutlook12HourTime(t *testing.T) {
 Meeting,1/15/2024,3:04:05 PM,1/15/2024,4:04:05 PM,False,Sync call,Office,,Normal`
 
 	p := NewOutlookParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -42,7 +43,7 @@ func TestOutlook24HourTime(t *testing.T) {
 Standup,1/10/2024,15:04:05,1/10/2024,15:34:05,False`
 
 	p := NewOutlookParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -60,7 +61,7 @@ func TestOutlookCategories(t *testing.T) {
 Team Event,"work; meeting; important"`
 
 	p := NewOutlookParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -80,7 +81,7 @@ Normal Task,Normal
 Low Task,Low`
 
 	p := NewOutlookParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -100,7 +101,7 @@ func TestOutlookAllDayEvent(t *testing.T) {
 Holiday,1/25/2024,True`
 
 	p := NewOutlookParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -118,7 +119,7 @@ func TestOutlookMissingSubjectError(t *testing.T) {
 Something,Somewhere`
 
 	p := NewOutlookParser()
-	_, err := p.Parse(strings.NewReader(csv), "test.csv")
+	_, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err == nil {
 		t.Fatal("expected error for missing Subject column")
 	}
@@ -130,7 +131,7 @@ Something,Somewhere`
 func TestOutlookSourceApp(t *testing.T) {
 	csv := "Subject\nTest\n"
 	p := NewOutlookParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

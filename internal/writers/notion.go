@@ -1,6 +1,7 @@
 package writers
 
 import (
+	"context"
 	"encoding/csv"
 	
 	"io"
@@ -16,16 +17,16 @@ func NewNotionWriter() *NotionWriter {
 	return &NotionWriter{}
 }
 
-func (w *NotionWriter) WriteFile(collection *model.CalendarCollection, filePath string) error {
+func (w *NotionWriter) WriteFile(ctx context.Context, collection *model.CalendarCollection, filePath string) error {
 	f, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	return w.Write(collection, f)
+	return w.Write(ctx, collection, f)
 }
 
-func (w *NotionWriter) Write(collection *model.CalendarCollection, writer io.Writer) error {
+func (w *NotionWriter) Write(ctx context.Context, collection *model.CalendarCollection, writer io.Writer) error {
 	csvWriter := csv.NewWriter(writer)
 	defer csvWriter.Flush()
 

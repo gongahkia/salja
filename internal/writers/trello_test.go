@@ -1,6 +1,7 @@
 package writers
 
 import (
+	"context"
 	"bytes"
 	"encoding/json"
 	"strings"
@@ -32,14 +33,14 @@ func TestTrelloWriterRoundtrip(t *testing.T) {
 	}`
 
 	p := parsers.NewTrelloParser()
-	col, err := p.Parse(strings.NewReader(input), "test.json")
+	col, err := p.Parse(context.Background(), strings.NewReader(input), "test.json")
 	if err != nil {
 		t.Fatalf("parse error: %v", err)
 	}
 
 	var buf bytes.Buffer
 	w := NewTrelloWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -65,7 +66,7 @@ func TestTrelloWriterJSONValidity(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewTrelloWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -100,7 +101,7 @@ func TestTrelloWriterChecklistFromSubtasks(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewTrelloWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -143,7 +144,7 @@ func TestTrelloWriterConfigurableChecklistName(t *testing.T) {
 	var buf bytes.Buffer
 	w := NewTrelloWriter()
 	w.ChecklistName = "My Custom Checklist"
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -169,7 +170,7 @@ func TestTrelloWriterLabelsFromTags(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewTrelloWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -197,7 +198,7 @@ func TestTrelloWriterDueDateFormat(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewTrelloWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -221,7 +222,7 @@ func TestTrelloWriterClosedStatus(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewTrelloWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 

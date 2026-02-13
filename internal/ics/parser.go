@@ -1,6 +1,7 @@
 package ics
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -17,17 +18,17 @@ func NewParser() *Parser {
 	return &Parser{}
 }
 
-func (p *Parser) ParseFile(filePath string) (*model.CalendarCollection, error) {
+func (p *Parser) ParseFile(ctx context.Context, filePath string) (*model.CalendarCollection, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open ICS file: %w", err)
 	}
 	defer f.Close()
 
-	return p.Parse(f, filePath)
+	return p.Parse(ctx, f, filePath)
 }
 
-func (p *Parser) Parse(r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
+func (p *Parser) Parse(ctx context.Context, r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
 	dec := ical.NewDecoder(r)
 	
 	collection := &model.CalendarCollection{

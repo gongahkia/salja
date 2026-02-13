@@ -2,6 +2,7 @@ package parsers
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -18,16 +19,16 @@ func NewOmniFocusParser() *OmniFocusParser {
 	return &OmniFocusParser{}
 }
 
-func (p *OmniFocusParser) ParseFile(filePath string) (*model.CalendarCollection, error) {
+func (p *OmniFocusParser) ParseFile(ctx context.Context, filePath string) (*model.CalendarCollection, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	return p.Parse(f, filePath)
+	return p.Parse(ctx, f, filePath)
 }
 
-func (p *OmniFocusParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
+func (p *OmniFocusParser) Parse(ctx context.Context, r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
 	tr, err := transcodeReader(r)
 	if err != nil {
 		return nil, fmt.Errorf("charset detection failed: %w", err)

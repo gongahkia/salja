@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -11,7 +12,7 @@ func TestOmniFocusBasicTask(t *testing.T) {
 	input := "- Buy groceries @due(2024-01-15) @defer(2024-01-10)\n"
 
 	p := NewOmniFocusParser()
-	col, err := p.Parse(strings.NewReader(input), "test.txt")
+	col, err := p.Parse(context.Background(), strings.NewReader(input), "test.txt")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -43,7 +44,7 @@ func TestOmniFocusDoneTag(t *testing.T) {
 	input := "- Completed task @done\n"
 
 	p := NewOmniFocusParser()
-	col, err := p.Parse(strings.NewReader(input), "test.txt")
+	col, err := p.Parse(context.Background(), strings.NewReader(input), "test.txt")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -57,7 +58,7 @@ func TestOmniFocusFlaggedTag(t *testing.T) {
 	input := "- Important task @flagged\n"
 
 	p := NewOmniFocusParser()
-	col, err := p.Parse(strings.NewReader(input), "test.txt")
+	col, err := p.Parse(context.Background(), strings.NewReader(input), "test.txt")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -78,7 +79,7 @@ func TestOmniFocusPriorityParsing(t *testing.T) {
 	}
 	for _, tc := range tests {
 		p := NewOmniFocusParser()
-		col, err := p.Parse(strings.NewReader(tc.input), "test.txt")
+		col, err := p.Parse(context.Background(), strings.NewReader(tc.input), "test.txt")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -92,7 +93,7 @@ func TestOmniFocusNotesBlock(t *testing.T) {
 	input := "- Task with notes @due(2024-01-15)\n\tThis is a note line\n\tAnother note line\n"
 
 	p := NewOmniFocusParser()
-	col, err := p.Parse(strings.NewReader(input), "test.txt")
+	col, err := p.Parse(context.Background(), strings.NewReader(input), "test.txt")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -109,7 +110,7 @@ func TestOmniFocusMultipleTasks(t *testing.T) {
 	input := "- Task 1 @due(2024-01-01)\n- Task 2 @flagged\n- Task 3 @done\n"
 
 	p := NewOmniFocusParser()
-	col, err := p.Parse(strings.NewReader(input), "test.txt")
+	col, err := p.Parse(context.Background(), strings.NewReader(input), "test.txt")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -130,7 +131,7 @@ func TestOmniFocusMultipleTasks(t *testing.T) {
 func TestOmniFocusSourceApp(t *testing.T) {
 	input := "- Test\n"
 	p := NewOmniFocusParser()
-	col, err := p.Parse(strings.NewReader(input), "test.txt")
+	col, err := p.Parse(context.Background(), strings.NewReader(input), "test.txt")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -143,7 +144,7 @@ func TestOmniFocusTagsParsing(t *testing.T) {
 	input := "- Task @tags(work,personal)\n"
 
 	p := NewOmniFocusParser()
-	col, err := p.Parse(strings.NewReader(input), "test.txt")
+	col, err := p.Parse(context.Background(), strings.NewReader(input), "test.txt")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -158,7 +159,7 @@ func TestOmniFocusTagsParsing(t *testing.T) {
 
 func TestOmniFocusEmptyInput(t *testing.T) {
 	p := NewOmniFocusParser()
-	col, err := p.Parse(strings.NewReader(""), "test.txt")
+	col, err := p.Parse(context.Background(), strings.NewReader(""), "test.txt")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

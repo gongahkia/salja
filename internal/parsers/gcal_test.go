@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -12,7 +13,7 @@ func TestGCalAllDayEvent(t *testing.T) {
 Holiday,01/25/2024,,01/26/2024,,True,Day off,`
 
 	p := NewGoogleCalendarParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -51,7 +52,7 @@ func TestGCalTimedEvent(t *testing.T) {
 Meeting,01/15/2024,2:00 PM,01/15/2024,3:00 PM,False,Team sync,Room 101`
 
 	p := NewGoogleCalendarParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -84,7 +85,7 @@ func TestGCalMissingOptionalColumns(t *testing.T) {
 Just a title`
 
 	p := NewGoogleCalendarParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -108,7 +109,7 @@ func TestGCalMissingSubjectError(t *testing.T) {
 Some desc,Somewhere`
 
 	p := NewGoogleCalendarParser()
-	_, err := p.Parse(strings.NewReader(csv), "test.csv")
+	_, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err == nil {
 		t.Fatal("expected error for missing Subject column")
 	}
@@ -120,7 +121,7 @@ Some desc,Somewhere`
 func TestGCalSourceApp(t *testing.T) {
 	csv := "Subject\nTest\n"
 	p := NewGoogleCalendarParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -131,7 +132,7 @@ func TestGCalSourceApp(t *testing.T) {
 
 func TestGCalEmptyInput(t *testing.T) {
 	p := NewGoogleCalendarParser()
-	col, err := p.Parse(strings.NewReader(""), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(""), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

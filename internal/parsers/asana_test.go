@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -12,7 +13,7 @@ func TestAsanaAllFields(t *testing.T) {
 Buy groceries,Milk and bread,2024-01-15,"food, errands",false`
 
 	p := NewAsanaParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -48,7 +49,7 @@ func TestAsanaCompletedTask(t *testing.T) {
 Done Task,true`
 
 	p := NewAsanaParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -63,7 +64,7 @@ func TestAsanaCompletedTaskNumeric(t *testing.T) {
 Done Task,1`
 
 	p := NewAsanaParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -77,7 +78,7 @@ func TestAsanaMissingNameError(t *testing.T) {
 Some description,2024-01-01`
 
 	p := NewAsanaParser()
-	_, err := p.Parse(strings.NewReader(csv), "test.csv")
+	_, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err == nil {
 		t.Fatal("expected error for missing Name column")
 	}
@@ -91,7 +92,7 @@ func TestAsanaMinimalTask(t *testing.T) {
 Simple Task`
 
 	p := NewAsanaParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -110,7 +111,7 @@ Simple Task`
 func TestAsanaSourceApp(t *testing.T) {
 	csv := "Name\nTest\n"
 	p := NewAsanaParser()
-	col, err := p.Parse(strings.NewReader(csv), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(csv), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -121,7 +122,7 @@ func TestAsanaSourceApp(t *testing.T) {
 
 func TestAsanaEmptyInput(t *testing.T) {
 	p := NewAsanaParser()
-	col, err := p.Parse(strings.NewReader(""), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(""), "test.csv")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

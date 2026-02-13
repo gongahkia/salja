@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -50,16 +51,16 @@ type TrelloList struct {
 	Name string `json:"name"`
 }
 
-func (p *TrelloParser) ParseFile(filePath string) (*model.CalendarCollection, error) {
+func (p *TrelloParser) ParseFile(ctx context.Context, filePath string) (*model.CalendarCollection, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	return p.Parse(f, filePath)
+	return p.Parse(ctx, f, filePath)
 }
 
-func (p *TrelloParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
+func (p *TrelloParser) Parse(ctx context.Context, r io.Reader, sourcePath string) (*model.CalendarCollection, error) {
 	var board TrelloBoard
 	if err := json.NewDecoder(r).Decode(&board); err != nil {
 		return nil, fmt.Errorf("failed to decode Trello JSON: %w", err)

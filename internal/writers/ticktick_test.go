@@ -1,6 +1,7 @@
 package writers
 
 import (
+	"context"
 	"bytes"
 	"encoding/csv"
 	"strings"
@@ -16,14 +17,14 @@ func TestTickTickWriterRoundtrip(t *testing.T) {
 Buy groceries,"food, errands",Milk and eggs,false,2024-01-15T09:00:00Z,2024-01-16T09:00:00Z,5,0,America/New_York,false,DAILY,`
 
 	p := parsers.NewTickTickParser()
-	col, err := p.Parse(strings.NewReader(input), "test.csv")
+	col, err := p.Parse(context.Background(), strings.NewReader(input), "test.csv")
 	if err != nil {
 		t.Fatalf("parse error: %v", err)
 	}
 
 	var buf bytes.Buffer
 	w := NewTickTickWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -55,7 +56,7 @@ func TestTickTickWriterSubtaskSerialization(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewTickTickWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -121,7 +122,7 @@ func TestTickTickWriterCompletedStatus(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewTickTickWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 
@@ -150,7 +151,7 @@ func TestTickTickWriterAllDay(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := NewTickTickWriter()
-	if err := w.Write(col, &buf); err != nil {
+	if err := w.Write(context.Background(), col, &buf); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
 

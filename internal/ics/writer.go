@@ -1,6 +1,7 @@
 package ics
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -17,17 +18,17 @@ func NewWriter() *Writer {
 	return &Writer{}
 }
 
-func (w *Writer) WriteFile(collection *model.CalendarCollection, filePath string) error {
+func (w *Writer) WriteFile(ctx context.Context, collection *model.CalendarCollection, filePath string) error {
 	f, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create ICS file: %w", err)
 	}
 	defer f.Close()
 
-	return w.Write(collection, f)
+	return w.Write(ctx, collection, f)
 }
 
-func (w *Writer) Write(collection *model.CalendarCollection, writer io.Writer) error {
+func (w *Writer) Write(ctx context.Context, collection *model.CalendarCollection, writer io.Writer) error {
 	cal := ical.NewCalendar()
 	cal.Props.SetText(ical.PropVersion, "2.0")
 	cal.Props.SetText(ical.PropProductID, "-//gongahkia//salja//EN")

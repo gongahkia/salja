@@ -1,6 +1,7 @@
 package writers
 
 import (
+	"context"
 	"encoding/csv"
 	
 	"io"
@@ -16,16 +17,16 @@ func NewAsanaWriter() *AsanaWriter {
 	return &AsanaWriter{}
 }
 
-func (w *AsanaWriter) WriteFile(collection *model.CalendarCollection, filePath string) error {
+func (w *AsanaWriter) WriteFile(ctx context.Context, collection *model.CalendarCollection, filePath string) error {
 	f, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	return w.Write(collection, f)
+	return w.Write(ctx, collection, f)
 }
 
-func (w *AsanaWriter) Write(collection *model.CalendarCollection, writer io.Writer) error {
+func (w *AsanaWriter) Write(ctx context.Context, collection *model.CalendarCollection, writer io.Writer) error {
 	csvWriter := csv.NewWriter(writer)
 	defer csvWriter.Flush()
 

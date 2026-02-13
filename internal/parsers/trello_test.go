@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestTrelloCardWithChecklist(t *testing.T) {
 	}`
 
 	p := NewTrelloParser()
-	col, err := p.Parse(strings.NewReader(json), "test.json")
+	col, err := p.Parse(context.Background(), strings.NewReader(json), "test.json")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -71,7 +72,7 @@ func TestTrelloCardWithLabels(t *testing.T) {
 	}`
 
 	p := NewTrelloParser()
-	col, err := p.Parse(strings.NewReader(json), "test.json")
+	col, err := p.Parse(context.Background(), strings.NewReader(json), "test.json")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -99,7 +100,7 @@ func TestTrelloCardWithDueDate(t *testing.T) {
 	}`
 
 	p := NewTrelloParser()
-	col, err := p.Parse(strings.NewReader(json), "test.json")
+	col, err := p.Parse(context.Background(), strings.NewReader(json), "test.json")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -127,7 +128,7 @@ func TestTrelloClosedCard(t *testing.T) {
 	}`
 
 	p := NewTrelloParser()
-	col, err := p.Parse(strings.NewReader(json), "test.json")
+	col, err := p.Parse(context.Background(), strings.NewReader(json), "test.json")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -141,7 +142,7 @@ func TestTrelloEmptyBoard(t *testing.T) {
 	json := `{"name": "Empty Board", "cards": [], "lists": []}`
 
 	p := NewTrelloParser()
-	col, err := p.Parse(strings.NewReader(json), "test.json")
+	col, err := p.Parse(context.Background(), strings.NewReader(json), "test.json")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -153,7 +154,7 @@ func TestTrelloEmptyBoard(t *testing.T) {
 func TestTrelloSourceApp(t *testing.T) {
 	json := `{"name": "Board", "cards": [], "lists": []}`
 	p := NewTrelloParser()
-	col, err := p.Parse(strings.NewReader(json), "test.json")
+	col, err := p.Parse(context.Background(), strings.NewReader(json), "test.json")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -180,7 +181,7 @@ func TestTrelloLabelWithEmptyName(t *testing.T) {
 	}`
 
 	p := NewTrelloParser()
-	col, err := p.Parse(strings.NewReader(json), "test.json")
+	col, err := p.Parse(context.Background(), strings.NewReader(json), "test.json")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
