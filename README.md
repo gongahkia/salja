@@ -8,6 +8,8 @@ Universal CLI for converting between calendar and task management formats — IC
 ## Stack
 
 * *Scripting*: [Go](https://go.dev/), [Cobra](https://github.com/spf13/cobra), [go-keyring](https://github.com/zalando/go-keyring) 
+* *TUI*: [Bubble Tea](https://github.com/charmbracelet/bubbletea), [Lip Gloss](https://github.com/charmbracelet/lipgloss), [Bubbles](https://github.com/charmbracelet/bubbles)
+* *MCP*: [mcp-go](https://github.com/mark3labs/mcp-go)
 * *Parsing*: [go-ical](https://github.com/emersion/go-ical) 
 * *Config files*: [TOML](https://github.com/BurntSushi/toml) 
 * *Build*: [GoReleaser](https://goreleaser.com/) 
@@ -161,6 +163,79 @@ date_proximity_hours = 24
 client_id = ""
 client_secret = ""
 redirect_uri = ""
+```
+
+## Interactive TUI
+
+Launch the full-screen terminal UI by running `salja` with no arguments, or explicitly with `salja tui`.
+
+```sh
+salja       # launches TUI
+salja tui   # same thing
+```
+
+### Keybindings
+
+| Key | Action |
+|---|---|
+| `q` / `Ctrl+C` | Quit |
+| `?` | Toggle help overlay |
+| `Esc` | Back / close |
+| `Tab` | Cycle focus |
+| `Enter` | Select / confirm |
+| `↑` / `k` | Move up |
+| `↓` / `j` | Move down |
+| `←` / `h` | Move left |
+| `→` / `l` | Move right |
+| `e` | Open `$EDITOR` (config view) |
+| `p` | Push (sync view) |
+| `l` | Pull (sync view) |
+
+The TUI provides views for conversion, validation, diffing, cloud sync, authentication management, and configuration viewing — all accessible from the main menu.
+
+## MCP Server
+
+`salja-mcp` is an [MCP](https://modelcontextprotocol.io/) server that exposes salja's capabilities to AI assistants over stdio.
+
+### Install
+
+```sh
+go install github.com/gongahkia/salja/cmd/salja-mcp@latest
+```
+
+### Tools
+
+| Tool | Description |
+|---|---|
+| `convert` | Convert between calendar/task formats |
+| `validate` | Validate a file and return format, item count, field coverage |
+| `diff` | Compare two calendar/task files |
+| `list_formats` | List all supported formats with capabilities |
+| `sync_push` | Push local data to a cloud service |
+| `sync_pull` | Pull data from a cloud service |
+| `auth_status` | Check authentication status for all services |
+
+### Resources
+
+| URI | Description |
+|---|---|
+| `salja://formats` | All registered format metadata |
+| `salja://config` | Current configuration values |
+| `salja://auth/{service}` | Auth state for a specific service |
+
+### Claude Desktop Configuration
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "salja": {
+      "command": "salja-mcp",
+      "args": []
+    }
+  }
+}
 ```
 
 ## Architecture
