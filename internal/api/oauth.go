@@ -189,7 +189,7 @@ func (f *PKCEFlow) Authorize(ctx context.Context) (*Token, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to start callback server: %w", err)
 	}
-	defer listener.Close()
+	defer func() { _ = listener.Close() }()
 
 	port := listener.Addr().(*net.TCPAddr).Port
 	redirectURI := f.Config.RedirectURI

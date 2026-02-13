@@ -23,7 +23,7 @@ func (p *Parser) ParseFile(ctx context.Context, filePath string) (*model.Calenda
 	if err != nil {
 		return nil, fmt.Errorf("failed to open ICS file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	return p.Parse(ctx, f, filePath)
 }

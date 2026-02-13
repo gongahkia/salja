@@ -59,7 +59,7 @@ func (c *GCalClient) doRequest(ctx context.Context, method, url string, body int
 		if err != nil {
 			return err
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		respBody, err = io.ReadAll(resp.Body)
 		statusCode = resp.StatusCode

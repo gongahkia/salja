@@ -57,7 +57,7 @@ func (c *NotionClient) doRequest(ctx context.Context, method, url string, body i
 	if err != nil {
 		return nil, 0, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	respBody, err := io.ReadAll(resp.Body)
 	return respBody, resp.StatusCode, err

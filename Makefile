@@ -5,7 +5,7 @@ VERSION?=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 BUILD_DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 LDFLAGS=-ldflags "-X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.buildDate=$(BUILD_DATE)"
-LDFLAGS_MCP=-ldflags "-X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.buildDate=$(BUILD_DATE)"
+LDFLAGS_MCP=-ldflags "-X main.version=$(VERSION)"
 
 .PHONY: build build-mcp test lint fmt vet coverage install clean
 
@@ -16,7 +16,7 @@ build-mcp:
 	go build $(LDFLAGS_MCP) -o bin/$(MCP_BINARY_NAME) ./cmd/salja-mcp
 
 test:
-	go test ./... -v
+	go test ./... -v -timeout 60s
 
 lint:
 	@if which golangci-lint > /dev/null 2>&1; then \
@@ -32,7 +32,7 @@ vet:
 	go vet ./...
 
 coverage:
-	go test ./... -coverprofile=coverage.out
+	go test ./... -coverprofile=coverage.out -timeout 60s
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report: coverage.html"
 
