@@ -4,12 +4,7 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 
 --- PHILOSOPHICAL ALIGNMENT ---
 
-(B) Register apple-calendar as a format in internal/registry/formats.go with NewParser wrapping apple.CalendarReader and NewWriter wrapping apple.CalendarWriter so `salja convert X apple-calendar` works on macOS +feature +apple
-(B) Register apple-reminders as a format in internal/registry/formats.go with NewParser wrapping apple.RemindersReader and NewWriter wrapping apple.RemindersWriter so `salja convert X apple-reminders` works on macOS +feature +apple
-(B) Add `--calendar` and `--list` flags to convert command for apple-calendar and apple-reminders target names (required when target is apple-calendar or apple-reminders) +feature +apple
-(B) Add `salja auth login todoist` case in cmd/salja/commands/auth.go using Todoist OAuth flow (auth URL: https://todoist.com/oauth/authorize, token URL: https://todoist.com/oauth/access_token) reading client_id/secret from config.API.Todoist +feature +sync
-(B) Add `salja auth login ticktick` case in cmd/salja/commands/auth.go using TickTick OAuth flow (auth URL: https://ticktick.com/oauth/authorize, token URL: https://ticktick.com/oauth/token) reading from config.API.TickTick +feature +sync
-(B) Add `salja auth login notion` case in cmd/salja/commands/auth.go that stores a Notion integration token (bearer-style, no OAuth needed) by prompting for the token and saving via store.Set("notion", &Token{AccessToken: input}) +feature +sync
+
 (B) Add `sync push --to todoist` case in cmd/salja/commands/sync.go that creates a TodoistClient, iterates collection.Items, calls CalendarItemToTodoist and client.CreateTask with rate limiting (50ms ticker for Todoist's 50 req/min) +feature +sync
 (B) Add `sync pull --from todoist` case in cmd/salja/commands/sync.go that calls TodoistClient.GetTasks, maps each via TodoistToCalendarItem, writes to output file +feature +sync
 (B) Add `sync push --to ticktick` case in cmd/salja/commands/sync.go that creates a TickTickClient, lists projects, prompts for project selection, iterates items, calls CalendarItemToTickTick and client.CreateTask +feature +sync
