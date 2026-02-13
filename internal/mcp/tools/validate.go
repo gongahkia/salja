@@ -42,7 +42,7 @@ func HandleValidate(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 		}
 		parser := entry.NewParser()
 		col, err := parser.ParseFile(ctx, filePath)
-		if err != nil {
+		if err != nil || len(col.Items) == 0 {
 			continue
 		}
 
