@@ -235,44 +235,4 @@ fmt.Printf("  Status:      %s vs %s\n", a.Status, b.Status)
 }
 }
 
-type DataLossChecker struct{}
 
-func NewDataLossChecker() *DataLossChecker {
-return &DataLossChecker{}
-}
-
-type DataLossWarning struct {
-Field   string
-Message string
-}
-
-func (c *DataLossChecker) Check(items []model.CalendarItem, targetFormat string) []DataLossWarning {
-var warnings []DataLossWarning
-
-noSubtasks := map[string]bool{"gcal": true, "outlook": true, "ics": true}
-noRecurrence := map[string]bool{"notion": true, "trello": true, "asana": true}
-noReminders := map[string]bool{"trello": true, "asana": true, "notion": true}
-
-for _, item := range items {
-if len(item.Subtasks) > 0 && noSubtasks[targetFormat] {
-warnings = append(warnings, DataLossWarning{
-Field:   "subtasks",
-Message: fmt.Sprintf("'%s' has %d subtasks which %s doesn't support", item.Title, len(item.Subtasks), targetFormat),
-})
-}
-if item.Recurrence != nil && noRecurrence[targetFormat] {
-warnings = append(warnings, DataLossWarning{
-Field:   "recurrence",
-Message: fmt.Sprintf("'%s' has recurrence which %s doesn't support", item.Title, targetFormat),
-})
-}
-if len(item.Reminders) > 0 && noReminders[targetFormat] {
-warnings = append(warnings, DataLossWarning{
-Field:   "reminders",
-Message: fmt.Sprintf("'%s' has reminders which %s doesn't support", item.Title, targetFormat),
-})
-}
-}
-
-return warnings
-}

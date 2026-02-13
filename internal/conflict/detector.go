@@ -223,12 +223,4 @@ func levenshteinDistance(a, b string) int {
 	return matrix[len(a)][len(b)]
 }
 
-func min(nums ...int) int {
-	m := nums[0]
-	for _, n := range nums[1:] {
-		if n < m {
-			m = n
-		}
-	}
-	return m
-}
+

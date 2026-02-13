@@ -44,27 +44,4 @@ t.Fatalf("expected 0 matches, got %d", len(matches))
 }
 }
 
-func TestDataLossSubtaskFlattening(t *testing.T) {
-checker := NewDataLossChecker()
-items := []model.CalendarItem{
-{Title: "Task", Subtasks: []model.Subtask{{Title: "Sub1"}, {Title: "Sub2"}}},
-}
-warnings := checker.Check(items, "gcal")
-if len(warnings) == 0 {
-t.Fatal("expected data loss warning for subtasks -> gcal")
-}
-if warnings[0].Field != "subtasks" {
-t.Errorf("expected subtasks warning, got %s", warnings[0].Field)
-}
-}
 
-func TestDataLossRecurrenceDrop(t *testing.T) {
-checker := NewDataLossChecker()
-items := []model.CalendarItem{
-{Title: "Recurring", Recurrence: &model.Recurrence{Freq: model.FreqDaily}},
-}
-warnings := checker.Check(items, "trello")
-if len(warnings) == 0 {
-t.Fatal("expected data loss warning for recurrence -> trello")
-}
-}
