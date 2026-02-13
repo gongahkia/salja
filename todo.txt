@@ -19,7 +19,6 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 --- STABILITY / SCALING ---
 
 
-(B) Add rate limiting awareness to sync push commands so that batch event creation respects Google Calendar API quota (calendar.events.insert: 10 QPS) and Microsoft Graph limits +feature +api
 (B) Add integration tests for the convert command that verify round-trip conversion ICS→CSV→ICS preserves all fields that both formats support +infra +testing
 (B) Add integration tests for the convert command that verify round-trip conversion between every pair of registered formats and assert that DataLossWarnings match expected field losses +infra +testing
 (B) Add benchmark tests for CSV and ICS parsers with 10000-item files to establish baseline performance and detect regressions +infra +testing
