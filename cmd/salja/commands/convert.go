@@ -9,6 +9,7 @@ import (
 "strings"
 
 "github.com/gongahkia/salja/internal/config"
+"github.com/gongahkia/salja/internal/conflict"
 salerr "github.com/gongahkia/salja/internal/errors"
 "github.com/gongahkia/salja/internal/fidelity"
 "github.com/gongahkia/salja/internal/model"
@@ -20,7 +21,7 @@ _ "github.com/gongahkia/salja/internal/registry" // ensure format registration
 
 func NewConvertCmd() *cobra.Command {
 var fromFormat, toFormat string
-var dryRun, quiet, strict, jsonOutput bool
+var dryRun, quiet, strict, jsonOutput, merge bool
 var outputFormat, fidelityMode string
 
 cmd := &cobra.Command{
@@ -147,6 +148,52 @@ case "silent":
 }
 }
 
+// Merge with existing output file when --merge is set
+if merge {
+if _, statErr := os.Stat(outputFile); statErr == nil {
+existing, readErr := ReadInput(outputFile, toFormat, cfg)
+if readErr != nil {
+return fmt.Errorf("--merge: failed to read existing output file: %w", readErr)
+}
+
+strategy := conflict.StrategyAsk
+if cfg != nil && cfg.ConflictStrategy != "" {
+strategy = conflict.Strategy(cfg.ConflictStrategy)
+}
+
+detector := conflict.NewDetector()
+matches := detector.FindDuplicates(collection, existing)
+
+if len(matches) > 0 {
+if !quiet && !jsonOutput {
+fmt.Fprintf(os.Stderr, "Found %d duplicate(s) in existing output file\n", len(matches))
+}
+resolver := conflict.NewResolver(strategy)
+resolved := make(map[int]bool)
+for _, m := range matches {
+result, err := resolver.Resolve(&collection.Items[m.SourceIndex], &existing.Items[m.TargetIndex])
+if err != nil {
+return fmt.Errorf("--merge: conflict resolution failed: %w", err)
+}
+if result != nil {
+collection.Items[m.SourceIndex] = *result
+}
+resolved[m.TargetIndex] = true
+}
+// Append non-duplicate items from existing file
+for j, item := range existing.Items {
+if !resolved[j] {
+collection.Items = append(collection.Items, item)
+}
+}
+_ = resolver.WriteLog()
+} else {
+// No duplicates: append all existing items
+collection.Items = append(collection.Items, existing.Items...)
+}
+}
+}
+
 if err := WriteOutput(collection, outputFile, toFormat); err != nil {
 return fmt.Errorf("failed to write output: %w", err)
 }
@@ -209,6 +256,7 @@ cmd.Flags().StringVar(&outputFormat, "output-format", "text", "Output format: te
 cmd.Flags().StringVar(&fidelityMode, "fidelity", "", "Data loss mode override: warn|error|silent")
 cmd.Flags().BoolVar(&strict, "strict", false, "Treat any warning as a fatal error")
 cmd.Flags().BoolVar(&jsonOutput, "json", false, "Output structured JSON conversion report")
+cmd.Flags().BoolVar(&merge, "merge", false, "Detect duplicates and resolve conflicts when output file exists")
 
 return cmd
 }
