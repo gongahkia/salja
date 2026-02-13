@@ -121,7 +121,7 @@ func newSyncPushCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&to, "to", "", "Target service: google, microsoft")
-	cmd.MarkFlagRequired("to")
+	_ = cmd.MarkFlagRequired("to")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would be created without making API calls")
 	return cmd
 }
@@ -207,9 +207,9 @@ func newSyncPullCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&from, "from", "", "Source service: google, microsoft, todoist, ticktick, notion")
-	cmd.MarkFlagRequired("from")
+	_ = cmd.MarkFlagRequired("from")
 	cmd.Flags().StringVar(&output, "output", "", "Output file path")
-	cmd.MarkFlagRequired("output")
+	_ = cmd.MarkFlagRequired("output")
 	cmd.Flags().StringVar(&startFlag, "start", "", "Start date for pull range (YYYY-MM-DD, default: -1 month)")
 	cmd.Flags().StringVar(&endFlag, "end", "", "End date for pull range (YYYY-MM-DD, default: +3 months)")
 	return cmd
@@ -450,7 +450,7 @@ func pushToNotion(ctx context.Context, token *api.Token, collection *model.Calen
 
 	fmt.Fprint(os.Stderr, "Enter Notion database ID: ")
 	var databaseID string
-	fmt.Fscanln(os.Stdin, &databaseID)
+	_, _ = fmt.Fscanln(os.Stdin, &databaseID)
 	if databaseID == "" {
 		return fmt.Errorf("database ID cannot be empty")
 	}
@@ -488,7 +488,7 @@ func pullFromNotion(ctx context.Context, token *api.Token, timeout time.Duration
 
 	fmt.Fprint(os.Stderr, "Enter Notion database ID: ")
 	var databaseID string
-	fmt.Fscanln(os.Stdin, &databaseID)
+	_, _ = fmt.Fscanln(os.Stdin, &databaseID)
 	if databaseID == "" {
 		return nil, fmt.Errorf("database ID cannot be empty")
 	}

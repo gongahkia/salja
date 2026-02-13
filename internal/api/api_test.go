@@ -426,7 +426,7 @@ func TestNotionQueryDatabase(t *testing.T) {
 		} else {
 			// Verify cursor was sent
 			var body map[string]interface{}
-			json.NewDecoder(r.Body).Decode(&body)
+			_ = json.NewDecoder(r.Body).Decode(&body)
 			if body["start_cursor"] != "cursor-abc" {
 				t.Errorf("expected start_cursor 'cursor-abc', got %v", body["start_cursor"])
 			}
@@ -523,7 +523,7 @@ func TestNotionCreatePage(t *testing.T) {
 func TestNotionQueryDatabase429(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(429)
-		w.Write([]byte(`{"message":"rate limited","code":"rate_limited"}`))
+		_, _ = w.Write([]byte(`{"message":"rate limited","code":"rate_limited"}`))
 	}))
 	defer ts.Close()
 

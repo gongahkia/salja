@@ -86,7 +86,7 @@ func (s *TokenStore) Load() (TokenFile, error) {
 	if err := lockFile(f, false); err != nil {
 		return nil, fmt.Errorf("failed to lock token file: %w", err)
 	}
-	defer unlockFile(f)
+	defer func() { _ = unlockFile(f) }()
 	data, err := os.ReadFile(s.Path)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (s *TokenStore) Save(tf TokenFile) error {
 	if err := lockFile(f, true); err != nil {
 		return fmt.Errorf("failed to lock token file: %w", err)
 	}
-	defer unlockFile(f)
+	defer func() { _ = unlockFile(f) }()
 	data, err := json.MarshalIndent(tf, "", "  ")
 	if err != nil {
 		return err
@@ -233,8 +233,8 @@ func (f *PKCEFlow) Authorize(ctx context.Context) (*Token, error) {
 	})
 
 	server := &http.Server{Handler: mux}
-	go server.Serve(listener)
-	defer server.Shutdown(ctx)
+	go func() { _ = server.Serve(listener) }()
+	defer func() { _ = server.Shutdown(ctx) }()
 
 	var code string
 	select {

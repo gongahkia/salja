@@ -138,17 +138,10 @@ func (d *Detector) isDuplicate(a, b *model.CalendarItem) bool {
 	}
 
 	if a.StartTime != nil && b.StartTime != nil {
-		if !d.timeMatch(*a.StartTime, *b.StartTime) {
-			return false
-		}
-		return true
+		return d.timeMatch(*a.StartTime, *b.StartTime)
 	}
-
 	if a.DueDate != nil && b.DueDate != nil {
-		if !d.timeMatch(*a.DueDate, *b.DueDate) {
-			return false
-		}
-		return true
+		return d.timeMatch(*a.DueDate, *b.DueDate)
 	}
 
 	return false
@@ -186,7 +179,7 @@ func (d *Detector) calculateConfidence(a, b *model.CalendarItem) float64 {
 		score += 1.0
 	}
 
-	if strings.ToLower(a.Title) == strings.ToLower(b.Title) {
+	if strings.EqualFold(a.Title, b.Title) {
 		score += 0.5
 	} else if d.fuzzyTitleMatch(a.Title, b.Title) {
 		score += 0.3

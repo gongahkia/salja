@@ -86,7 +86,7 @@ func NewConvertCmd() *cobra.Command {
 						fmt.Fprintf(os.Stderr, "Warning: input file is %dMB (threshold: %dMB). Large files may use significant memory.\n", fileSizeMB, thresholdMB)
 						fmt.Fprint(os.Stderr, "Continue? [Y/n] ")
 						var confirm string
-						fmt.Fscanln(os.Stdin, &confirm)
+						_, _ = fmt.Fscanln(os.Stdin, &confirm)
 						if confirm == "n" || confirm == "N" {
 							return fmt.Errorf("aborted by user")
 						}
@@ -174,7 +174,7 @@ func NewConvertCmd() *cobra.Command {
 
 			warnings := fidelity.Check(collection, toFormat)
 			if bar != nil {
-				bar.Add(len(collection.Items) / 2)
+				_ = bar.Add(len(collection.Items) / 2)
 			}
 
 			// Enforce DataLossMode
@@ -254,8 +254,8 @@ func NewConvertCmd() *cobra.Command {
 			}
 
 			if bar != nil {
-				bar.Add(len(collection.Items) - len(collection.Items)/2)
-				bar.Finish()
+				_ = bar.Add(len(collection.Items) - len(collection.Items)/2)
+				_ = bar.Finish()
 			}
 
 			// Compute summary counts

@@ -90,7 +90,7 @@ func newAuthLoginCmd() *cobra.Command {
 			case "notion":
 				var input string
 				fmt.Fprint(os.Stderr, "Enter your Notion integration token: ")
-				fmt.Fscanln(os.Stdin, &input)
+				_, _ = fmt.Fscanln(os.Stdin, &input)
 				if input == "" {
 					return fmt.Errorf("token cannot be empty")
 				}

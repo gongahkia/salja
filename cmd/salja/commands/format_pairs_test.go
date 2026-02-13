@@ -12,12 +12,6 @@ import (
 	_ "github.com/gongahkia/salja/internal/registry" // trigger init
 )
 
-// formatPair defines a source→target conversion to test.
-type formatPair struct {
-	Source string
-	Target string
-}
-
 // allWritableFormats returns format names that have both a parser and writer.
 func allWritableFormats() []string {
 	// Apple formats use AppleScript and don't support stream-based I/O
