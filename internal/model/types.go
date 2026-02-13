@@ -3,6 +3,8 @@ package model
 import (
 	"fmt"
 	"time"
+
+	salerr "github.com/gongahkia/salja/internal/errors"
 )
 
 type ItemType string
@@ -103,16 +105,16 @@ type CalendarItem struct {
 
 func (item *CalendarItem) Validate() error {
 	if item.Title == "" {
-		return fmt.Errorf("title is required")
+		return &salerr.ValidationError{Field: "title", Message: "is required"}
 	}
 	if item.Priority < 0 || item.Priority > 5 {
-		return fmt.Errorf("priority must be 0-5, got %d", item.Priority)
+		return &salerr.ValidationError{Field: "priority", Message: fmt.Sprintf("must be 0-5, got %d", item.Priority)}
 	}
 	if item.StartTime != nil && item.EndTime != nil && item.StartTime.After(*item.EndTime) {
-		return fmt.Errorf("start time %v is after end time %v", *item.StartTime, *item.EndTime)
+		return &salerr.ValidationError{Field: "start_time", Message: fmt.Sprintf("start time %v is after end time %v", *item.StartTime, *item.EndTime)}
 	}
 	if item.ItemType != "" && item.ItemType != ItemTypeEvent && item.ItemType != ItemTypeTask && item.ItemType != ItemTypeJournal {
-		return fmt.Errorf("invalid item type: %s", item.ItemType)
+		return &salerr.ValidationError{Field: "item_type", Message: fmt.Sprintf("invalid value: %s", item.ItemType)}
 	}
 	return nil
 }

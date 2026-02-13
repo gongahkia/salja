@@ -7,6 +7,7 @@ import (
 "time"
 
 "github.com/BurntSushi/toml"
+salerr "github.com/gongahkia/salja/internal/errors"
 )
 
 type Config struct {
@@ -93,22 +94,22 @@ return cfg, nil
 func validate(cfg *Config) error {
 validModes := map[string]bool{"file": true, "api": true}
 if !validModes[cfg.PreferredMode] {
-return fmt.Errorf("invalid preferred_mode '%s': must be 'file' or 'api'", cfg.PreferredMode)
+return &salerr.ValidationError{Field: "preferred_mode", Message: "must be 'file' or 'api', got '" + cfg.PreferredMode + "'"}
 }
 
 validStrategies := map[string]bool{"ask": true, "prefer-source": true, "prefer-target": true, "skip": true, "fail": true}
 if !validStrategies[cfg.ConflictStrategy] {
-return fmt.Errorf("invalid conflict_strategy '%s'", cfg.ConflictStrategy)
+return &salerr.ValidationError{Field: "conflict_strategy", Message: "invalid value '" + cfg.ConflictStrategy + "'"}
 }
 
 validDataLossModes := map[string]bool{"warn": true, "error": true, "silent": true}
 if !validDataLossModes[cfg.DataLossMode] {
-return fmt.Errorf("invalid data_loss_mode '%s': must be 'warn', 'error', or 'silent'", cfg.DataLossMode)
+return &salerr.ValidationError{Field: "data_loss_mode", Message: "must be 'warn', 'error', or 'silent', got '" + cfg.DataLossMode + "'"}
 }
 
 if cfg.DefaultTimezone != "" {
 if _, err := time.LoadLocation(cfg.DefaultTimezone); err != nil {
-return fmt.Errorf("invalid default_timezone '%s': %w", cfg.DefaultTimezone, err)
+return &salerr.ValidationError{Field: "default_timezone", Message: "invalid value '" + cfg.DefaultTimezone + "'", Err: err}
 }
 }
 

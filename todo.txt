@@ -19,9 +19,6 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 --- STABILITY / SCALING ---
 
 
-(B) Refactor all CSV parsers to report malformed date values as ParseError via ErrorCollector instead of silently using zero-value time.Time +refactor +errors
-
-(B) Replace the unused ParseError type in internal/errors/errors.go with actual usage in all parsers — each parser should wrap format-specific parse failures in ParseError with the relevant field and line number context +refactor +errors
 (B) Replace the unused ValidationError type in internal/errors/errors.go with actual usage in config validation, model Validate, and writer output validation +refactor +errors
 (B) Use ConflictError from internal/errors in internal/conflict/resolver.go when conflict resolution fails instead of returning plain error strings +refactor +errors
 (B) Use PermissionError from internal/errors in internal/apple/ when AppleScript permission checks fail instead of returning plain error strings +refactor +errors
