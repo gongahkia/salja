@@ -60,7 +60,7 @@ func (c *TodoistClient) doRequest(ctx context.Context, method, url string, body 
 	if err != nil {
 		return nil, 0, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	respBody, err := io.ReadAll(resp.Body)
 	return respBody, resp.StatusCode, err
@@ -194,7 +194,7 @@ func (c *TodoistSyncClient) Sync(ctx context.Context, resourceTypes []string) (*
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
 		respBody, _ := io.ReadAll(resp.Body)

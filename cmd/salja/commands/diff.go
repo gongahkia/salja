@@ -89,32 +89,32 @@ func NewDiffCmd() *cobra.Command {
 				_, _ = fmt.Fprintf(out, "--- %s\n", args[0])
 				_, _ = fmt.Fprintf(out, "+++ %s\n", args[1])
 				if len(removedTitles) > 0 || len(addedTitles) > 0 {
-					fmt.Fprintf(out, "@@ -%d,0 +%d,0 @@\n", len(col1.Items), len(col2.Items))
+					_, _ = fmt.Fprintf(out, "@@ -%d,0 +%d,0 @@\n", len(col1.Items), len(col2.Items))
 					for _, title := range removedTitles {
-						fmt.Fprintf(out, "-%s\n", title)
+						_, _ = fmt.Fprintf(out, "-%s\n", title)
 					}
 					for _, title := range addedTitles {
-						fmt.Fprintf(out, "+%s\n", title)
+						_, _ = fmt.Fprintf(out, "+%s\n", title)
 					}
 				}
 
 			default: // "table"
-				fmt.Fprintf(out, "File 1: %d items\n", len(col1.Items))
-				fmt.Fprintf(out, "File 2: %d items\n", len(col2.Items))
-				fmt.Fprintf(out, "Matching: %d items\n", len(matches))
-				fmt.Fprintf(out, "Added:   %d items (in file2 only)\n", len(addedTitles))
-				fmt.Fprintf(out, "Removed: %d items (in file1 only)\n", len(removedTitles))
+				_, _ = fmt.Fprintf(out, "File 1: %d items\n", len(col1.Items))
+				_, _ = fmt.Fprintf(out, "File 2: %d items\n", len(col2.Items))
+				_, _ = fmt.Fprintf(out, "Matching: %d items\n", len(matches))
+				_, _ = fmt.Fprintf(out, "Added:   %d items (in file2 only)\n", len(addedTitles))
+				_, _ = fmt.Fprintf(out, "Removed: %d items (in file1 only)\n", len(removedTitles))
 
 				if len(removedTitles) > 0 {
 					_, _ = fmt.Fprintln(out, "\n--- Removed ---")
 					for _, title := range removedTitles {
-						fmt.Fprintf(out, "  - %s\n", title)
+						_, _ = fmt.Fprintf(out, "  - %s\n", title)
 					}
 				}
 				if len(addedTitles) > 0 {
 					_, _ = fmt.Fprintln(out, "\n--- Added ---")
 					for _, title := range addedTitles {
-						fmt.Fprintf(out, "  + %s\n", title)
+						_, _ = fmt.Fprintf(out, "  + %s\n", title)
 					}
 				}
 			}

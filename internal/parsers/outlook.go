@@ -24,7 +24,7 @@ func (p *OutlookParser) ParseFile(ctx context.Context, filePath string) (*model.
 	if err != nil {
 		return nil, fmt.Errorf("failed to open Outlook CSV %s: %w", filePath, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	return p.Parse(ctx, f, filePath)
 }
 
@@ -52,7 +52,7 @@ func (p *OutlookParser) Parse(ctx context.Context, r io.Reader, sourcePath strin
 
 	requiredCols := []string{"Subject"}
 	if missing := findMissingColumns(colMap, requiredCols); len(missing) > 0 {
-		return nil, fmt.Errorf("Outlook CSV %s missing required columns: %s", sourcePath, strings.Join(missing, ", "))
+		return nil, fmt.Errorf("outlook CSV %s missing required columns: %s", sourcePath, strings.Join(missing, ", "))
 	}
 
 	ec := salerr.NewErrorCollector()

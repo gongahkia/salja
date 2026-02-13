@@ -24,7 +24,7 @@ func (p *TickTickParser) ParseFile(ctx context.Context, filePath string) (*model
 	if err != nil {
 		return nil, fmt.Errorf("failed to open TickTick CSV: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	return p.Parse(ctx, f, filePath)
 }
