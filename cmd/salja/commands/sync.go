@@ -147,11 +147,19 @@ return cmd
 func pushToGoogle(ctx context.Context, token *api.Token, collection *model.CalendarCollection, dryRun bool, timeout time.Duration) error {
 client := api.NewGCalClientWithTimeout(token, timeout)
 created := 0
+// Google Calendar API quota: 10 QPS for calendar.events.insert
+ticker := time.NewTicker(100 * time.Millisecond)
+defer ticker.Stop()
 for _, item := range collection.Items {
 event := api.CalendarItemToGCal(item)
 if dryRun {
 fmt.Printf("  [dry-run] would create: %s\n", event.Summary)
 continue
+}
+select {
+case <-ctx.Done():
+return ctx.Err()
+case <-ticker.C:
 }
 _, err := client.InsertEvent(ctx, "primary", &event)
 if err != nil {
@@ -169,11 +177,19 @@ return nil
 func pushToMicrosoft(ctx context.Context, token *api.Token, collection *model.CalendarCollection, dryRun bool, timeout time.Duration) error {
 client := api.NewMSGraphClientWithTimeout(token, timeout)
 created := 0
+// Microsoft Graph rate limit: ~4 requests per second
+ticker := time.NewTicker(250 * time.Millisecond)
+defer ticker.Stop()
 for _, item := range collection.Items {
 event := api.CalendarItemToMSGraph(item)
 if dryRun {
 fmt.Printf("  [dry-run] would create: %s\n", event.Subject)
 continue
+}
+select {
+case <-ctx.Done():
+return ctx.Err()
+case <-ticker.C:
 }
 _, err := client.CreateEvent(ctx, &event)
 if err != nil {
