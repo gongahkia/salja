@@ -1,0 +1,11 @@
+services:
+  salja:
+    build: .
+    volumes:
+      - ${HOME}/.config/salja:/root/.config/salja
+  salja-mcp:
+    build: .
+    entrypoint: ["salja-mcp"]
+    stdin_open: true
+    volumes:
+      - ${HOME}/.config/salja:/root/.config/salja

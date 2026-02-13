@@ -1,0 +1,11 @@
+.git/
+bin/
+coverage.*
+*.out
+*.html
+.goreleaser.yml
+.github/
+CLAUDE.md
+README.md
+LICENSE
+docker-compose.yml
