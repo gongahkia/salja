@@ -31,6 +31,13 @@ httpClient: &http.Client{Timeout: 30 * time.Second},
 }
 }
 
+func NewTodoistClientWithTimeout(token *Token, timeout time.Duration) *TodoistClient {
+return &TodoistClient{
+token:      token,
+httpClient: &http.Client{Timeout: timeout},
+}
+}
+
 func (c *TodoistClient) doRequest(ctx context.Context, method, url string, body interface{}) ([]byte, int, error) {
 var reqBody io.Reader
 if body != nil {

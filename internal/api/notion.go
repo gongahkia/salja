@@ -28,6 +28,13 @@ httpClient: &http.Client{Timeout: 30 * time.Second},
 }
 }
 
+func NewNotionClientWithTimeout(bearerToken string, timeout time.Duration) *NotionClient {
+return &NotionClient{
+token:      bearerToken,
+httpClient: &http.Client{Timeout: timeout},
+}
+}
+
 func (c *NotionClient) doRequest(ctx context.Context, method, url string, body interface{}) ([]byte, int, error) {
 var reqBody io.Reader
 if body != nil {

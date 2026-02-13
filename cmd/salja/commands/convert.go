@@ -7,6 +7,7 @@ import (
 "io"
 "os"
 "path/filepath"
+"sort"
 "strings"
 
 "github.com/gongahkia/salja/internal/config"
@@ -36,14 +37,18 @@ outputFile := args[1]
 
 if fromFormat == "" {
 fromFormat = DetectFormat(inputFile)
-if !quiet && !jsonOutput {
+if fromFormat == "unknown" && !quiet && !jsonOutput {
+fromFormat = interactiveFormatPicker("source")
+} else if !quiet && !jsonOutput {
 fmt.Fprintf(os.Stderr, "Detected source format: %s\n", fromFormat)
 }
 }
 
 if toFormat == "" {
 toFormat = DetectFormat(outputFile)
-if !quiet && !jsonOutput {
+if toFormat == "unknown" && !quiet && !jsonOutput {
+toFormat = interactiveFormatPicker("target")
+} else if !quiet && !jsonOutput {
 fmt.Fprintf(os.Stderr, "Detected target format: %s\n", toFormat)
 }
 }
@@ -193,6 +198,11 @@ strategy = conflict.Strategy(cfg.ConflictStrategy)
 }
 
 detector := conflict.NewDetector()
+if cfg != nil {
+detector.LevenshteinThreshold = cfg.ConflictThresholds.LevenshteinThreshold
+detector.MinTitleLength = cfg.ConflictThresholds.MinTitleLength
+detector.DateProximityHours = cfg.ConflictThresholds.DateProximityHours
+}
 matches := detector.FindDuplicates(collection, existing)
 
 if len(matches) > 0 {
@@ -388,4 +398,24 @@ if w != nil {
 return wr.Write(ctx, collection, w)
 }
 return wr.WriteFile(ctx, collection, filePath)
+}
+
+func interactiveFormatPicker(role string) string {
+	all := registry.AllFormats()
+	names := make([]string, 0, len(all))
+	for name := range all {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	fmt.Fprintf(os.Stderr, "Could not detect %s format. Select one:\n", role)
+	for i, name := range names {
+		fmt.Fprintf(os.Stderr, "  %d) %s\n", i+1, name)
+	}
+	fmt.Fprint(os.Stderr, "> ")
+	var choice int
+	if _, err := fmt.Fscan(os.Stdin, &choice); err != nil || choice < 1 || choice > len(names) {
+		return names[0]
+	}
+	return names[choice-1]
 }

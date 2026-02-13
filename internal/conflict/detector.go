@@ -7,10 +7,18 @@ import (
 	"github.com/gongahkia/salja/internal/model"
 )
 
-type Detector struct{}
+type Detector struct {
+	LevenshteinThreshold int
+	MinTitleLength       int
+	DateProximityHours   int
+}
 
 func NewDetector() *Detector {
-	return &Detector{}
+	return &Detector{
+		LevenshteinThreshold: 3,
+		MinTitleLength:       10,
+		DateProximityHours:   24,
+	}
 }
 
 type Match struct {
@@ -154,15 +162,21 @@ func (d *Detector) fuzzyTitleMatch(a, b string) bool {
 		return true
 	}
 
-	if len(a) > 10 && len(b) > 10 {
-		return levenshteinDistance(a, b) < 3
+	minLen := d.MinTitleLength
+	threshold := d.LevenshteinThreshold
+	if len(a) > minLen && len(b) > minLen {
+		return levenshteinDistance(a, b) < threshold
 	}
 
 	return false
 }
 
 func (d *Detector) timeMatch(a, b time.Time) bool {
-	return a.Year() == b.Year() && a.Month() == b.Month() && a.Day() == b.Day()
+	diff := a.Sub(b)
+	if diff < 0 {
+		diff = -diff
+	}
+	return diff < time.Duration(d.DateProximityHours)*time.Hour
 }
 
 func (d *Detector) calculateConfidence(a, b *model.CalendarItem) float64 {

@@ -29,6 +29,14 @@ baseURL:    tickTickBaseURL,
 }
 }
 
+func NewTickTickClientWithTimeout(token *Token, timeout time.Duration) *TickTickClient {
+return &TickTickClient{
+token:      token,
+httpClient: &http.Client{Timeout: timeout},
+baseURL:    tickTickBaseURL,
+}
+}
+
 func (c *TickTickClient) doRequest(ctx context.Context, method, path string, body interface{}) ([]byte, int, error) {
 var reqBody io.Reader
 if body != nil {
