@@ -279,7 +279,7 @@ func pullFromGoogle(ctx context.Context, token *api.Token, startTime, endTime ti
 	client := api.NewGCalClientWithTimeout(token, timeout)
 	events, err := client.ListEvents(ctx, "primary", startTime, endTime)
 	if err != nil {
-		return nil, fmt.Errorf("Google Calendar API error: %w", err)
+		return nil, fmt.Errorf("google calendar API error: %w", err)
 	}
 
 	collection := &model.CalendarCollection{
@@ -297,7 +297,7 @@ func pullFromMicrosoft(ctx context.Context, token *api.Token, startTime, endTime
 	client := api.NewMSGraphClientWithTimeout(token, timeout)
 	events, err := client.ListEvents(ctx, startTime, endTime)
 	if err != nil {
-		return nil, fmt.Errorf("Microsoft Graph API error: %w", err)
+		return nil, fmt.Errorf("microsoft graph API error: %w", err)
 	}
 
 	collection := &model.CalendarCollection{
@@ -344,7 +344,7 @@ func pullFromTodoist(ctx context.Context, token *api.Token, timeout time.Duratio
 	client := api.NewTodoistClientWithTimeout(token, timeout)
 	tasks, err := client.GetTasks(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("Todoist API error: %w", err)
+		return nil, fmt.Errorf("todoist API error: %w", err)
 	}
 
 	collection := &model.CalendarCollection{
