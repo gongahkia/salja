@@ -98,7 +98,7 @@ func newAuthLoginCmd() *cobra.Command {
 				if err := store.Set("notion", token); err != nil {
 					return fmt.Errorf("failed to save token: %w", err)
 				}
-				fmt.Fprintf(cmd.ErrOrStderr(), "✓ Stored Notion integration token\n")
+				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "✓ Stored Notion integration token\n")
 				return nil
 			default:
 				return fmt.Errorf("unsupported service %q; supported: google, microsoft, todoist, ticktick, notion", service)
@@ -117,7 +117,7 @@ func newAuthLoginCmd() *cobra.Command {
 				return fmt.Errorf("failed to save token: %w", err)
 			}
 
-			fmt.Fprintf(cmd.ErrOrStderr(), "✓ Authenticated with %s (expires: %s)\n", service, token.ExpiresAt.Format(time.RFC3339))
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "✓ Authenticated with %s (expires: %s)\n", service, token.ExpiresAt.Format(time.RFC3339))
 			return nil
 		},
 	}
@@ -136,7 +136,7 @@ func newAuthLogoutCmd() *cobra.Command {
 			if err := store.Delete(args[0]); err != nil {
 				return fmt.Errorf("failed to remove token: %w", err)
 			}
-			fmt.Fprintf(cmd.ErrOrStderr(), "✓ Removed tokens for %s\n", args[0])
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "✓ Removed tokens for %s\n", args[0])
 			return nil
 		},
 	}

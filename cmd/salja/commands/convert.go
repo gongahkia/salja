@@ -17,7 +17,6 @@ import (
 	"github.com/gongahkia/salja/internal/model"
 	"github.com/gongahkia/salja/internal/parsers"
 	"github.com/gongahkia/salja/internal/registry"
-	_ "github.com/gongahkia/salja/internal/registry" // ensure format registration
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 )
@@ -403,7 +402,7 @@ func readInputStreaming(ctx context.Context, filePath, format string) (*model.Ca
 		if err != nil {
 			return nil, fmt.Errorf("streaming CSV init failed: %w", err)
 		}
-		defer sp.Close()
+		defer func() { _ = sp.Close() }()
 
 		p, pErr := registry.GetParser(format)
 		if pErr != nil {

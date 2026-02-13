@@ -10,15 +10,15 @@ import (
 )
 
 type formatMeta struct {
-	ID           string   `json:"id"`
-	Name         string   `json:"name"`
-	Extensions   []string `json:"extensions"`
-	HasParser    bool     `json:"has_parser"`
-	HasWriter    bool     `json:"has_writer"`
-	Events       bool     `json:"supports_events"`
-	Tasks        bool     `json:"supports_tasks"`
-	Recurrence   bool     `json:"supports_recurrence"`
-	Subtasks     bool     `json:"supports_subtasks"`
+	ID         string   `json:"id"`
+	Name       string   `json:"name"`
+	Extensions []string `json:"extensions"`
+	HasParser  bool     `json:"has_parser"`
+	HasWriter  bool     `json:"has_writer"`
+	Events     bool     `json:"supports_events"`
+	Tasks      bool     `json:"supports_tasks"`
+	Recurrence bool     `json:"supports_recurrence"`
+	Subtasks   bool     `json:"supports_subtasks"`
 }
 
 // HandleFormats returns all registered format metadata as JSON.

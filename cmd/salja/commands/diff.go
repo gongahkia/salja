@@ -65,7 +65,7 @@ func NewDiffCmd() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("failed to create output file: %w", err)
 				}
-				defer out.Close()
+				defer func() { _ = out.Close() }()
 			} else {
 				out = os.Stdout
 			}
@@ -82,7 +82,7 @@ func NewDiffCmd() *cobra.Command {
 					"removed":        removedTitles,
 				}
 				data, _ := json.MarshalIndent(result, "", "  ")
-				fmt.Fprintln(out, string(data))
+				_, _ = fmt.Fprintln(out, string(data))
 
 			case "patch":
 				// Valid unified diff format
@@ -106,13 +106,13 @@ func NewDiffCmd() *cobra.Command {
 				fmt.Fprintf(out, "Removed: %d items (in file1 only)\n", len(removedTitles))
 
 				if len(removedTitles) > 0 {
-					fmt.Fprintln(out, "\n--- Removed ---")
+					_, _ = fmt.Fprintln(out, "\n--- Removed ---")
 					for _, title := range removedTitles {
 						fmt.Fprintf(out, "  - %s\n", title)
 					}
 				}
 				if len(addedTitles) > 0 {
-					fmt.Fprintln(out, "\n--- Added ---")
+					_, _ = fmt.Fprintln(out, "\n--- Added ---")
 					for _, title := range addedTitles {
 						fmt.Fprintf(out, "  + %s\n", title)
 					}

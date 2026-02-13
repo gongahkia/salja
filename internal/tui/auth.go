@@ -16,9 +16,9 @@ type AuthModel struct {
 }
 
 type authService struct {
-	name      string
-	authed    bool
-	expiry    string
+	name   string
+	authed bool
+	expiry string
 }
 
 // NewAuthModel creates a new auth view.

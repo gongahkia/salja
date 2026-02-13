@@ -19,7 +19,7 @@ func TestMCPIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create in-process client: %v", err)
 	}
-	defer testClient.Close()
+	defer func() { _ = testClient.Close() }()
 
 	ctx := context.Background()
 	initReq := mcp.InitializeRequest{}

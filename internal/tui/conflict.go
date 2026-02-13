@@ -9,6 +9,7 @@ import (
 )
 
 type conflictStrategy int
+
 var strategyLabels = []string{"prefer-source", "prefer-target", "skip", "merge-manual"}
 
 // ConflictModel presents interactive conflict resolution UI.

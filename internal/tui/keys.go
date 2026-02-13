@@ -4,15 +4,15 @@ import "github.com/charmbracelet/bubbles/key"
 
 // KeyMap defines global keybindings shared across all TUI views.
 type KeyMap struct {
-	Quit   key.Binding
-	Help   key.Binding
-	Back   key.Binding
-	Tab    key.Binding
-	Enter  key.Binding
-	Up     key.Binding
-	Down   key.Binding
-	Left   key.Binding
-	Right  key.Binding
+	Quit  key.Binding
+	Help  key.Binding
+	Back  key.Binding
+	Tab   key.Binding
+	Enter key.Binding
+	Up    key.Binding
+	Down  key.Binding
+	Left  key.Binding
+	Right key.Binding
 }
 
 // DefaultKeyMap returns the standard set of keybindings.
