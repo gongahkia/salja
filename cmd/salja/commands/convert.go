@@ -49,6 +49,26 @@ fmt.Fprintf(os.Stderr, "Detected target format: %s\n", toFormat)
 // Load config early so streaming threshold is available
 cfg, _ := config.Load()
 
+// File size pre-check: warn if file exceeds streaming threshold
+if inputFile != "-" {
+thresholdMB := 10
+if cfg != nil && cfg.StreamingThresholdMB > 0 {
+thresholdMB = cfg.StreamingThresholdMB
+}
+if info, statErr := os.Stat(inputFile); statErr == nil {
+fileSizeMB := info.Size() / (1024 * 1024)
+if fileSizeMB >= int64(thresholdMB) && !quiet {
+fmt.Fprintf(os.Stderr, "Warning: input file is %dMB (threshold: %dMB). Large files may use significant memory.\n", fileSizeMB, thresholdMB)
+fmt.Fprint(os.Stderr, "Continue? [Y/n] ")
+var confirm string
+fmt.Fscanln(os.Stdin, &confirm)
+if confirm == "n" || confirm == "N" {
+return fmt.Errorf("aborted by user")
+}
+}
+}
+}
+
 collection, err := ReadInput(inputFile, fromFormat, cfg)
 if err != nil {
 return fmt.Errorf("failed to read input: %w", err)
