@@ -9,7 +9,6 @@ import (
 	"github.com/gongahkia/salja/internal/fidelity"
 	"github.com/gongahkia/salja/internal/model"
 	"github.com/gongahkia/salja/internal/registry"
-	_ "github.com/gongahkia/salja/internal/registry" // trigger init
 )
 
 // allWritableFormats returns format names that have both a parser and writer.

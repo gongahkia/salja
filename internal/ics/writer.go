@@ -23,7 +23,7 @@ func (w *Writer) WriteFile(ctx context.Context, collection *model.CalendarCollec
 	if err != nil {
 		return fmt.Errorf("failed to create ICS file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	return w.Write(ctx, collection, f)
 }

@@ -24,7 +24,7 @@ func (p *AsanaParser) ParseFile(ctx context.Context, filePath string) (*model.Ca
 	if err != nil {
 		return nil, fmt.Errorf("failed to open Asana CSV %s: %w", filePath, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	return p.Parse(ctx, f, filePath)
 }
 

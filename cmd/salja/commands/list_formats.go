@@ -5,7 +5,6 @@ import (
 	"sort"
 
 	"github.com/gongahkia/salja/internal/registry"
-	_ "github.com/gongahkia/salja/internal/registry" // ensure format registration
 	"github.com/spf13/cobra"
 )
 
