@@ -19,9 +19,6 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 --- STABILITY / SCALING ---
 
 
-(B) Use ConflictError from internal/errors in internal/conflict/resolver.go when conflict resolution fails instead of returning plain error strings +refactor +errors
-(B) Use PermissionError from internal/errors in internal/apple/ when AppleScript permission checks fail instead of returning plain error strings +refactor +errors
-(B) Use APIError from internal/errors in internal/api/gcal.go and internal/api/msgraph.go for all HTTP error responses so callers can use IsRateLimit for retry logic +refactor +errors
 (B) Add a PartialResult return type to the convert command pipeline so that when some items fail parsing but others succeed, the CLI can report N succeeded / M failed with per-item error details +refactor +errors
 (B) Add input validation in the convert command to reject output formats that cannot represent the source item types (e.g. converting tasks to gcal which only supports events) with a clear error message before processing begins +feature +fidelity
 (B) Add conflict detection integration into the convert command with a --merge flag that runs Detector.FindDuplicates when the output file already exists and invokes the Resolver before overwriting +feature +conflict
