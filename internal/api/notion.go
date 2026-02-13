@@ -4,11 +4,11 @@ import (
 "bytes"
 "context"
 "encoding/json"
-"fmt"
 "io"
 "net/http"
 "time"
 
+salerr "github.com/gongahkia/salja/internal/errors"
 "github.com/gongahkia/salja/internal/model"
 )
 
@@ -137,7 +137,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("Notion API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "notion", StatusCode: status, Message: string(data)}
 }
 var result NotionQueryResult
 return &result, json.Unmarshal(data, &result)
@@ -154,7 +154,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("Notion API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "notion", StatusCode: status, Message: string(data)}
 }
 var created NotionPage
 return &created, json.Unmarshal(data, &created)
@@ -170,7 +170,7 @@ if err != nil {
 return err
 }
 if status != 200 {
-return fmt.Errorf("Notion update failed (HTTP %d)", status)
+return &salerr.APIError{Service: "notion", StatusCode: status, Message: "update failed"}
 }
 return nil
 }

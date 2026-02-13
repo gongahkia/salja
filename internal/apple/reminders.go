@@ -55,7 +55,7 @@ scriptParts = append(scriptParts, fmt.Sprintf(`    make new reminder with proper
 scriptParts = append(scriptParts, `  end tell`)
 scriptParts = append(scriptParts, `end tell`)
 
-_, err := RunAppleScript(strings.Join(scriptParts, "\n"))
+_, err := scriptRunnerFn(strings.Join(scriptParts, "\n"))
 return err
 }
 
@@ -87,7 +87,7 @@ end repeat
 return output
 end tell`
 
-output, err := RunAppleScript(script)
+output, err := scriptRunnerFn(script)
 if err != nil {
 return nil, err
 }
@@ -129,5 +129,9 @@ return collection, nil
 func escapeAS(s string) string {
 s = strings.ReplaceAll(s, `\`, `\\`)
 s = strings.ReplaceAll(s, `"`, `\"`)
+s = strings.ReplaceAll(s, "`", "")
+s = strings.ReplaceAll(s, "\t", " ")
+s = strings.ReplaceAll(s, "\n", " ")
+s = strings.ReplaceAll(s, "\r", "")
 return s
 }

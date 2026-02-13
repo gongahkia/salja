@@ -58,7 +58,7 @@ scriptParts = append(scriptParts, fmt.Sprintf(`    make new event with propertie
 scriptParts = append(scriptParts, `  end tell`)
 scriptParts = append(scriptParts, `end tell`)
 
-_, err := RunAppleScript(strings.Join(scriptParts, "\n"))
+_, err := scriptRunnerFn(strings.Join(scriptParts, "\n"))
 return err
 }
 
@@ -97,7 +97,7 @@ endDate.Format("January 2, 2006"),
 calendarName,
 )
 
-output, err := RunAppleScript(script)
+output, err := scriptRunnerFn(script)
 if err != nil {
 return nil, err
 }

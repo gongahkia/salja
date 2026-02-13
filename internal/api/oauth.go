@@ -75,6 +75,14 @@ return make(TokenFile), nil
 return nil, err
 }
 defer f.Close()
+
+fi, statErr := f.Stat()
+if statErr == nil {
+if perm := fi.Mode().Perm(); perm&0077 != 0 {
+fmt.Fprintf(os.Stderr, "Warning: token file %s has permissions %o; consider chmod 600\n", s.Path, perm)
+}
+}
+
 if err := lockFile(f, false); err != nil {
 return nil, fmt.Errorf("failed to lock token file: %w", err)
 }

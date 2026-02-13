@@ -102,6 +102,11 @@ return fmt.Errorf("failed to read input: %w", err)
 // Validate each item, collecting successes and failures
 partial := salerr.NewPartialResult[model.CalendarItem]()
 for i, item := range collection.Items {
+if i%100 == 0 {
+if err := ctx.Err(); err != nil {
+return fmt.Errorf("aborted: %w", err)
+}
+}
 if err := item.Validate(); err != nil {
 partial.AddError(i, item.UID, err.Error(), err)
 } else {
@@ -385,9 +390,29 @@ return p.ParseFile(ctx, filePath)
 }
 
 func readInputStreaming(ctx context.Context, filePath, format string) (*model.CalendarCollection, error) {
-// ICS parser already decodes component-by-component (streaming by nature).
-// For CSV, the standard parser is used but could be swapped for
-// StreamingCSVParser in format-specific parsers for constant-memory processing.
+// For CSV formats, use the StreamingCSVParser for constant-memory processing
+csvFormats := map[string]bool{"ticktick": true, "todoist": true, "gcal": true, "outlook": true, "notion": true, "asana": true}
+if csvFormats[format] {
+f, err := os.Open(filePath)
+if err != nil {
+return nil, fmt.Errorf("failed to open file: %w", err)
+}
+defer f.Close()
+
+sp, err := salerr.NewStreamingCSVParser(f)
+if err != nil {
+return nil, fmt.Errorf("streaming CSV init failed: %w", err)
+}
+defer sp.Close()
+
+p, pErr := registry.GetParser(format)
+if pErr != nil {
+return nil, pErr
+}
+// Fall back to standard parser with the file reader
+return p.Parse(ctx, f, filePath)
+}
+
 p, err := registry.GetParser(format)
 if err != nil {
 return nil, err

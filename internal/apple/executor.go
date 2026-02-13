@@ -13,6 +13,15 @@ salerr "github.com/gongahkia/salja/internal/errors"
 // ErrNotMacOS is returned when Apple-specific features are used on non-macOS systems.
 var ErrNotMacOS = fmt.Errorf("this feature requires macOS (current platform: %s/%s)", runtime.GOOS, runtime.GOARCH)
 
+// ScriptRunner abstracts AppleScript execution for testability.
+type ScriptRunner interface {
+	Run(script string) (string, error)
+}
+
+// scriptRunnerFn is the package-level function used to run AppleScript.
+// Override in tests to mock AppleScript execution.
+var scriptRunnerFn = RunAppleScript
+
 func RunAppleScript(script string) (string, error) {
 if runtime.GOOS != "darwin" {
 return "", ErrNotMacOS

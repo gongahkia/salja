@@ -23,6 +23,45 @@ cmd.AddCommand(newSyncPullCmd())
 return cmd
 }
 
+func ensureTokenValid(ctx context.Context, store api.TokenStorer, service string, token *api.Token, cfg *config.Config) (*api.Token, error) {
+if !token.IsExpired() {
+return token, nil
+}
+if token.RefreshToken == "" {
+return nil, fmt.Errorf("token for %s is expired; run: salja auth login %s", service, service)
+}
+var pkceConfig api.PKCEConfig
+switch service {
+case "google":
+if cfg != nil {
+pkceConfig = api.PKCEConfig{ClientID: cfg.API.Google.ClientID, TokenURL: "https://oauth2.googleapis.com/token"}
+}
+case "microsoft":
+if cfg != nil {
+pkceConfig = api.PKCEConfig{ClientID: cfg.API.Microsoft.ClientID, TokenURL: "https://login.microsoftonline.com/common/oauth2/v2.0/token"}
+}
+case "todoist":
+if cfg != nil {
+pkceConfig = api.PKCEConfig{ClientID: cfg.API.Todoist.ClientID, TokenURL: "https://todoist.com/oauth/access_token"}
+}
+case "ticktick":
+if cfg != nil {
+pkceConfig = api.PKCEConfig{ClientID: cfg.API.TickTick.ClientID, TokenURL: "https://ticktick.com/oauth/token"}
+}
+default:
+return nil, fmt.Errorf("token for %s is expired; run: salja auth login %s", service, service)
+}
+flow := api.NewPKCEFlow(pkceConfig)
+newToken, err := flow.RefreshAccessToken(ctx, token.RefreshToken)
+if err != nil {
+return nil, fmt.Errorf("failed to refresh %s token: %w", service, err)
+}
+if err := store.Set(service, newToken); err != nil {
+fmt.Fprintf(os.Stderr, "Warning: failed to persist refreshed token: %v\n", err)
+}
+return newToken, nil
+}
+
 func newSyncPushCmd() *cobra.Command {
 var to string
 var dryRun bool
@@ -59,8 +98,9 @@ if err != nil {
 return err
 }
 
-if token.IsExpired() {
-return fmt.Errorf("token for %s is expired; run: salja auth login %s", to, to)
+token, err = ensureTokenValid(ctx, store, to, token, cfg)
+if err != nil {
+return err
 }
 
 switch to {
@@ -103,18 +143,20 @@ if err != nil {
 return err
 }
 
-if token.IsExpired() {
-return fmt.Errorf("token for %s is expired; run: salja auth login %s", from, from)
+cfg, _ := config.Load()
+
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+defer cancel()
+
+token, err = ensureTokenValid(ctx, store, from, token, cfg)
+if err != nil {
+return err
 }
 
-cfg, _ := config.Load()
 apiTimeout := 30 * time.Second
 if cfg != nil && cfg.APITimeoutSeconds > 0 {
 apiTimeout = time.Duration(cfg.APITimeoutSeconds) * time.Second
 }
-
-ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-defer cancel()
 
 now := time.Now()
 startTime := now.AddDate(0, -1, 0)

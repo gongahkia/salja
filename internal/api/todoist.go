@@ -10,6 +10,7 @@ import (
 "strings"
 "time"
 
+salerr "github.com/gongahkia/salja/internal/errors"
 "github.com/gongahkia/salja/internal/model"
 )
 
@@ -99,7 +100,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("Todoist API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "todoist", StatusCode: status, Message: string(data)}
 }
 var tasks []TodoistTask
 return tasks, json.Unmarshal(data, &tasks)
@@ -111,7 +112,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("Todoist API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "todoist", StatusCode: status, Message: string(data)}
 }
 var created TodoistTask
 return &created, json.Unmarshal(data, &created)
@@ -123,7 +124,7 @@ if err != nil {
 return err
 }
 if status != 204 {
-return fmt.Errorf("Todoist update failed (HTTP %d)", status)
+return &salerr.APIError{Service: "todoist", StatusCode: status, Message: "update failed"}
 }
 return nil
 }
@@ -134,7 +135,7 @@ if err != nil {
 return err
 }
 if status != 204 {
-return fmt.Errorf("Todoist close failed (HTTP %d)", status)
+return &salerr.APIError{Service: "todoist", StatusCode: status, Message: "close failed"}
 }
 return nil
 }
@@ -145,7 +146,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("Todoist API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "todoist", StatusCode: status, Message: string(data)}
 }
 var projects []TodoistProject
 return projects, json.Unmarshal(data, &projects)

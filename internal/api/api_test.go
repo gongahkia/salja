@@ -5,11 +5,35 @@ import (
 "encoding/json"
 "net/http"
 "net/http/httptest"
+"net/url"
+"strings"
+"sync/atomic"
 "testing"
 "time"
 
 "github.com/gongahkia/salja/internal/model"
 )
+
+// roundTripperFunc adapts a function to http.RoundTripper.
+type roundTripperFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripperFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+// redirectClient returns an *http.Client whose transport rewrites every
+// outgoing request so that it hits the given httptest server instead of
+// the real host embedded in the URL.
+func redirectClient(ts *httptest.Server) *http.Client {
+	tsURL, _ := url.Parse(ts.URL)
+	return &http.Client{
+		Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+			req.URL.Scheme = tsURL.Scheme
+			req.URL.Host = tsURL.Host
+			return http.DefaultTransport.RoundTrip(req)
+		}),
+	}
+}
 
 func newTestToken() *Token {
 return &Token{
@@ -273,4 +297,247 @@ t.Fatal(err)
 if status != 429 {
 t.Errorf("expected 429, got %d", status)
 }
+}
+
+// ---------------------------------------------------------------------------
+// Todoist httptest tests
+// ---------------------------------------------------------------------------
+
+func TestTodoistGetTasks(t *testing.T) {
+	tasks := []TodoistTask{
+		{ID: "1", Content: "Buy milk", Priority: 3, Labels: []string{"errands"}, Due: &TodoistDue{Date: "2024-08-01"}},
+		{ID: "2", Content: "Write tests", Priority: 4, IsCompleted: true},
+	}
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			t.Errorf("expected GET, got %s", r.Method)
+		}
+		if !strings.HasSuffix(r.URL.Path, "/tasks") {
+			t.Errorf("unexpected path %s", r.URL.Path)
+		}
+		if r.Header.Get("Authorization") != "Bearer test-token" {
+			t.Error("missing or wrong auth header")
+		}
+		json.NewEncoder(w).Encode(tasks)
+	}))
+	defer ts.Close()
+
+	client := NewTodoistClient(newTestToken())
+	client.httpClient = redirectClient(ts)
+
+	got, err := client.GetTasks(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("expected 2 tasks, got %d", len(got))
+	}
+	if got[0].Content != "Buy milk" {
+		t.Errorf("task[0].Content = %q", got[0].Content)
+	}
+	if got[1].IsCompleted != true {
+		t.Error("task[1] should be completed")
+	}
+
+	item := TodoistToCalendarItem(got[0])
+	if item.Priority != model.PriorityHigh {
+		t.Errorf("mapped priority: got %d, want %d", item.Priority, model.PriorityHigh)
+	}
+	if item.DueDate == nil {
+		t.Error("due date should be set")
+	}
+}
+
+func TestTodoistCreateTask(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			t.Errorf("expected POST, got %s", r.Method)
+		}
+		var incoming TodoistTask
+		json.NewDecoder(r.Body).Decode(&incoming)
+		incoming.ID = "new-123"
+		json.NewEncoder(w).Encode(incoming)
+	}))
+	defer ts.Close()
+
+	client := NewTodoistClient(newTestToken())
+	client.httpClient = redirectClient(ts)
+
+	created, err := client.CreateTask(context.Background(), &TodoistTask{
+		Content:  "Deploy v2",
+		Priority: 2,
+		Labels:   []string{"ops"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if created.ID != "new-123" {
+		t.Errorf("expected ID 'new-123', got %q", created.ID)
+	}
+	if created.Content != "Deploy v2" {
+		t.Errorf("content: got %q", created.Content)
+	}
+}
+
+func TestTodoistGetTasksNon200(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(500)
+		w.Write([]byte(`{"error":"internal server error"}`))
+	}))
+	defer ts.Close()
+
+	client := NewTodoistClient(newTestToken())
+	client.httpClient = redirectClient(ts)
+
+	_, err := client.GetTasks(context.Background())
+	if err == nil {
+		t.Fatal("expected error for 500 response")
+	}
+	if !strings.Contains(err.Error(), "500") {
+		t.Errorf("error should mention status 500: %v", err)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Notion httptest tests
+// ---------------------------------------------------------------------------
+
+func TestNotionQueryDatabase(t *testing.T) {
+	var callCount int32
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			t.Errorf("expected POST, got %s", r.Method)
+		}
+		if r.Header.Get("Notion-Version") != notionVersion {
+			t.Errorf("missing Notion-Version header")
+		}
+
+		call := atomic.AddInt32(&callCount, 1)
+		if call == 1 {
+			json.NewEncoder(w).Encode(NotionQueryResult{
+				Results: []NotionPage{
+					{ID: "page-1", Properties: map[string]NotionProperty{
+						"Name": {Type: "title", Title: []NotionRichText{{PlainText: "First"}}},
+					}},
+				},
+				HasMore:    true,
+				NextCursor: "cursor-abc",
+			})
+		} else {
+			// Verify cursor was sent
+			var body map[string]interface{}
+			json.NewDecoder(r.Body).Decode(&body)
+			if body["start_cursor"] != "cursor-abc" {
+				t.Errorf("expected start_cursor 'cursor-abc', got %v", body["start_cursor"])
+			}
+			json.NewEncoder(w).Encode(NotionQueryResult{
+				Results: []NotionPage{
+					{ID: "page-2", Properties: map[string]NotionProperty{
+						"Name": {Type: "title", Title: []NotionRichText{{PlainText: "Second"}}},
+					}},
+				},
+				HasMore: false,
+			})
+		}
+	}))
+	defer ts.Close()
+
+	client := NewNotionClient("test-notion-token")
+	client.httpClient = redirectClient(ts)
+	ctx := context.Background()
+
+	// First page
+	result1, err := client.QueryDatabase(ctx, "db-1", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result1.Results) != 1 || result1.Results[0].ID != "page-1" {
+		t.Errorf("page 1 unexpected: %+v", result1)
+	}
+	if !result1.HasMore {
+		t.Error("expected HasMore=true on first call")
+	}
+
+	// Second page using cursor
+	result2, err := client.QueryDatabase(ctx, "db-1", result1.NextCursor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result2.Results) != 1 || result2.Results[0].ID != "page-2" {
+		t.Errorf("page 2 unexpected: %+v", result2)
+	}
+	if result2.HasMore {
+		t.Error("expected HasMore=false on second call")
+	}
+
+	// Verify mapping of first result
+	pm := DefaultNotionPropertyMap()
+	item := NotionToCalendarItem(result1.Results[0], pm)
+	if item.Title != "First" {
+		t.Errorf("mapped title: got %q", item.Title)
+	}
+}
+
+func TestNotionCreatePage(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			t.Errorf("expected POST, got %s", r.Method)
+		}
+		if !strings.HasSuffix(r.URL.Path, "/pages") {
+			t.Errorf("unexpected path %s", r.URL.Path)
+		}
+		json.NewEncoder(w).Encode(NotionPage{
+			ID: "created-page-1",
+			Properties: map[string]NotionProperty{
+				"Name": {Type: "title", Title: []NotionRichText{{PlainText: "New Task"}}},
+			},
+		})
+	}))
+	defer ts.Close()
+
+	client := NewNotionClient("test-notion-token")
+	client.httpClient = redirectClient(ts)
+
+	pm := DefaultNotionPropertyMap()
+	dueDate := time.Date(2024, 7, 1, 0, 0, 0, 0, time.UTC)
+	page := CalendarItemToNotion(model.CalendarItem{
+		Title:    "New Task",
+		DueDate:  &dueDate,
+		Priority: model.PriorityMedium,
+		Status:   model.StatusPending,
+	}, pm)
+
+	created, err := client.CreatePage(context.Background(), "db-1", &page)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if created.ID != "created-page-1" {
+		t.Errorf("expected ID 'created-page-1', got %q", created.ID)
+	}
+	item := NotionToCalendarItem(*created, pm)
+	if item.Title != "New Task" {
+		t.Errorf("mapped title: got %q", item.Title)
+	}
+}
+
+func TestNotionQueryDatabase429(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(429)
+		w.Write([]byte(`{"message":"rate limited","code":"rate_limited"}`))
+	}))
+	defer ts.Close()
+
+	client := NewNotionClient("test-notion-token")
+	client.httpClient = redirectClient(ts)
+
+	_, err := client.QueryDatabase(context.Background(), "db-1", "")
+	if err == nil {
+		t.Fatal("expected error for 429 response")
+	}
+	if !strings.Contains(err.Error(), "429") {
+		t.Errorf("error should mention 429: %v", err)
+	}
+	if !strings.Contains(err.Error(), "rate") {
+		t.Errorf("error should contain rate limit message: %v", err)
+	}
 }

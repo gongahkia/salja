@@ -5,13 +5,7 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 --- PHILOSOPHICAL ALIGNMENT ---
 
 
-(B) Add `sync push --to todoist` case in cmd/salja/commands/sync.go that creates a TodoistClient, iterates collection.Items, calls CalendarItemToTodoist and client.CreateTask with rate limiting (50ms ticker for Todoist's 50 req/min) +feature +sync
-(B) Add `sync pull --from todoist` case in cmd/salja/commands/sync.go that calls TodoistClient.GetTasks, maps each via TodoistToCalendarItem, writes to output file +feature +sync
-(B) Add `sync push --to ticktick` case in cmd/salja/commands/sync.go that creates a TickTickClient, lists projects, prompts for project selection, iterates items, calls CalendarItemToTickTick and client.CreateTask +feature +sync
-(B) Add `sync pull --from ticktick` case in cmd/salja/commands/sync.go that calls TickTickClient.ListProjects, prompts for selection, calls ListTasks, maps via TickTickToCalendarItem, writes output +feature +sync
-(B) Add `sync push --to notion` case in cmd/salja/commands/sync.go that creates a NotionClient with token, prompts for database_id, iterates items, calls CalendarItemToNotion and client.CreatePage +feature +sync
-(B) Add `sync pull --from notion` case in cmd/salja/commands/sync.go that calls NotionClient.QueryDatabase with pagination (follow HasMore/NextCursor), maps via NotionToCalendarItem, writes output +feature +sync
-(B) Add `--start` and `--end` flags to `sync pull` command (default: -1mo/+3mo) to replace hardcoded date range in newSyncPullCmd at sync.go:113-115 +feature +sync
+
 
 
 --- DX / UTILITY ---

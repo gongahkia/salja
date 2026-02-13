@@ -20,9 +20,11 @@ type formatPair struct {
 
 // allWritableFormats returns format names that have both a parser and writer.
 func allWritableFormats() []string {
+	// Apple formats use AppleScript and don't support stream-based I/O
+	appleFormats := map[string]bool{"apple-calendar": true, "apple-reminders": true}
 	var names []string
 	for name, entry := range registry.AllFormats() {
-		if entry.NewParser != nil && entry.NewWriter != nil {
+		if entry.NewParser != nil && entry.NewWriter != nil && !appleFormats[name] {
 			names = append(names, name)
 		}
 	}

@@ -9,6 +9,7 @@ import (
 "net/http"
 "time"
 
+salerr "github.com/gongahkia/salja/internal/errors"
 "github.com/gongahkia/salja/internal/model"
 )
 
@@ -102,7 +103,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("TickTick API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "ticktick", StatusCode: status, Message: string(data)}
 }
 var projects []TickTickProject
 return projects, json.Unmarshal(data, &projects)
@@ -115,7 +116,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("TickTick API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "ticktick", StatusCode: status, Message: string(data)}
 }
 var result struct {
 Tasks []TickTickTask `json:"tasks"`
@@ -132,7 +133,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("TickTick API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "ticktick", StatusCode: status, Message: string(data)}
 }
 var created TickTickTask
 return &created, json.Unmarshal(data, &created)
@@ -145,7 +146,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("TickTick API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "ticktick", StatusCode: status, Message: string(data)}
 }
 var updated TickTickTask
 return &updated, json.Unmarshal(data, &updated)
@@ -158,7 +159,7 @@ if err != nil {
 return err
 }
 if status != 200 {
-return fmt.Errorf("TickTick delete failed (HTTP %d)", status)
+return &salerr.APIError{Service: "ticktick", StatusCode: status, Message: "delete failed"}
 }
 return nil
 }
