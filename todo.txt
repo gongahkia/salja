@@ -19,7 +19,6 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 --- STABILITY / SCALING ---
 
 
-(B) Add conflict detection integration into the convert command with a --merge flag that runs Detector.FindDuplicates when the output file already exists and invokes the Resolver before overwriting +feature +conflict
 (B) Encrypt OAuth tokens at rest in internal/api/oauth.go using OS keyring (keyctl on Linux, Keychain on macOS, Credential Manager on Windows) instead of plaintext JSON +security
 (B) Add a file size pre-check in the convert command that warns when the input file exceeds StreamingThresholdMB and confirms the user wants to proceed in non-streaming mode if streaming is not yet triggered +feature +performance
 (B) Add context.Context propagation through all parser and writer interfaces so that long-running conversions can be cancelled via Ctrl+C through the existing SignalHandler +refactor +stability

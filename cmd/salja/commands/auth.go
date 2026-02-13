@@ -35,7 +35,7 @@ if err != nil {
 return fmt.Errorf("failed to load config: %w", err)
 }
 
-store, err := api.DefaultTokenStore()
+store, err := api.DefaultSecureStore()
 if err != nil {
 return err
 }
@@ -93,7 +93,7 @@ Use:   "logout <service>",
 Short: "Remove stored tokens for a service",
 Args:  cobra.ExactArgs(1),
 RunE: func(cmd *cobra.Command, args []string) error {
-store, err := api.DefaultTokenStore()
+store, err := api.DefaultSecureStore()
 if err != nil {
 return err
 }

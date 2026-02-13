@@ -37,6 +37,13 @@ func (t *Token) IsExpired() bool {
 return time.Now().After(t.ExpiresAt)
 }
 
+// TokenStorer is the interface for token persistence.
+type TokenStorer interface {
+	Get(service string) (*Token, error)
+	Set(service string, token *Token) error
+	Delete(service string) error
+}
+
 // DefaultTokenStore returns the XDG-compliant token store path.
 func DefaultTokenStore() (*TokenStore, error) {
 dir := os.Getenv("XDG_CONFIG_HOME")
@@ -48,6 +55,15 @@ return nil, fmt.Errorf("failed to determine home directory: %w", err)
 dir = filepath.Join(home, ".config")
 }
 return &TokenStore{Path: filepath.Join(dir, "salja", "tokens.json")}, nil
+}
+
+// DefaultSecureStore returns a keyring-backed store with file fallback.
+func DefaultSecureStore() (TokenStorer, error) {
+fileStore, err := DefaultTokenStore()
+if err != nil {
+return nil, err
+}
+return NewKeyringTokenStore(fileStore), nil
 }
 
 func (s *TokenStore) Load() (TokenFile, error) {

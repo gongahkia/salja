@@ -39,7 +39,7 @@ if err != nil {
 return fmt.Errorf("failed to read input: %w", err)
 }
 
-store, err := api.DefaultTokenStore()
+store, err := api.DefaultSecureStore()
 if err != nil {
 return err
 }
@@ -80,7 +80,7 @@ cmd := &cobra.Command{
 Use:   "pull",
 Short: "Pull events from a cloud service to a local file",
 RunE: func(cmd *cobra.Command, args []string) error {
-store, err := api.DefaultTokenStore()
+store, err := api.DefaultSecureStore()
 if err != nil {
 return err
 }
