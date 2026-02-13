@@ -132,7 +132,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("Google Calendar API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "Google Calendar", StatusCode: status, Message: string(data)}
 }
 var list GCalCalendarList
 return list.Items, json.Unmarshal(data, &list)
@@ -152,7 +152,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("Google Calendar API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "Google Calendar", StatusCode: status, Message: string(data)}
 }
 var list GCalEventList
 if err := json.Unmarshal(data, &list); err != nil {
@@ -175,7 +175,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("Google Calendar API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "Google Calendar", StatusCode: status, Message: string(data)}
 }
 var created GCalEvent
 return &created, json.Unmarshal(data, &created)
@@ -188,7 +188,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("Google Calendar API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "Google Calendar", StatusCode: status, Message: string(data)}
 }
 var updated GCalEvent
 return &updated, json.Unmarshal(data, &updated)
@@ -201,7 +201,7 @@ if err != nil {
 return err
 }
 if status != 204 && status != 200 {
-return fmt.Errorf("Google Calendar delete failed (HTTP %d)", status)
+return &salerr.APIError{Service: "Google Calendar", StatusCode: status, Message: "delete failed"}
 }
 return nil
 }

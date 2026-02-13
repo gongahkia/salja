@@ -19,7 +19,6 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 --- STABILITY / SCALING ---
 
 
-(B) Replace the unused ValidationError type in internal/errors/errors.go with actual usage in config validation, model Validate, and writer output validation +refactor +errors
 (B) Use ConflictError from internal/errors in internal/conflict/resolver.go when conflict resolution fails instead of returning plain error strings +refactor +errors
 (B) Use PermissionError from internal/errors in internal/apple/ when AppleScript permission checks fail instead of returning plain error strings +refactor +errors
 (B) Use APIError from internal/errors in internal/api/gcal.go and internal/api/msgraph.go for all HTTP error responses so callers can use IsRateLimit for retry logic +refactor +errors

@@ -10,6 +10,7 @@ import (
 "time"
 
 "github.com/gongahkia/salja/internal/config"
+salerr "github.com/gongahkia/salja/internal/errors"
 "github.com/gongahkia/salja/internal/model"
 )
 
@@ -56,7 +57,7 @@ case StrategySkip:
 r.log(source.Title, target.Title, "skip")
 return nil, nil
 case StrategyFail:
-return nil, fmt.Errorf("conflict detected between '%s' and '%s'", source.Title, target.Title)
+return nil, &salerr.ConflictError{SourceItem: source.Title, TargetItem: target.Title, Message: "conflict detected"}
 case StrategyAsk:
 return r.interactiveResolve(source, target)
 default:

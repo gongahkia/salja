@@ -6,6 +6,8 @@ import (
 "os/exec"
 "runtime"
 "strings"
+
+salerr "github.com/gongahkia/salja/internal/errors"
 )
 
 // ErrNotMacOS is returned when Apple-specific features are used on non-macOS systems.
@@ -25,7 +27,7 @@ err := cmd.Run()
 if err != nil {
 errMsg := strings.TrimSpace(stderr.String())
 if strings.Contains(errMsg, "Not authorized") || strings.Contains(errMsg, "assistive") {
-return "", fmt.Errorf("permission denied: grant Automation/Accessibility access in System Preferences > Security & Privacy. Error: %s", errMsg)
+return "", &salerr.PermissionError{Resource: "AppleScript Automation", Message: "grant Automation/Accessibility access in System Preferences > Security & Privacy", Err: fmt.Errorf("%s", errMsg)}
 }
 return "", fmt.Errorf("osascript error: %s (stderr: %s)", err, errMsg)
 }
@@ -39,7 +41,7 @@ return ErrNotMacOS
 }
 _, err := RunAppleScript(`tell application "System Events" to return name of first process`)
 if err != nil {
-return fmt.Errorf("AppleScript permissions not granted. Go to System Preferences > Security & Privacy > Privacy > Automation and grant access to Terminal/your IDE. Detail: %w", err)
+return &salerr.PermissionError{Resource: "AppleScript Automation", Message: "Go to System Preferences > Security & Privacy > Privacy > Automation and grant access to Terminal/your IDE", Err: err}
 }
 return nil
 }

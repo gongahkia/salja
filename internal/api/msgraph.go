@@ -131,7 +131,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("Microsoft Graph API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "Microsoft Graph", StatusCode: status, Message: string(data)}
 }
 var list MSGraphEventList
 if err := json.Unmarshal(data, &list); err != nil {
@@ -149,7 +149,7 @@ if err != nil {
 return nil, err
 }
 if status != 201 {
-return nil, fmt.Errorf("Microsoft Graph API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "Microsoft Graph", StatusCode: status, Message: string(data)}
 }
 var created MSGraphEvent
 return &created, json.Unmarshal(data, &created)
@@ -162,7 +162,7 @@ if err != nil {
 return nil, err
 }
 if status != 200 {
-return nil, fmt.Errorf("Microsoft Graph API error (HTTP %d): %s", status, data)
+return nil, &salerr.APIError{Service: "Microsoft Graph", StatusCode: status, Message: string(data)}
 }
 var updated MSGraphEvent
 return &updated, json.Unmarshal(data, &updated)
