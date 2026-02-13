@@ -206,6 +206,9 @@ The TUI provides views for conversion, validation, diffing, cloud sync, authenti
 
 ```sh
 go install github.com/gongahkia/salja/cmd/salja-mcp@latest
+
+# or via docker
+docker run --rm -i --entrypoint salja-mcp salja
 ```
 
 ### Tools
