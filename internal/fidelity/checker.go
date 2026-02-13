@@ -36,6 +36,20 @@ func Check(collection *model.CalendarCollection, targetFormat string) []DataLoss
 			})
 		}
 
+		// Subtask priority loss warning
+		if len(item.Subtasks) > 0 {
+			for _, sub := range item.Subtasks {
+				if sub.Priority > 0 && !caps.SupportsSubtasks {
+					warnings = append(warnings, DataLossWarning{
+						ItemTitle: item.Title,
+						Field:     "SubtaskPriority",
+						Reason:    fmt.Sprintf("subtask '%s' has priority %d which will be dropped during conversion", sub.Title, sub.Priority),
+					})
+					break
+				}
+			}
+		}
+
 		// Recurrence rule dropping warning
 		if item.Recurrence != nil && !caps.SupportsRecurrence {
 			warnings = append(warnings, DataLossWarning{
@@ -45,9 +59,31 @@ func Check(collection *model.CalendarCollection, targetFormat string) []DataLoss
 			})
 		}
 
+		// Reminder loss warning for CSV-based formats
+		if len(item.Reminders) > 0 {
+			csvFormats := map[string]bool{"todoist": true, "ticktick": true, "gcal": true, "outlook": true, "asana": true, "notion": true, "trello": true}
+			if csvFormats[targetFormat] {
+				warnings = append(warnings, DataLossWarning{
+					ItemTitle: item.Title,
+					Field:     "Reminders",
+					Reason:    fmt.Sprintf("%d reminder(s) will be lost converting to '%s' (no reminder support)", len(item.Reminders), targetFormat),
+				})
+			}
+		}
+
+		// Priority mapping collision detection for todoist
+		if targetFormat == "todoist" && (item.Priority == model.PriorityNone || item.Priority == model.PriorityLowest) {
+			if item.Priority == model.PriorityLowest {
+				warnings = append(warnings, DataLossWarning{
+					ItemTitle: item.Title,
+					Field:     "Priority",
+					Reason:    "PriorityLowest (1) maps to Todoist priority '1' (same as PriorityNone); priority distinction will be lost",
+				})
+			}
+		}
+
 		// Timezone loss warning
 		if item.Timezone != "" && item.Timezone != "UTC" {
-			// Formats that only support events without timezone fields
 			if !caps.SupportsEvents && !caps.SupportsRecurrence {
 				warnings = append(warnings, DataLossWarning{
 					ItemTitle: item.Title,

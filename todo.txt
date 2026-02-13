@@ -4,14 +4,11 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 
 --- PHILOSOPHICAL ALIGNMENT ---
 
-(B) Implement the DataLossMode enforcement in cmd/salja/convert.go so that when mode is "error" the CLI exits non-zero on any DataLossWarning, when "warn" it prints warnings to stderr, and when "silent" it suppresses all fidelity output +feature +fidelity
-(B) Add a --fidelity flag to the convert command that overrides config.DataLossMode per-run with values warn|error|silent +feature +fidelity
+
 (B) Extend internal/fidelity/check.go to detect and warn about priority mapping collisions (e.g. PriorityLow and PriorityNone both mapping to "1" in Todoist output) per target format +feature +fidelity
 (B) Extend internal/fidelity/check.go to warn when subtask priority will be dropped during conversion because the Subtask model struct lacks a Priority field +feature +fidelity
 (B) Extend internal/fidelity/check.go to warn when reminders will be lost converting from ICS to any CSV-based format since no CSV parser extracts reminder data +feature +fidelity
-(B) Add a --json flag to the convert command that outputs a structured JSON conversion report to stdout including item counts, warnings, errors, and skipped items instead of human-readable text +feature
-(B) Surface ErrorCollector warnings and per-item errors in the CLI output of the convert command so partial parse failures are visible to the user instead of silently accumulated +feature +errors
-(B) Add a --strict flag to the convert command that treats any ErrorCollector warning as a fatal error and exits non-zero +feature +errors
+
 
 --- DX / UTILITY ---
 
