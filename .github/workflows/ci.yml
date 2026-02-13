@@ -22,8 +22,10 @@ jobs:
         with:
           version: latest
           install-mode: goinstall
-      - name: Build
-        run: go build ./...
+      - name: Build salja
+        run: go build ./cmd/salja
+      - name: Build salja-mcp
+        run: go build ./cmd/salja-mcp
 
   test:
     runs-on: ubuntu-latest
@@ -47,8 +49,10 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Build
-        run: go build ./...
+      - name: Build salja
+        run: go build ./cmd/salja
+      - name: Build salja-mcp
+        run: go build ./cmd/salja-mcp
       - name: Test
         run: go test ./... -v
 
