@@ -1,14 +1,19 @@
 BINARY_NAME=salja
+MCP_BINARY_NAME=salja-mcp
 PKG=github.com/gongahkia/salja
 VERSION?=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 BUILD_DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 LDFLAGS=-ldflags "-X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.buildDate=$(BUILD_DATE)"
+LDFLAGS_MCP=-ldflags "-X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.buildDate=$(BUILD_DATE)"
 
-.PHONY: build test lint fmt vet coverage install clean
+.PHONY: build build-mcp test lint fmt vet coverage install clean
 
 build:
 	go build $(LDFLAGS) -o bin/$(BINARY_NAME) ./cmd/salja
+
+build-mcp:
+	go build $(LDFLAGS_MCP) -o bin/$(MCP_BINARY_NAME) ./cmd/salja-mcp
 
 test:
 	go test ./... -v
@@ -33,6 +38,7 @@ coverage:
 
 install:
 	go install $(LDFLAGS) ./cmd/salja
+	go install $(LDFLAGS_MCP) ./cmd/salja-mcp
 
 clean:
 	rm -rf bin/ coverage.out coverage.html
