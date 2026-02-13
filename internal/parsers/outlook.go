@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	salerr "github.com/gongahkia/salja/internal/errors"
 	"github.com/gongahkia/salja/internal/model"
 )
 
@@ -53,6 +54,8 @@ func (p *OutlookParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 		return nil, fmt.Errorf("Outlook CSV %s missing required columns: %s", sourcePath, strings.Join(missing, ", "))
 	}
 
+	ec := salerr.NewErrorCollector()
+
 	collection := &model.CalendarCollection{
 		Items:            []model.CalendarItem{},
 		SourceApp:        "outlook",
@@ -70,17 +73,23 @@ func (p *OutlookParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 			return nil, fmt.Errorf("failed to read CSV %s: %w", sourcePath, err)
 		}
 		lineNum++
-		item, err := parseOutlookRow(row, colMap)
+		item, err := parseOutlookRow(row, colMap, ec, sourcePath, lineNum)
 		if err != nil {
 			return nil, fmt.Errorf("%s line %d: %w", sourcePath, lineNum, err)
 		}
 		collection.Items = append(collection.Items, item)
 	}
 
+	if len(ec.Warnings) > 0 {
+		for _, w := range ec.Warnings {
+			fmt.Fprintf(os.Stderr, "outlook parser: %s\n", w)
+		}
+	}
+
 	return collection, nil
 }
 
-func parseOutlookRow(row []string, colMap map[string]int) (model.CalendarItem, error) {
+func parseOutlookRow(row []string, colMap map[string]int, ec *salerr.ErrorCollector, sourcePath string, lineNum int) (model.CalendarItem, error) {
 	item := model.CalendarItem{
 		ItemType: model.ItemTypeEvent,
 		Status:   model.StatusPending,
@@ -125,6 +134,12 @@ func parseOutlookRow(row []string, colMap map[string]int) (model.CalendarItem, e
 		
 		if err == nil {
 			item.StartTime = &start
+		} else if err != nil {
+			ec.AddWarning((&salerr.ParseError{
+				File:    sourcePath,
+				Line:    lineNum,
+				Message: fmt.Sprintf("malformed date value %q in field %s", row[startDateIdx], "Start Date"),
+			}).Error())
 		}
 	}
 
@@ -144,6 +159,12 @@ func parseOutlookRow(row []string, colMap map[string]int) (model.CalendarItem, e
 		
 		if err == nil {
 			item.EndTime = &end
+		} else if err != nil {
+			ec.AddWarning((&salerr.ParseError{
+				File:    sourcePath,
+				Line:    lineNum,
+				Message: fmt.Sprintf("malformed date value %q in field %s", row[endDateIdx], "End Date"),
+			}).Error())
 		}
 	}
 

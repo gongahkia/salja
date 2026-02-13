@@ -18,8 +18,7 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 
 --- STABILITY / SCALING ---
 
-(B) Refactor internal/parsers/todoist.go to log skipped rows with non-task TYPE values to the ErrorCollector instead of silently continuing +refactor +errors
-(B) Refactor internal/parsers/ticktick.go to log skipped rows to the ErrorCollector instead of silently continuing +refactor +errors
+
 (B) Refactor all CSV parsers to report malformed date values as ParseError via ErrorCollector instead of silently using zero-value time.Time +refactor +errors
 
 (B) Replace the unused ParseError type in internal/errors/errors.go with actual usage in all parsers — each parser should wrap format-specific parse failures in ParseError with the relevant field and line number context +refactor +errors

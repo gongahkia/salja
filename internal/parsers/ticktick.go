@@ -77,7 +77,7 @@ func (p *TickTickParser) Parse(r io.Reader, sourcePath string) (*model.CalendarC
 			continue
 		}
 
-		item := p.parseRow(row, colMap)
+		item := p.parseRow(row, colMap, ec, sourcePath, lineNum)
 		collection.Items = append(collection.Items, item)
 	}
 
@@ -90,7 +90,7 @@ func (p *TickTickParser) Parse(r io.Reader, sourcePath string) (*model.CalendarC
 	return collection, nil
 }
 
-func (p *TickTickParser) parseRow(row []string, colMap map[string]int) model.CalendarItem {
+func (p *TickTickParser) parseRow(row []string, colMap map[string]int, ec *salerr.ErrorCollector, sourcePath string, lineNum int) model.CalendarItem {
 	item := model.CalendarItem{
 		ItemType: model.ItemTypeTask,
 		Status:   model.StatusPending,
@@ -114,12 +114,24 @@ func (p *TickTickParser) parseRow(row []string, colMap map[string]int) model.Cal
 	if idx, ok := colMap["start_date"]; ok && idx < len(row) && row[idx] != "" {
 		if t, err := parseTickTickDateField(row[idx]); err == nil {
 			item.StartTime = &t
+		} else {
+			ec.AddWarning((&salerr.ParseError{
+				File:    sourcePath,
+				Line:    lineNum,
+				Message: fmt.Sprintf("malformed date value %q in field %s", row[idx], "start_date"),
+			}).Error())
 		}
 	}
 
 	if idx, ok := colMap["due_date"]; ok && idx < len(row) && row[idx] != "" {
 		if t, err := parseTickTickDateField(row[idx]); err == nil {
 			item.DueDate = &t
+		} else {
+			ec.AddWarning((&salerr.ParseError{
+				File:    sourcePath,
+				Line:    lineNum,
+				Message: fmt.Sprintf("malformed date value %q in field %s", row[idx], "due_date"),
+			}).Error())
 		}
 	}
 
@@ -140,6 +152,12 @@ func (p *TickTickParser) parseRow(row []string, colMap map[string]int) model.Cal
 		if t, err := time.Parse(time.RFC3339, row[idx]); err == nil {
 			item.CompletionDate = &t
 			item.Status = model.StatusCompleted
+		} else {
+			ec.AddWarning((&salerr.ParseError{
+				File:    sourcePath,
+				Line:    lineNum,
+				Message: fmt.Sprintf("malformed date value %q in field %s", row[idx], "completed_time"),
+			}).Error())
 		}
 	}
 

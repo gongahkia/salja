@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	salerr "github.com/gongahkia/salja/internal/errors"
 	"github.com/gongahkia/salja/internal/model"
 )
 
@@ -53,6 +54,8 @@ func (p *AsanaParser) Parse(r io.Reader, sourcePath string) (*model.CalendarColl
 		return nil, fmt.Errorf("Asana CSV %s missing required columns: %s", sourcePath, strings.Join(missing, ", "))
 	}
 
+	ec := salerr.NewErrorCollector()
+
 	collection := &model.CalendarCollection{
 		Items:            []model.CalendarItem{},
 		SourceApp:        "asana",
@@ -70,17 +73,23 @@ func (p *AsanaParser) Parse(r io.Reader, sourcePath string) (*model.CalendarColl
 			return nil, fmt.Errorf("failed to read CSV %s: %w", sourcePath, err)
 		}
 		lineNum++
-		item, err := parseAsanaRow(row, colMap)
+		item, err := parseAsanaRow(row, colMap, ec, sourcePath, lineNum)
 		if err != nil {
 			return nil, fmt.Errorf("%s line %d: %w", sourcePath, lineNum, err)
 		}
 		collection.Items = append(collection.Items, item)
 	}
 
+	if len(ec.Warnings) > 0 {
+		for _, w := range ec.Warnings {
+			fmt.Fprintf(os.Stderr, "asana parser: %s\n", w)
+		}
+	}
+
 	return collection, nil
 }
 
-func parseAsanaRow(row []string, colMap map[string]int) (model.CalendarItem, error) {
+func parseAsanaRow(row []string, colMap map[string]int, ec *salerr.ErrorCollector, sourcePath string, lineNum int) (model.CalendarItem, error) {
 	item := model.CalendarItem{
 		ItemType: model.ItemTypeTask,
 		Status:   model.StatusPending,
@@ -99,6 +108,12 @@ func parseAsanaRow(row []string, colMap map[string]int) (model.CalendarItem, err
 			item.DueDate = &t
 		} else if t, err := parseAmbiguousDate(row[idx]); err == nil {
 			item.DueDate = &t
+		} else {
+			ec.AddWarning((&salerr.ParseError{
+				File:    sourcePath,
+				Line:    lineNum,
+				Message: fmt.Sprintf("malformed date value %q in field %s", row[idx], "Due Date"),
+			}).Error())
 		}
 	}
 

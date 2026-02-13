@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	salerr "github.com/gongahkia/salja/internal/errors"
 	"github.com/gongahkia/salja/internal/model"
 )
 
@@ -61,6 +62,8 @@ func (p *NotionParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCol
 		return nil, fmt.Errorf("Notion CSV %s missing a title column (expected one of: Title, Name, Task)", sourcePath)
 	}
 
+	ec := salerr.NewErrorCollector()
+
 	collection := &model.CalendarCollection{
 		Items:            []model.CalendarItem{},
 		SourceApp:        "notion",
@@ -78,17 +81,23 @@ func (p *NotionParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCol
 			return nil, fmt.Errorf("failed to read CSV %s: %w", sourcePath, err)
 		}
 		lineNum++
-		item, err := parseNotionRow(row, colMap)
+		item, err := parseNotionRow(row, colMap, ec, sourcePath, lineNum)
 		if err != nil {
 			return nil, fmt.Errorf("%s line %d: %w", sourcePath, lineNum, err)
 		}
 		collection.Items = append(collection.Items, item)
 	}
 
+	if len(ec.Warnings) > 0 {
+		for _, w := range ec.Warnings {
+			fmt.Fprintf(os.Stderr, "notion parser: %s\n", w)
+		}
+	}
+
 	return collection, nil
 }
 
-func parseNotionRow(row []string, colMap map[string]int) (model.CalendarItem, error) {
+func parseNotionRow(row []string, colMap map[string]int, ec *salerr.ErrorCollector, sourcePath string, lineNum int) (model.CalendarItem, error) {
 	item := model.CalendarItem{
 		ItemType: model.ItemTypeTask,
 		Status:   model.StatusPending,
@@ -114,6 +123,12 @@ func parseNotionRow(row []string, colMap map[string]int) (model.CalendarItem, er
 			} else if t, err := parseAmbiguousDate(row[idx]); err == nil {
 				item.DueDate = &t
 				break
+			} else {
+				ec.AddWarning((&salerr.ParseError{
+					File:    sourcePath,
+					Line:    lineNum,
+					Message: fmt.Sprintf("malformed date value %q in field %s", row[idx], candidate),
+				}).Error())
 			}
 		}
 	}

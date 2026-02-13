@@ -81,7 +81,7 @@ func (p *TodoistParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 			continue
 		}
 
-		item := p.parseRow(row, colMap)
+		item := p.parseRow(row, colMap, ec, sourcePath, lineNum)
 		
 		indentIdx, hasIndent := colMap["INDENT"]
 		currentIndent := 0
@@ -120,7 +120,7 @@ func (p *TodoistParser) Parse(r io.Reader, sourcePath string) (*model.CalendarCo
 	return collection, nil
 }
 
-func (p *TodoistParser) parseRow(row []string, colMap map[string]int) model.CalendarItem {
+func (p *TodoistParser) parseRow(row []string, colMap map[string]int, ec *salerr.ErrorCollector, sourcePath string, lineNum int) model.CalendarItem {
 	item := model.CalendarItem{
 		ItemType: model.ItemTypeTask,
 		Status:   model.StatusPending,
@@ -145,6 +145,12 @@ func (p *TodoistParser) parseRow(row []string, colMap map[string]int) model.Cale
 			item.DueDate = &t
 		} else if t, err := parseAmbiguousDate(row[idx]); err == nil {
 			item.DueDate = &t
+		} else {
+			ec.AddWarning((&salerr.ParseError{
+				File:    sourcePath,
+				Line:    lineNum,
+				Message: fmt.Sprintf("malformed date value %q in field %s", row[idx], "DATE"),
+			}).Error())
 		}
 	}
 
