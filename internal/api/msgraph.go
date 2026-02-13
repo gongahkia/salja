@@ -22,9 +22,13 @@ httpClient *http.Client
 }
 
 func NewMSGraphClient(token *Token) *MSGraphClient {
+return NewMSGraphClientWithTimeout(token, 30*time.Second)
+}
+
+func NewMSGraphClientWithTimeout(token *Token, timeout time.Duration) *MSGraphClient {
 return &MSGraphClient{
 token:      token,
-httpClient: &http.Client{Timeout: 30 * time.Second},
+httpClient: &http.Client{Timeout: timeout},
 }
 }
 

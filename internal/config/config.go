@@ -16,6 +16,7 @@ DefaultTimezone     string              `toml:"default_timezone"`
 ConflictStrategy    string              `toml:"conflict_strategy"`
 DataLossMode        string              `toml:"data_loss_mode"`
 StreamingThresholdMB int                `toml:"streaming_threshold_mb"`
+APITimeoutSeconds   int                 `toml:"api_timeout_seconds"`
 PriorityMap         map[string]int      `toml:"priority_map"`
 TagMap              map[string]string    `toml:"tag_map"`
 ConflictThresholds  ConflictThresholds  `toml:"conflict_thresholds"`
@@ -50,6 +51,7 @@ DefaultTimezone:     "UTC",
 ConflictStrategy:    "ask",
 DataLossMode:        "warn",
 StreamingThresholdMB: 10,
+APITimeoutSeconds:   30,
 PriorityMap:         map[string]int{},
 TagMap:              map[string]string{},
 ConflictThresholds: ConflictThresholds{

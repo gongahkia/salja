@@ -24,9 +24,13 @@ httpClient *http.Client
 }
 
 func NewGCalClient(token *Token) *GCalClient {
+return NewGCalClientWithTimeout(token, 30*time.Second)
+}
+
+func NewGCalClientWithTimeout(token *Token, timeout time.Duration) *GCalClient {
 return &GCalClient{
 token:      token,
-httpClient: &http.Client{Timeout: 30 * time.Second},
+httpClient: &http.Client{Timeout: timeout},
 }
 }
 

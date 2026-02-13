@@ -19,7 +19,6 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 --- STABILITY / SCALING ---
 
 
-(B) Add context.Context propagation through all parser and writer interfaces so that long-running conversions can be cancelled via Ctrl+C through the existing SignalHandler +refactor +stability
 (B) Add timeout configuration for API calls in internal/api so that GCalClient and MSGraphClient respect a configurable timeout from Config instead of hardcoded 30 seconds +feature +api
 (B) Add rate limiting awareness to sync push commands so that batch event creation respects Google Calendar API quota (calendar.events.insert: 10 QPS) and Microsoft Graph limits +feature +api
 (B) Add integration tests for the convert command that verify round-trip conversion ICS→CSV→ICS preserves all fields that both formats support +infra +testing

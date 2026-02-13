@@ -7,6 +7,7 @@ import (
 "time"
 
 "github.com/gongahkia/salja/internal/api"
+"github.com/gongahkia/salja/internal/config"
 "github.com/gongahkia/salja/internal/model"
 "github.com/spf13/cobra"
 )
@@ -34,6 +35,12 @@ RunE: func(cmd *cobra.Command, args []string) error {
 filePath := args[0]
 format := DetectFormat(filePath)
 
+cfg, _ := config.Load()
+apiTimeout := 30 * time.Second
+if cfg != nil && cfg.APITimeoutSeconds > 0 {
+apiTimeout = time.Duration(cfg.APITimeoutSeconds) * time.Second
+}
+
 ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 defer cancel()
 
@@ -58,9 +65,9 @@ return fmt.Errorf("token for %s is expired; run: salja auth login %s", to, to)
 
 switch to {
 case "google":
-return pushToGoogle(ctx, token, collection, dryRun)
+return pushToGoogle(ctx, token, collection, dryRun, apiTimeout)
 case "microsoft":
-return pushToMicrosoft(ctx, token, collection, dryRun)
+return pushToMicrosoft(ctx, token, collection, dryRun, apiTimeout)
 default:
 return fmt.Errorf("unsupported target %q; supported: google, microsoft", to)
 }
@@ -94,6 +101,12 @@ if token.IsExpired() {
 return fmt.Errorf("token for %s is expired; run: salja auth login %s", from, from)
 }
 
+cfg, _ := config.Load()
+apiTimeout := 30 * time.Second
+if cfg != nil && cfg.APITimeoutSeconds > 0 {
+apiTimeout = time.Duration(cfg.APITimeoutSeconds) * time.Second
+}
+
 ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 defer cancel()
 
@@ -104,9 +117,9 @@ endTime := now.AddDate(0, 3, 0)
 var collection *model.CalendarCollection
 switch from {
 case "google":
-collection, err = pullFromGoogle(ctx, token, startTime, endTime)
+collection, err = pullFromGoogle(ctx, token, startTime, endTime, apiTimeout)
 case "microsoft":
-collection, err = pullFromMicrosoft(ctx, token, startTime, endTime)
+collection, err = pullFromMicrosoft(ctx, token, startTime, endTime, apiTimeout)
 default:
 return fmt.Errorf("unsupported source %q; supported: google, microsoft", from)
 }
@@ -131,8 +144,8 @@ cmd.MarkFlagRequired("output")
 return cmd
 }
 
-func pushToGoogle(ctx context.Context, token *api.Token, collection *model.CalendarCollection, dryRun bool) error {
-client := api.NewGCalClient(token)
+func pushToGoogle(ctx context.Context, token *api.Token, collection *model.CalendarCollection, dryRun bool, timeout time.Duration) error {
+client := api.NewGCalClientWithTimeout(token, timeout)
 created := 0
 for _, item := range collection.Items {
 event := api.CalendarItemToGCal(item)
@@ -153,8 +166,8 @@ fmt.Fprintf(os.Stderr, "✓ Created %d/%d events in Google Calendar\n", created,
 return nil
 }
 
-func pushToMicrosoft(ctx context.Context, token *api.Token, collection *model.CalendarCollection, dryRun bool) error {
-client := api.NewMSGraphClient(token)
+func pushToMicrosoft(ctx context.Context, token *api.Token, collection *model.CalendarCollection, dryRun bool, timeout time.Duration) error {
+client := api.NewMSGraphClientWithTimeout(token, timeout)
 created := 0
 for _, item := range collection.Items {
 event := api.CalendarItemToMSGraph(item)
@@ -175,8 +188,8 @@ fmt.Fprintf(os.Stderr, "✓ Created %d/%d events in Microsoft Outlook\n", create
 return nil
 }
 
-func pullFromGoogle(ctx context.Context, token *api.Token, startTime, endTime time.Time) (*model.CalendarCollection, error) {
-client := api.NewGCalClient(token)
+func pullFromGoogle(ctx context.Context, token *api.Token, startTime, endTime time.Time, timeout time.Duration) (*model.CalendarCollection, error) {
+client := api.NewGCalClientWithTimeout(token, timeout)
 events, err := client.ListEvents(ctx, "primary", startTime, endTime)
 if err != nil {
 return nil, fmt.Errorf("Google Calendar API error: %w", err)
@@ -193,8 +206,8 @@ collection.Items = append(collection.Items, api.GCalToCalendarItem(event))
 return collection, nil
 }
 
-func pullFromMicrosoft(ctx context.Context, token *api.Token, startTime, endTime time.Time) (*model.CalendarCollection, error) {
-client := api.NewMSGraphClient(token)
+func pullFromMicrosoft(ctx context.Context, token *api.Token, startTime, endTime time.Time, timeout time.Duration) (*model.CalendarCollection, error) {
+client := api.NewMSGraphClientWithTimeout(token, timeout)
 events, err := client.ListEvents(ctx, startTime, endTime)
 if err != nil {
 return nil, fmt.Errorf("Microsoft Graph API error: %w", err)
