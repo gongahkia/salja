@@ -267,7 +267,7 @@ func (f *PKCEFlow) exchangeCode(ctx context.Context, code, verifier, redirectURI
 	if err != nil {
 		return nil, fmt.Errorf("token exchange failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("token exchange returned HTTP %d", resp.StatusCode)
@@ -311,7 +311,7 @@ func (f *PKCEFlow) RefreshAccessToken(ctx context.Context, refreshToken string) 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("token refresh returned HTTP %d", resp.StatusCode)
