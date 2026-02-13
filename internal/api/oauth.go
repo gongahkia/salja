@@ -316,10 +316,35 @@ ExpiresAt:    time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second),
 }, nil
 }
 
-func generateState() (string, error) {
-b := make([]byte, 16)
-if _, err := rand.Read(b); err != nil {
-return "", fmt.Errorf("failed to generate random state: %w", err)
+// TokenRefresher can refresh expired tokens.
+type TokenRefresher struct {
+	Flow  *PKCEFlow
+	Store *TokenStore
+	Service string
 }
-return base64.RawURLEncoding.EncodeToString(b), nil
+
+// EnsureValid refreshes the token if expired and a refresh token is available.
+func (r *TokenRefresher) EnsureValid(ctx context.Context, token *Token) (*Token, error) {
+	if !token.IsExpired() {
+		return token, nil
+	}
+	if token.RefreshToken == "" {
+		return nil, fmt.Errorf("token for %s is expired and no refresh token available; run: salja auth login %s", r.Service, r.Service)
+	}
+	newToken, err := r.Flow.RefreshAccessToken(ctx, token.RefreshToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to refresh %s token: %w", r.Service, err)
+	}
+	if r.Store != nil {
+		_ = r.Store.Set(r.Service, newToken)
+	}
+	return newToken, nil
+}
+
+func generateState() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", fmt.Errorf("failed to generate random state: %w", err)
+	}
+	return base64.RawURLEncoding.EncodeToString(b), nil
 }

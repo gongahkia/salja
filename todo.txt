@@ -11,13 +11,9 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 --- DX / UTILITY ---
 
 
-(B) Implement salja sync push <file> --to google in cmd/salja/sync.go that parses the local file, authenticates via TokenStore, and creates events via GCalClient.CreateEvent for each CalendarItem +feature +api
-(B) Implement salja sync push <file> --to microsoft in cmd/salja/sync.go that parses the local file, authenticates via TokenStore, and creates events via MSGraphClient.CreateEvent for each CalendarItem +feature +api
-(B) Implement salja sync pull --from google --output <file> in cmd/salja/sync.go that fetches events via GCalClient.ListEvents and writes them to the specified output file using the appropriate writer +feature +api
-(B) Implement salja sync pull --from microsoft --output <file> in cmd/salja/sync.go that fetches events via MSGraphClient.ListEvents and writes them to the specified output file using the appropriate writer +feature +api
+
 (B) Add token refresh logic in internal/api/oauth.go so that when a stored token is expired but has a refresh_token, GCalClient and MSGraphClient automatically request a new access_token before making API calls +feature +api
 (B) Implement retry logic with exponential backoff in internal/api/gcal.go and internal/api/msgraph.go using the existing RetryConfig from internal/errors for rate-limited or transient HTTP failures +feature +api
-(B) Add a --dry-run flag to the sync push command that shows which items would be created/updated/skipped without making any API calls +feature +api
 (B) Make the diff command patch output format produce valid unified diff with proper --- +++ file headers and @@ hunk markers instead of the current custom +/- prefix format +refactor
 (B) Add a --output flag to the diff command to write results to a file instead of only stdout +feature
 (B) Add shell completion generation for bash, zsh, fish, and powershell via cobra's built-in completion subcommand +feature +dx
