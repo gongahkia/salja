@@ -9,6 +9,7 @@ import (
 "strings"
 
 "github.com/gongahkia/salja/internal/config"
+salerr "github.com/gongahkia/salja/internal/errors"
 "github.com/gongahkia/salja/internal/fidelity"
 "github.com/gongahkia/salja/internal/model"
 "github.com/gongahkia/salja/internal/registry"
@@ -52,8 +53,23 @@ if err != nil {
 return fmt.Errorf("failed to read input: %w", err)
 }
 
+// Validate each item, collecting successes and failures
+partial := salerr.NewPartialResult[model.CalendarItem]()
+for i, item := range collection.Items {
+if err := item.Validate(); err != nil {
+partial.AddError(i, item.UID, err.Error(), err)
+} else {
+partial.Add(item)
+}
+}
+collection.Items = partial.Items
+
 if !quiet && !jsonOutput {
+if partial.HasErrors() {
+fmt.Fprintf(os.Stderr, "%s\n", partial.Summary())
+} else {
 fmt.Fprintf(os.Stderr, "Loaded %d items from %s\n", len(collection.Items), inputFile)
+}
 }
 
 if dryRun {
@@ -137,19 +153,29 @@ warningStrs := make([]string, len(warnings))
 for i, w := range warnings {
 warningStrs[i] = w.String()
 }
+var errStrs []string
+for _, e := range partial.Errors {
+errStrs = append(errStrs, e.Error())
+}
 report := convertReport{
-Converted: len(collection.Items),
-Events:    eventCount,
-Tasks:     taskCount,
-Warnings:  warnCount,
-Source:    fromFormat,
-Target:    toFormat,
-Details:   warningStrs,
+Converted:   len(collection.Items),
+Events:      eventCount,
+Tasks:       taskCount,
+Warnings:    warnCount,
+ParseErrors: len(partial.Errors),
+Source:      fromFormat,
+Target:      toFormat,
+Details:     warningStrs,
+Errors:      errStrs,
 }
 data, _ := json.MarshalIndent(report, "", "  ")
 fmt.Println(string(data))
 } else if !quiet {
+if partial.HasErrors() {
+fmt.Fprintf(os.Stderr, "Converted %d events, %d tasks (%d warnings, %d parse errors)\n", eventCount, taskCount, warnCount, len(partial.Errors))
+} else {
 fmt.Fprintf(os.Stderr, "Converted %d events, %d tasks (%d warnings)\n", eventCount, taskCount, warnCount)
+}
 }
 return nil
 },
@@ -168,13 +194,15 @@ return cmd
 }
 
 type convertReport struct {
-Converted int      `json:"converted"`
-Events    int      `json:"events"`
-Tasks     int      `json:"tasks"`
-Warnings  int      `json:"warnings"`
-Source    string   `json:"source"`
-Target    string   `json:"target"`
-Details   []string `json:"details,omitempty"`
+Converted   int      `json:"converted"`
+Events      int      `json:"events"`
+Tasks       int      `json:"tasks"`
+Warnings    int      `json:"warnings"`
+ParseErrors int      `json:"parse_errors,omitempty"`
+Source      string   `json:"source"`
+Target      string   `json:"target"`
+Details     []string `json:"details,omitempty"`
+Errors      []string `json:"errors,omitempty"`
 }
 
 func DetectFormat(filePath string) string {
