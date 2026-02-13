@@ -4,18 +4,49 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 
 --- PHILOSOPHICAL ALIGNMENT ---
 
-
-
-
+(B) Register apple-calendar as a format in internal/registry/formats.go with NewParser wrapping apple.CalendarReader and NewWriter wrapping apple.CalendarWriter so `salja convert X apple-calendar` works on macOS +feature +apple
+(B) Register apple-reminders as a format in internal/registry/formats.go with NewParser wrapping apple.RemindersReader and NewWriter wrapping apple.RemindersWriter so `salja convert X apple-reminders` works on macOS +feature +apple
+(B) Add `--calendar` and `--list` flags to convert command for apple-calendar and apple-reminders target names (required when target is apple-calendar or apple-reminders) +feature +apple
+(B) Add `salja auth login todoist` case in cmd/salja/commands/auth.go using Todoist OAuth flow (auth URL: https://todoist.com/oauth/authorize, token URL: https://todoist.com/oauth/access_token) reading client_id/secret from config.API.Todoist +feature +sync
+(B) Add `salja auth login ticktick` case in cmd/salja/commands/auth.go using TickTick OAuth flow (auth URL: https://ticktick.com/oauth/authorize, token URL: https://ticktick.com/oauth/token) reading from config.API.TickTick +feature +sync
+(B) Add `salja auth login notion` case in cmd/salja/commands/auth.go that stores a Notion integration token (bearer-style, no OAuth needed) by prompting for the token and saving via store.Set("notion", &Token{AccessToken: input}) +feature +sync
+(B) Add `sync push --to todoist` case in cmd/salja/commands/sync.go that creates a TodoistClient, iterates collection.Items, calls CalendarItemToTodoist and client.CreateTask with rate limiting (50ms ticker for Todoist's 50 req/min) +feature +sync
+(B) Add `sync pull --from todoist` case in cmd/salja/commands/sync.go that calls TodoistClient.GetTasks, maps each via TodoistToCalendarItem, writes to output file +feature +sync
+(B) Add `sync push --to ticktick` case in cmd/salja/commands/sync.go that creates a TickTickClient, lists projects, prompts for project selection, iterates items, calls CalendarItemToTickTick and client.CreateTask +feature +sync
+(B) Add `sync pull --from ticktick` case in cmd/salja/commands/sync.go that calls TickTickClient.ListProjects, prompts for selection, calls ListTasks, maps via TickTickToCalendarItem, writes output +feature +sync
+(B) Add `sync push --to notion` case in cmd/salja/commands/sync.go that creates a NotionClient with token, prompts for database_id, iterates items, calls CalendarItemToNotion and client.CreatePage +feature +sync
+(B) Add `sync pull --from notion` case in cmd/salja/commands/sync.go that calls NotionClient.QueryDatabase with pagination (follow HasMore/NextCursor), maps via NotionToCalendarItem, writes output +feature +sync
+(B) Add `--start` and `--end` flags to `sync pull` command (default: -1mo/+3mo) to replace hardcoded date range in newSyncPullCmd at sync.go:113-115 +feature +sync
+(B) Add interactive format picker when DetectFormat returns "unknown" in convert.go — present registered formats via fmt.Fprintf(os.Stderr) numbered list, read selection from stdin +feature +ux
+(B) Add ANSI color helper (internal/ui/color.go) with functions Red/Yellow/Green/Bold that check os.Getenv("NO_COLOR") and isatty, then use it in convert.go warnings (yellow), errors (red), success (green) +feature +ux
 
 --- DX / UTILITY ---
 
-
-
-
-
-
+(B) Fix .github/workflows/ci.yml to trigger on branches: [main] instead of [master] on both push and pull_request events — current default branch is main so CI never triggers +infra
+(B) Delete the DataLossChecker struct and its Check method from internal/conflict/resolver.go (lines 238-278) — this duplicates internal/fidelity/checker.go and is unused by any caller +refactor
+(B) Wire config.ConflictThresholds into conflict.Detector by adding a Config field to Detector struct, passing thresholds from config.Load() in convert.go, and replacing hardcoded values: levenshtein < 3 with cfg.LevenshteinThreshold, len > 10 with cfg.MinTitleLength, day-level timeMatch with cfg.DateProximityHours +refactor
+(B) Wire config.APITimeoutSeconds into TodoistClient, TickTickClient, and NotionClient by adding a WithTimeout constructor variant (like GCalClientWithTimeout) that sets httpClient.Timeout = time.Duration(cfg.APITimeoutSeconds) * time.Second +refactor
+(B) Add missing fields to `config init` template in cmd/salja/commands/config.go: data_loss_mode = "warn", streaming_threshold_mb = 10, api_timeout_seconds = 30, [conflict_thresholds] section with levenshtein_threshold = 3, min_title_length = 10, date_proximity_hours = 24 +infra
+(B) Wire the --config persistent flag from main.go rootCmd into config.LoadFrom(path) — currently config.Load() always reads from default XDG path, ignoring the flag value +refactor
+(B) Use distinct exit codes in cmd/salja/main.go: 1 for parse errors, 2 for validation errors, 3 for conflict errors — check error type with errors.As and call os.Exit with appropriate code +feature +ux
+(B) Add `salja config show` subcommand in cmd/salja/commands/config.go that loads config via config.Load() and prints it as TOML to stdout using toml.NewEncoder(os.Stdout).Encode(cfg) +feature +ux
+(B) Add `--locale` flag to convert command that passes to salerr.NewAmbiguousDateParser(locale) instead of using the default empty-locale parser in parsers/helpers.go +feature
 
 --- STABILITY / SCALING ---
 
-
+(B) Add unit tests for conflict/resolver.go: test Resolve with StrategyPreferSource, StrategyPreferTarget, StrategySkip, StrategyFail using two CalendarItems with differing titles/priorities/statuses — verify correct item returned and resolution logged +testing
+(B) Add unit tests for fidelity/checker.go: test Check with items having subtasks→gcal (warning), recurrence→notion (warning), reminders→trello (warning), and no-warning cases — assert correct DataLossWarning fields +testing
+(B) Add unit tests for apple/executor.go by extracting RunAppleScript into an interface (ScriptRunner) with a mock implementation, then test CalendarWriter.createEvent and RemindersWriter.createReminder with mock runner +testing +apple
+(B) Add httptest-based unit tests for TodoistClient.GetTasks and CreateTask in internal/api/api_test.go — mock server returns JSON tasks, verify mapping and error handling for non-200 status codes +testing
+(B) Add httptest-based unit tests for NotionClient.QueryDatabase and CreatePage in internal/api/api_test.go — mock server returns paginated NotionQueryResult, verify cursor following and 429 handling +testing
+(B) Remove custom min function from internal/conflict/detector.go (lines 226-234) — Go 1.21+ has builtin min(); go.mod specifies go 1.25.7 so this shadows the builtin +refactor
+(B) Add Dockerfile to project root: multi-stage build (FROM golang:1.25 AS builder, COPY go.mod go.sum, RUN go mod download, COPY . ., RUN CGO_ENABLED=0 go build -o /salja ./cmd/salja, FROM scratch, COPY --from=builder /salja /salja, ENTRYPOINT ["/salja"]) +infra
+(B) Add flake.nix to project root using buildGoModule with vendorHash, src = ./., subPackages = ["cmd/salja"], meta.mainProgram = "salja" +infra
+(B) Add PKGBUILD file for AUR: pkgname=salja, source from GitHub releases tarball, build() { go build -o salja ./cmd/salja }, package() { install -Dm755 salja "$pkgdir/usr/bin/salja" } +infra
+(B) Make readInputStreaming in convert.go actually use salerr.StreamingCSVParser for CSV formats — open file, create StreamingCSVParser, iterate with Next() building CalendarItems incrementally instead of loading all into memory +refactor +feature
+(B) Add token auto-refresh in sync push/pull: before API calls, check token.IsExpired() and if refresh token exists, call PKCEFlow.RefreshAccessToken and store.Set to persist the new token, using the existing TokenRefresher struct +feature +sync
+(B) Wrap all API client HTTP error responses with salerr.APIError{Service, StatusCode, Message} instead of plain fmt.Errorf — enables retry logic via APIError.IsRateLimit() for 429s and structured error reporting +refactor +security
+(B) Add retry with backoff for sync push/pull API calls by wrapping each client call with salerr.Retry(salerr.DefaultRetryConfig(), func() error { ... }) for transient failures (429, 500, 502, 503) +feature +sync
+(B) Sanitize AppleScript string inputs in apple/reminders.go escapeAS function: also escape backtick, tab, newline, and carriage return characters to prevent AppleScript injection via crafted event titles +security +apple
+(B) Add token file permission check: in TokenStore.Load(), after opening file, check fi.Mode().Perm() and if group/other readable (perm & 0077 != 0) print warning to stderr suggesting chmod 600 +security
+(B) Add context cancellation check inside convert.go's item validation loop (line 85-91) — check ctx.Err() every N items to allow ctrl-c to abort large conversions promptly +refactor
