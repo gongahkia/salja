@@ -16,19 +16,3 @@ Philosophy: File-based calendar conversion CLI for power users and developers. D
 
 --- STABILITY / SCALING ---
 
-(B) Add unit tests for conflict/resolver.go: test Resolve with StrategyPreferSource, StrategyPreferTarget, StrategySkip, StrategyFail using two CalendarItems with differing titles/priorities/statuses — verify correct item returned and resolution logged +testing
-(B) Add unit tests for fidelity/checker.go: test Check with items having subtasks→gcal (warning), recurrence→notion (warning), reminders→trello (warning), and no-warning cases — assert correct DataLossWarning fields +testing
-(B) Add unit tests for apple/executor.go by extracting RunAppleScript into an interface (ScriptRunner) with a mock implementation, then test CalendarWriter.createEvent and RemindersWriter.createReminder with mock runner +testing +apple
-(B) Add httptest-based unit tests for TodoistClient.GetTasks and CreateTask in internal/api/api_test.go — mock server returns JSON tasks, verify mapping and error handling for non-200 status codes +testing
-(B) Add httptest-based unit tests for NotionClient.QueryDatabase and CreatePage in internal/api/api_test.go — mock server returns paginated NotionQueryResult, verify cursor following and 429 handling +testing
-
-(B) Add Dockerfile to project root: multi-stage build (FROM golang:1.25 AS builder, COPY go.mod go.sum, RUN go mod download, COPY . ., RUN CGO_ENABLED=0 go build -o /salja ./cmd/salja, FROM scratch, COPY --from=builder /salja /salja, ENTRYPOINT ["/salja"]) +infra
-(B) Add flake.nix to project root using buildGoModule with vendorHash, src = ./., subPackages = ["cmd/salja"], meta.mainProgram = "salja" +infra
-(B) Add PKGBUILD file for AUR: pkgname=salja, source from GitHub releases tarball, build() { go build -o salja ./cmd/salja }, package() { install -Dm755 salja "$pkgdir/usr/bin/salja" } +infra
-(B) Make readInputStreaming in convert.go actually use salerr.StreamingCSVParser for CSV formats — open file, create StreamingCSVParser, iterate with Next() building CalendarItems incrementally instead of loading all into memory +refactor +feature
-(B) Add token auto-refresh in sync push/pull: before API calls, check token.IsExpired() and if refresh token exists, call PKCEFlow.RefreshAccessToken and store.Set to persist the new token, using the existing TokenRefresher struct +feature +sync
-(B) Wrap all API client HTTP error responses with salerr.APIError{Service, StatusCode, Message} instead of plain fmt.Errorf — enables retry logic via APIError.IsRateLimit() for 429s and structured error reporting +refactor +security
-(B) Add retry with backoff for sync push/pull API calls by wrapping each client call with salerr.Retry(salerr.DefaultRetryConfig(), func() error { ... }) for transient failures (429, 500, 502, 503) +feature +sync
-(B) Sanitize AppleScript string inputs in apple/reminders.go escapeAS function: also escape backtick, tab, newline, and carriage return characters to prevent AppleScript injection via crafted event titles +security +apple
-(B) Add token file permission check: in TokenStore.Load(), after opening file, check fi.Mode().Perm() and if group/other readable (perm & 0077 != 0) print warning to stderr suggesting chmod 600 +security
-(B) Add context cancellation check inside convert.go's item validation loop (line 85-91) — check ctx.Err() every N items to allow ctrl-c to abort large conversions promptly +refactor
