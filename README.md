@@ -36,10 +36,10 @@
 1. **Cloud Sync (OAuth)**: Push/pull to Google Calendar, Microsoft Outlook, Todoist, TickTick, and Notion via authenticated API calls with PKCE OAuth2 flow, token refresh, and secure keyring storage.
 2. **Conflict Detection**: Fuzzy duplicate detection using UID matching, Levenshtein title distance, and date proximity heuristics. Configurable resolution strategies: `ask`, `prefer-source`, `prefer-target`, `skip-conflicts`, `fail-on-conflict`.
 3. **Fidelity Checking**: Pre-conversion warnings when the target format can't represent source data (subtasks, recurrence rules, reminders, timezones). Modes: `warn` (default), `error`, `silent`.
-4. **Streaming CSV/ICS parsing**: 
-5. **Locale-aware date parsing**: 
-6. **Shell completion**: 
-7. **Native AppleScript**:
+4. **Streaming CSV/ICS parsing**
+5. **Locale-aware date parsing**
+6. **Shell completion**
+7. **Native AppleScript**
 
 ## Usage
 
