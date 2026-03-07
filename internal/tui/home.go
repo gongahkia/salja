@@ -46,6 +46,7 @@ func defaultActions() []suggestedAction {
 		{"Cloud sync", "s", ViewSync},
 		{"Manage auth", "a", ViewAuth},
 		{"Settings", "o", ViewConfig},
+		{"View log", "l", ViewLog},
 	}
 }
 

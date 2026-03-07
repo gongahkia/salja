@@ -17,6 +17,7 @@ const (
 	ViewSync
 	ViewAuth
 	ViewConfig
+	ViewLog
 	ViewHelp
 )
 
@@ -33,6 +34,7 @@ type App struct {
 	sync       SyncModel
 	auth       AuthModel
 	config     ConfigModel
+	logViewer  LogViewerModel
 	help       HelpModel
 	showHelp   bool
 	errorPanel ErrorPanel
@@ -115,6 +117,8 @@ func (a App) View() string {
 		content = a.auth.View()
 	case ViewConfig:
 		content = a.config.View()
+	case ViewLog:
+		content = a.logViewer.View()
 	default:
 		content = a.home.View()
 	}
@@ -147,6 +151,8 @@ func (a App) updateChild(msg tea.Msg) (tea.Model, tea.Cmd) {
 		a.auth, cmd = a.auth.Update(msg)
 	case ViewConfig:
 		a.config, cmd = a.config.Update(msg)
+	case ViewLog:
+		a.logViewer, cmd = a.logViewer.Update(msg)
 	}
 	return a, cmd
 }
@@ -185,6 +191,9 @@ func (a App) initView(v View) (tea.Model, tea.Cmd) {
 	case ViewConfig:
 		a.config = NewConfigModel()
 		cmd = a.config.Init()
+	case ViewLog:
+		a.logViewer = NewLogViewerModel()
+		cmd = a.logViewer.Init()
 	}
 	return a, cmd
 }
