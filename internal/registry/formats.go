@@ -134,6 +134,7 @@ func init() {
 	Register(&FormatEntry{
 		Name:       "apple-calendar",
 		Extensions: []string{},
+		Platform:   "darwin",
 		NewParser:  func() Parser { return apple.NewCalendarParserAdapter() },
 		NewWriter:  func() Writer { return apple.NewCalendarWriterAdapter() },
 		Capabilities: FormatCapabilities{
@@ -147,6 +148,7 @@ func init() {
 	Register(&FormatEntry{
 		Name:       "apple-reminders",
 		Extensions: []string{},
+		Platform:   "darwin",
 		NewParser:  func() Parser { return apple.NewRemindersParserAdapter() },
 		NewWriter:  func() Writer { return apple.NewRemindersWriterAdapter() },
 		Capabilities: FormatCapabilities{

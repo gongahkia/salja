@@ -16,7 +16,7 @@ func NewListFormatsCmd() *cobra.Command {
 			fmt.Println("Format       | Events | Tasks | Recurring | Subtasks")
 			fmt.Println("-------------|--------|-------|-----------|--------")
 
-			allFormats := registry.AllFormats()
+			allFormats := registry.AvailableFormats()
 			names := make([]string, 0, len(allFormats))
 			for name := range allFormats {
 				names = append(names, name)
