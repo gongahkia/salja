@@ -73,8 +73,10 @@ func TestMockCalendarWriterCreateEvent(t *testing.T) {
 			`summary:"Team Standup"`,
 			`description:"Daily sync"`,
 			`location:"Room 42"`,
-			`start date:date "`,
-			`end date:date "`,
+			`start date:startD`,
+			`end date:endD`,
+			`set year of startD to 2025`,
+			`set year of endD to 2025`,
 			`make new event with properties`,
 		} {
 			if !strings.Contains(script, want) {
@@ -133,7 +135,7 @@ func TestMockCalendarWriterNoStartTime(t *testing.T) {
 }
 
 func TestMockCalendarReaderRead(t *testing.T) {
-	fakeOutput := "Meeting|||June 15, 2025 10:00:00 AM|||June 15, 2025 11:00:00 AM|||Notes here|||Office\nLunch|||June 15, 2025 12:00:00 PM|||June 15, 2025 1:00:00 PM||||||Cafe"
+	fakeOutput := "Meeting|||2025-06-15T10:00:00|||2025-06-15T11:00:00|||Notes here|||Office\nLunch|||2025-06-15T12:00:00|||2025-06-15T13:00:00||||||Cafe"
 
 	mock := &mockScriptRunner{outputs: []string{fakeOutput}}
 	withMock(mock, func() {
@@ -205,7 +207,8 @@ func TestMockRemindersWriterCreateReminder(t *testing.T) {
 			`tell list "Shopping"`,
 			`name:"Buy groceries"`,
 			`body:"Milk, eggs, bread"`,
-			`due date:date "`,
+			`due date:dueD`,
+			`set year of dueD to 2025`,
 			`priority:1`,
 			`make new reminder with properties`,
 		} {
@@ -246,7 +249,7 @@ func TestMockRemindersWriterCompleted(t *testing.T) {
 }
 
 func TestMockRemindersReaderRead(t *testing.T) {
-	fakeOutput := "Shopping|||Buy milk|||Get 2% milk|||July 1, 2025 9:00:00 AM|||false\nWork|||Finish report|||Q2 summary|||July 2, 2025 5:00:00 PM|||true"
+	fakeOutput := "Shopping|||Buy milk|||Get 2% milk|||2025-07-01T09:00:00|||false\nWork|||Finish report|||Q2 summary|||2025-07-02T17:00:00|||true"
 
 	mock := &mockScriptRunner{outputs: []string{fakeOutput}}
 	withMock(mock, func() {

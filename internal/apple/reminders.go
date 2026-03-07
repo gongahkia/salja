@@ -25,15 +25,18 @@ func (w *RemindersWriter) Write(items []model.CalendarItem, listName string) err
 
 func (w *RemindersWriter) createReminder(item model.CalendarItem, listName string) error {
 	var scriptParts []string
+	if item.DueDate != nil {
+		scriptParts = append(scriptParts, asDateVar("dueD", *item.DueDate))
+	}
 	scriptParts = append(scriptParts, `tell application "Reminders"`)
-	scriptParts = append(scriptParts, fmt.Sprintf(`  tell list "%s"`, listName))
+	scriptParts = append(scriptParts, fmt.Sprintf(`  tell list "%s"`, escapeAS(listName)))
 
 	props := []string{fmt.Sprintf(`name:"%s"`, escapeAS(item.Title))}
 	if item.Description != "" {
 		props = append(props, fmt.Sprintf(`body:"%s"`, escapeAS(item.Description)))
 	}
 	if item.DueDate != nil {
-		props = append(props, fmt.Sprintf(`due date:date "%s"`, item.DueDate.Format("January 2, 2006 3:04:05 PM")))
+		props = append(props, `due date:dueD`)
 	}
 	if item.Priority > 0 {
 		asPriority := 0
@@ -66,7 +69,9 @@ func NewRemindersReader() *RemindersReader {
 }
 
 func (r *RemindersReader) Read() (*model.CalendarCollection, error) {
-	script := `tell application "Reminders"
+	script := fmt.Sprintf(`%s
+
+tell application "Reminders"
 set output to ""
 repeat with l in lists
 set listName to name of l
@@ -78,14 +83,14 @@ set remBody to body of rem
 end try
 set remDue to ""
 try
-set remDue to (due date of rem) as string
+set remDue to my isoDate(due date of rem)
 end try
 set remDone to completed of rem
 set output to output & listName & "|||" & remName & "|||" & remBody & "|||" & remDue & "|||" & remDone & linefeed
 end repeat
 end repeat
 return output
-end tell`
+end tell`, isoDateScript)
 
 	output, err := scriptRunnerFn(script)
 	if err != nil {
@@ -114,6 +119,12 @@ end tell`
 			Status:      model.StatusPending,
 			Title:       parts[1],
 			Description: parts[2],
+		}
+
+		if dueStr := strings.TrimSpace(parts[3]); dueStr != "" {
+			if t, err := time.Parse("2006-01-02T15:04:05", dueStr); err == nil {
+				item.DueDate = &t
+			}
 		}
 
 		if parts[4] == "true" {
