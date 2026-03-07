@@ -73,7 +73,7 @@ func hasCP1252Bytes(data []byte) bool {
 // TranscodeToUTF8 converts data from detected encoding to UTF-8.
 func TranscodeToUTF8(r io.Reader) (io.Reader, Encoding, error) {
 	buf := bufio.NewReader(r)
-	peek, err := buf.Peek(4)
+	peek, err := buf.Peek(8)
 	if err != nil && err != io.EOF {
 		return buf, EncodingUTF8, nil
 	}
@@ -94,14 +94,14 @@ func TranscodeToUTF8(r io.Reader) (io.Reader, Encoding, error) {
 }
 
 func newUTF16Reader(r io.Reader, order binary.ByteOrder) io.Reader {
-	return &utf16Reader{r: r, order: order, skipBOM: true}
+	return &utf16Reader{r: r, order: order}
 }
 
 type utf16Reader struct {
-	r       io.Reader
-	order   binary.ByteOrder
-	skipBOM bool
-	buf     bytes.Buffer
+	r          io.Reader
+	order      binary.ByteOrder
+	bomSkipped bool
+	buf        bytes.Buffer
 }
 
 func (u *utf16Reader) Read(p []byte) (int, error) {
@@ -116,11 +116,13 @@ func (u *utf16Reader) Read(p []byte) (int, error) {
 	}
 	raw = raw[:n]
 
-	if u.skipBOM && len(raw) >= 2 {
-		u.skipBOM = false
-		if (u.order == binary.LittleEndian && raw[0] == 0xFF && raw[1] == 0xFE) ||
-			(u.order == binary.BigEndian && raw[0] == 0xFE && raw[1] == 0xFF) {
-			raw = raw[2:]
+	if !u.bomSkipped {
+		u.bomSkipped = true
+		if len(raw) >= 2 {
+			if (u.order == binary.LittleEndian && raw[0] == 0xFF && raw[1] == 0xFE) ||
+				(u.order == binary.BigEndian && raw[0] == 0xFE && raw[1] == 0xFF) {
+				raw = raw[2:]
+			}
 		}
 	}
 
