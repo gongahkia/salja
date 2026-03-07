@@ -4,11 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/gongahkia/salja/cmd/salja/commands"
 	"github.com/gongahkia/salja/internal/config"
 	salerr "github.com/gongahkia/salja/internal/errors"
+	"github.com/gongahkia/salja/internal/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -19,6 +21,13 @@ var (
 )
 
 func main() {
+	logPath := filepath.Join(config.DataDir(), "salja.log")
+	if err := logging.Init(logPath); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: failed to init log: %v\n", err)
+	}
+	defer logging.Shutdown()
+	logging.Default().Info("system", "salja started")
+
 	rootCmd := &cobra.Command{
 		Use:     "salja",
 		Short:   "Universal calendar and task converter",
