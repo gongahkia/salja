@@ -1,7 +1,9 @@
 package tui
 
 import (
+	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -18,11 +20,11 @@ type FormatPickerMsg struct {
 type formatItem struct {
 	id   string
 	name string
-	exts string
+	desc string
 }
 
 func (f formatItem) Title() string       { return f.name }
-func (f formatItem) Description() string { return f.exts }
+func (f formatItem) Description() string { return f.desc }
 func (f formatItem) FilterValue() string { return f.name + " " + f.id }
 
 // FormatPickerModel shows a filterable list of supported formats.
@@ -32,18 +34,19 @@ type FormatPickerModel struct {
 }
 
 // NewFormatPickerModel creates a format picker populated from the registry.
-func NewFormatPickerModel() FormatPickerModel {
-	all := registry.AllFormats()
+// If filter is non-empty, only formats whose IDs are in filter are shown.
+func NewFormatPickerModel(filter ...string) FormatPickerModel {
+	all := registry.AvailableFormats()
+	filterSet := make(map[string]bool, len(filter))
+	for _, f := range filter {
+		filterSet[f] = true
+	}
 	items := make([]list.Item, 0, len(all))
 	for id, entry := range all {
-		exts := ""
-		for i, e := range entry.Extensions {
-			if i > 0 {
-				exts += ", "
-			}
-			exts += e
+		if len(filterSet) > 0 && !filterSet[id] {
+			continue
 		}
-		items = append(items, formatItem{id: id, name: entry.Name, exts: exts})
+		items = append(items, formatItem{id: id, name: entry.Name, desc: capabilityDesc(entry)})
 	}
 	sort.Slice(items, func(i, j int) bool {
 		return items[i].(formatItem).name < items[j].(formatItem).name
@@ -57,6 +60,28 @@ func NewFormatPickerModel() FormatPickerModel {
 	l.SetShowHelp(false)
 
 	return FormatPickerModel{list: l, keys: DefaultKeyMap()}
+}
+
+func capabilityDesc(entry *registry.FormatEntry) string {
+	var parts []string
+	if entry.Capabilities.SupportsEvents {
+		parts = append(parts, "events")
+	}
+	if entry.Capabilities.SupportsTasks {
+		parts = append(parts, "tasks")
+	}
+	if entry.Capabilities.SupportsRecurrence {
+		parts = append(parts, "recurrence")
+	}
+	if entry.Capabilities.SupportsSubtasks {
+		parts = append(parts, "subtasks")
+	}
+	exts := strings.Join(entry.Extensions, ", ")
+	caps := strings.Join(parts, ", ")
+	if caps == "" {
+		return exts
+	}
+	return fmt.Sprintf("%s — %s", exts, caps)
 }
 
 func (f FormatPickerModel) Init() tea.Cmd { return nil }

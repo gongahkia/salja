@@ -3,6 +3,8 @@ package tui
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -52,13 +54,28 @@ func (c ConvertModel) Update(msg tea.Msg) (ConvertModel, tea.Cmd) {
 		switch c.step {
 		case stepInputFile:
 			c.inputPath = msg.Path
+			ext := strings.ToLower(filepath.Ext(msg.Path))
+			matches := registry.DetectByExtension(ext)
+			if len(matches) == 1 {
+				c.fromFormat = matches[0]
+				c.step = stepOutputFile
+				c.filePicker = NewFilePickerModel()
+				return c, c.filePicker.Init()
+			}
 			c.step = stepFromFormat
-			c.fmtPicker = NewFormatPickerModel()
+			c.fmtPicker = NewFormatPickerModel(matches...)
 			return c, c.fmtPicker.Init()
 		case stepOutputFile:
 			c.outputPath = msg.Path
+			ext := strings.ToLower(filepath.Ext(msg.Path))
+			matches := registry.DetectByExtension(ext)
+			if len(matches) == 1 {
+				c.toFormat = matches[0]
+				c.step = stepRunning
+				return c, c.runConvert()
+			}
 			c.step = stepToFormat
-			c.fmtPicker = NewFormatPickerModel()
+			c.fmtPicker = NewFormatPickerModel(matches...)
 			return c, c.fmtPicker.Init()
 		}
 	case FormatPickerMsg:
