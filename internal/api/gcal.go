@@ -12,6 +12,7 @@ import (
 	"time"
 
 	salerr "github.com/gongahkia/salja/internal/errors"
+	"github.com/gongahkia/salja/internal/logging"
 	"github.com/gongahkia/salja/internal/model"
 )
 
@@ -149,6 +150,7 @@ func (c *GCalClient) ListEvents(ctx context.Context, calendarID string, timeMin,
 		timeMax.Format(time.RFC3339),
 	)
 
+	const maxEvents = 50000
 	var allEvents []GCalEvent
 	for url != "" {
 		data, status, err := c.doRequest(ctx, "GET", url, nil)
@@ -163,6 +165,10 @@ func (c *GCalClient) ListEvents(ctx context.Context, calendarID string, timeMin,
 			return nil, err
 		}
 		allEvents = append(allEvents, list.Items...)
+		if len(allEvents) >= maxEvents {
+			logging.Default().Warn("system", fmt.Sprintf("gcal: safety cap of %d events reached, stopping pagination", maxEvents))
+			break
+		}
 		if list.NextPageToken != "" {
 			url = fmt.Sprintf("%s/calendars/%s/events?pageToken=%s", gcalBaseURL, calendarID, list.NextPageToken)
 		} else {
