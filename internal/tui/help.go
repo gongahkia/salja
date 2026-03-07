@@ -42,7 +42,7 @@ func (h HelpModel) View() string {
 
 	var b strings.Builder
 	for _, bind := range bindings {
-		b.WriteString(fmt.Sprintf("  %-14s %s\n", bind.key, bind.desc))
+		fmt.Fprintf(&b, "  %-14s %s\n", bind.key, bind.desc)
 	}
 
 	content := BorderStyle.Render(

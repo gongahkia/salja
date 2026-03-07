@@ -18,7 +18,9 @@ func TestLogWritesJSON(t *testing.T) {
 	}
 	l.Info("interaction", "user opened convert")
 	l.Error("error", "file not found")
-	l.Close()
+	if err := l.Close(); err != nil {
+		t.Fatal(err)
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -48,7 +50,9 @@ func TestRotation(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		l.Info("test", "some log message that is fairly long")
 	}
-	l.Close()
+	if err := l.Close(); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := os.Stat(path + ".1"); os.IsNotExist(err) {
 		t.Fatal("expected rotated log file")
 	}
@@ -70,7 +74,9 @@ func TestConcurrentWrites(t *testing.T) {
 		}()
 	}
 	wg.Wait()
-	l.Close()
+	if err := l.Close(); err != nil {
+		t.Fatal(err)
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -84,5 +90,7 @@ func TestConcurrentWrites(t *testing.T) {
 func TestNopLogger(t *testing.T) {
 	l := Nop()
 	l.Info("test", "should not panic") // should not panic
-	l.Close()
+	if err := l.Close(); err != nil {
+		t.Fatal(err)
+	}
 }

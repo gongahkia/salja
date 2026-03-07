@@ -109,4 +109,4 @@ func Init(path string) error {
 func Default() *Logger { return defaultLogger }
 
 // Shutdown closes the global logger.
-func Shutdown() { defaultLogger.Close() }
+func Shutdown() { _ = defaultLogger.Close() }

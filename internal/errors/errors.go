@@ -147,10 +147,6 @@ func Retry(cfg *RetryConfig, fn func() error) error {
 	return fmt.Errorf("max retries (%d) exceeded: %w", cfg.MaxRetries, lastErr)
 }
 
-func isTransient(statusCode int) bool {
-	return statusCode == 429 || statusCode == 500 || statusCode == 502 || statusCode == 503
-}
-
 type SignalHandler struct {
 	cleanup func()
 }
