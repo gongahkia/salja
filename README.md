@@ -1,4 +1,5 @@
-[![](https://img.shields.io/badge/salja_1.0.0-passing-green)](https://github.com/gongahkia/salja/releases/tag/1.0.0)
+[![](https://img.shields.io/badge/salja_1.0.0-passing-light_green)](https://github.com/gongahkia/salja/releases/tag/1.0.0)
+[![](https://img.shields.io/badge/salja_2.0.0-passing-green)](https://github.com/gongahkia/salja/releases/tag/2.0.0)
 ![](https://github.com/gongahkia/salja/actions/workflows/ci.yml/badge.svg)
 
 # `Salja`
