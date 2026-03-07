@@ -33,6 +33,8 @@ func NewStreamingCSVParser(r io.Reader) (*StreamingCSVParser, error) {
 		headers[i] = strings.TrimSpace(headers[i])
 	}
 
+	cr.FieldsPerRecord = len(headers) // enforce column count for data rows
+
 	var closer io.Closer
 	if c, ok := r.(io.Closer); ok {
 		closer = c
@@ -60,11 +62,14 @@ func (p *StreamingCSVParser) Close() error {
 
 // Next returns the next row as a map, or io.EOF when done.
 func (p *StreamingCSVParser) Next() (map[string]string, int, error) {
+	p.lineNum++
 	record, err := p.reader.Read()
 	if err != nil {
-		return nil, p.lineNum, err
+		if err == io.EOF {
+			return nil, p.lineNum, err
+		}
+		return nil, p.lineNum, fmt.Errorf("row %d: %w", p.lineNum, err)
 	}
-	p.lineNum++
 
 	row := make(map[string]string, len(p.headers))
 	for i, h := range p.headers {
