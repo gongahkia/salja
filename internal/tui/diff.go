@@ -8,7 +8,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/gongahkia/salja/internal/model"
+	"github.com/gongahkia/salja/internal/conflict"
+	"github.com/gongahkia/salja/internal/logging"
 	"github.com/gongahkia/salja/internal/registry"
 )
 
@@ -21,15 +22,23 @@ const (
 	diffDone
 )
 
-// DiffModel compares two files side-by-side.
+// DiffModel compares two files with item-level matching.
 type DiffModel struct {
 	step       diffStep
 	filePicker FilePickerModel
 	pathA      string
 	pathB      string
-	result     string
+	result     *diffResult
 	err        error
 	scrollY    int
+}
+
+type diffResult struct {
+	countA   int
+	countB   int
+	matched  int
+	added    []string
+	removed  []string
 }
 
 // NewDiffModel creates a new diff view.
@@ -45,7 +54,7 @@ func (d DiffModel) Init() tea.Cmd {
 }
 
 type diffDoneMsg struct {
-	result string
+	result *diffResult
 	err    error
 }
 
@@ -55,11 +64,13 @@ func (d DiffModel) Update(msg tea.Msg) (DiffModel, tea.Cmd) {
 		switch d.step {
 		case diffPickA:
 			d.pathA = msg.Path
+			logging.Default().Info("interaction", fmt.Sprintf("diff: selected file A %s", msg.Path))
 			d.step = diffPickB
 			d.filePicker = NewFilePickerModel()
 			return d, d.filePicker.Init()
 		case diffPickB:
 			d.pathB = msg.Path
+			logging.Default().Info("interaction", fmt.Sprintf("diff: selected file B %s", msg.Path))
 			d.step = diffRunning
 			return d, d.runDiff()
 		}
@@ -91,71 +102,50 @@ func (d DiffModel) Update(msg tea.Msg) (DiffModel, tea.Cmd) {
 }
 
 func (d DiffModel) runDiff() tea.Cmd {
+	pathA := d.pathA
+	pathB := d.pathB
 	return func() tea.Msg {
 		ctx := context.Background()
-		allFmts := registry.AllFormats()
-		var colA, colB *struct{ events, tasks int }
-
+		allFmts := registry.AvailableFormats()
 		for _, entry := range allFmts {
 			if entry.NewParser == nil {
 				continue
 			}
 			parser := entry.NewParser()
-			a, errA := parser.ParseFile(ctx, d.pathA)
-			b, errB := parser.ParseFile(ctx, d.pathB)
-			if errA == nil && errB == nil {
-				ae, at, be, bt := 0, 0, 0, 0
-				for _, item := range a.Items {
-					if item.ItemType == model.ItemTypeEvent {
-						ae++
-					} else {
-						at++
-					}
-				}
-				for _, item := range b.Items {
-					if item.ItemType == model.ItemTypeEvent {
-						be++
-					} else {
-						bt++
-					}
-				}
-				colA = &struct{ events, tasks int }{ae, at}
-				colB = &struct{ events, tasks int }{be, bt}
-				break
+			colA, errA := parser.ParseFile(ctx, pathA)
+			colB, errB := parser.ParseFile(ctx, pathB)
+			if errA != nil || errB != nil {
+				continue
 			}
+			detector := conflict.NewDetector()
+			matches := detector.FindDuplicates(colA, colB)
+			matchedA := make(map[int]bool)
+			matchedB := make(map[int]bool)
+			for _, m := range matches {
+				matchedA[m.SourceIndex] = true
+				matchedB[m.TargetIndex] = true
+			}
+			var added, removed []string
+			for j, item := range colB.Items {
+				if !matchedB[j] {
+					added = append(added, item.Title)
+				}
+			}
+			for i, item := range colA.Items {
+				if !matchedA[i] {
+					removed = append(removed, item.Title)
+				}
+			}
+			logging.Default().Info("interaction", fmt.Sprintf("diff: %d matched, %d added, %d removed", len(matches), len(added), len(removed)))
+			return diffDoneMsg{result: &diffResult{
+				countA:  len(colA.Items),
+				countB:  len(colB.Items),
+				matched: len(matches),
+				added:   added,
+				removed: removed,
+			}}
 		}
-
-		if colA == nil || colB == nil {
-			return diffDoneMsg{err: fmt.Errorf("could not parse both files")}
-		}
-
-		var b strings.Builder
-		addStyle := lipgloss.NewStyle().Foreground(ColorSuccess)
-		delStyle := lipgloss.NewStyle().Foreground(ColorError)
-
-		fmt.Fprintf(&b, "  File A: %s\n", d.pathA)
-		fmt.Fprintf(&b, "  File B: %s\n\n", d.pathB)
-
-		eDiff := colB.events - colA.events
-		tDiff := colB.tasks - colA.tasks
-
-		fmt.Fprintf(&b, "  Events: %d → %d", colA.events, colB.events)
-		if eDiff > 0 {
-			b.WriteString("  " + addStyle.Render(fmt.Sprintf("+%d", eDiff)))
-		} else if eDiff < 0 {
-			b.WriteString("  " + delStyle.Render(fmt.Sprintf("%d", eDiff)))
-		}
-		b.WriteString("\n")
-
-		fmt.Fprintf(&b, "  Tasks:  %d → %d", colA.tasks, colB.tasks)
-		if tDiff > 0 {
-			b.WriteString("  " + addStyle.Render(fmt.Sprintf("+%d", tDiff)))
-		} else if tDiff < 0 {
-			b.WriteString("  " + delStyle.Render(fmt.Sprintf("%d", tDiff)))
-		}
-		b.WriteString("\n")
-
-		return diffDoneMsg{result: b.String()}
+		return diffDoneMsg{err: fmt.Errorf("could not parse both files")}
 	}
 }
 
@@ -172,17 +162,47 @@ func (d DiffModel) View() string {
 		if d.err != nil {
 			return lipgloss.JoinVertical(lipgloss.Left, header, ErrorStyle.Render("  Error: "+d.err.Error()))
 		}
-		lines := strings.Split(d.result, "\n")
-		end := d.scrollY + 20
-		if end > len(lines) {
-			end = len(lines)
-		}
-		start := d.scrollY
-		if start >= len(lines) {
-			start = len(lines) - 1
-		}
-		visible := strings.Join(lines[start:end], "\n")
-		return lipgloss.JoinVertical(lipgloss.Left, header, visible)
+		return lipgloss.JoinVertical(lipgloss.Left, header, d.renderResult())
 	}
 	return header
+}
+
+func (d DiffModel) renderResult() string {
+	r := d.result
+	var lines []string
+	lines = append(lines, fmt.Sprintf("  File A: %s (%d items)", d.pathA, r.countA))
+	lines = append(lines, fmt.Sprintf("  File B: %s (%d items)", d.pathB, r.countB))
+	lines = append(lines, fmt.Sprintf("  Matching: %d", r.matched))
+	lines = append(lines, "")
+	if len(r.removed) > 0 {
+		lines = append(lines, ErrorStyle.Render(fmt.Sprintf("  Removed (%d):", len(r.removed))))
+		for _, t := range r.removed {
+			lines = append(lines, ErrorStyle.Render("    - "+t))
+		}
+	}
+	if len(r.added) > 0 {
+		lines = append(lines, SuccessStyle.Render(fmt.Sprintf("  Added (%d):", len(r.added))))
+		for _, t := range r.added {
+			lines = append(lines, SuccessStyle.Render("    + "+t))
+		}
+	}
+	if len(r.added) == 0 && len(r.removed) == 0 {
+		lines = append(lines, SuccessStyle.Render("  Files are identical"))
+	}
+	lines = append(lines, "")
+	lines = append(lines, MutedStyle.Render("  ↑↓ scroll"))
+
+	// apply scroll
+	end := d.scrollY + 20
+	if end > len(lines) {
+		end = len(lines)
+	}
+	start := d.scrollY
+	if start >= len(lines) {
+		start = len(lines) - 1
+	}
+	if start < 0 {
+		start = 0
+	}
+	return strings.Join(lines[start:end], "\n")
 }
