@@ -18,6 +18,7 @@ func init() {
 			SupportsTasks:      true,
 			SupportsRecurrence: true,
 			SupportsSubtasks:   false,
+			SupportsReminders:  true,
 		},
 	})
 

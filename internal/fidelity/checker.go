@@ -27,19 +27,33 @@ func Check(collection *model.CalendarCollection, targetFormat string) []DataLoss
 	var warnings []DataLossWarning
 
 	for _, item := range collection.Items {
-		// Subtask flattening warning
+		// event → task-only format
+		if item.ItemType == model.ItemTypeEvent && !caps.SupportsEvents && caps.SupportsTasks {
+			warnings = append(warnings, DataLossWarning{
+				ItemTitle: item.Title,
+				Field:     "ItemType",
+				Reason:    fmt.Sprintf("event will be converted to task (target '%s' does not support events)", targetFormat),
+			})
+		}
+
+		// task → event-only format
+		if item.ItemType == model.ItemTypeTask && !caps.SupportsTasks && caps.SupportsEvents {
+			warnings = append(warnings, DataLossWarning{
+				ItemTitle: item.Title,
+				Field:     "ItemType",
+				Reason:    fmt.Sprintf("task will be converted to event (target '%s' does not support tasks)", targetFormat),
+			})
+		}
+
+		// subtask flattening
 		if len(item.Subtasks) > 0 && !caps.SupportsSubtasks {
 			warnings = append(warnings, DataLossWarning{
 				ItemTitle: item.Title,
 				Field:     "Subtasks",
 				Reason:    fmt.Sprintf("target format '%s' does not support subtasks; %d subtask(s) will be flattened or lost", targetFormat, len(item.Subtasks)),
 			})
-		}
-
-		// Subtask priority loss warning
-		if len(item.Subtasks) > 0 {
 			for _, sub := range item.Subtasks {
-				if sub.Priority > 0 && !caps.SupportsSubtasks {
+				if sub.Priority > 0 {
 					warnings = append(warnings, DataLossWarning{
 						ItemTitle: item.Title,
 						Field:     "SubtaskPriority",
@@ -50,7 +64,7 @@ func Check(collection *model.CalendarCollection, targetFormat string) []DataLoss
 			}
 		}
 
-		// Recurrence rule dropping warning
+		// recurrence dropping
 		if item.Recurrence != nil && !caps.SupportsRecurrence {
 			warnings = append(warnings, DataLossWarning{
 				ItemTitle: item.Title,
@@ -59,30 +73,25 @@ func Check(collection *model.CalendarCollection, targetFormat string) []DataLoss
 			})
 		}
 
-		// Reminder loss warning for CSV-based formats
-		if len(item.Reminders) > 0 {
-			csvFormats := map[string]bool{"todoist": true, "ticktick": true, "gcal": true, "outlook": true, "asana": true, "notion": true, "trello": true}
-			if csvFormats[targetFormat] {
-				warnings = append(warnings, DataLossWarning{
-					ItemTitle: item.Title,
-					Field:     "Reminders",
-					Reason:    fmt.Sprintf("%d reminder(s) will be lost converting to '%s' (no reminder support)", len(item.Reminders), targetFormat),
-				})
-			}
+		// reminder loss (registry-driven, not hardcoded)
+		if len(item.Reminders) > 0 && !caps.SupportsReminders {
+			warnings = append(warnings, DataLossWarning{
+				ItemTitle: item.Title,
+				Field:     "Reminders",
+				Reason:    fmt.Sprintf("%d reminder(s) will be lost converting to '%s' (no reminder support)", len(item.Reminders), targetFormat),
+			})
 		}
 
-		// Priority mapping collision detection for todoist
-		if targetFormat == "todoist" && (item.Priority == model.PriorityNone || item.Priority == model.PriorityLowest) {
-			if item.Priority == model.PriorityLowest {
-				warnings = append(warnings, DataLossWarning{
-					ItemTitle: item.Title,
-					Field:     "Priority",
-					Reason:    "PriorityLowest (1) maps to Todoist priority '1' (same as PriorityNone); priority distinction will be lost",
-				})
-			}
+		// todoist priority collision (format-specific)
+		if targetFormat == "todoist" && item.Priority == model.PriorityLowest {
+			warnings = append(warnings, DataLossWarning{
+				ItemTitle: item.Title,
+				Field:     "Priority",
+				Reason:    "PriorityLowest (1) maps to Todoist priority '1' (same as PriorityNone); priority distinction will be lost",
+			})
 		}
 
-		// Timezone loss warning
+		// timezone loss
 		if item.Timezone != "" && item.Timezone != "UTC" {
 			if !caps.SupportsEvents && !caps.SupportsRecurrence {
 				warnings = append(warnings, DataLossWarning{

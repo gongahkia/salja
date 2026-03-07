@@ -28,6 +28,7 @@ type FormatCapabilities struct {
 	SupportsTasks      bool
 	SupportsRecurrence bool
 	SupportsSubtasks   bool
+	SupportsReminders  bool
 }
 
 type FormatEntry struct {
