@@ -38,11 +38,19 @@ type Resolver struct {
 	reader      *bufio.Reader
 }
 
-func NewResolver(strategy Strategy) *Resolver {
+var validStrategies = map[Strategy]bool{
+	StrategyAsk: true, StrategyPreferSource: true, StrategyPreferTarget: true,
+	StrategySkip: true, StrategyFail: true,
+}
+
+func NewResolver(strategy Strategy) (*Resolver, error) {
+	if !validStrategies[strategy] {
+		return nil, fmt.Errorf("unknown conflict strategy: %q, must be one of: ask, prefer-source, prefer-target, skip-conflicts, fail-on-conflict", strategy)
+	}
 	return &Resolver{
 		strategy: strategy,
 		reader:   bufio.NewReader(os.Stdin),
-	}
+	}, nil
 }
 
 func (r *Resolver) Resolve(source, target *model.CalendarItem) (*model.CalendarItem, error) {
@@ -61,7 +69,7 @@ func (r *Resolver) Resolve(source, target *model.CalendarItem) (*model.CalendarI
 	case StrategyAsk:
 		return r.interactiveResolve(source, target)
 	default:
-		return source, nil
+		return nil, fmt.Errorf("unhandled conflict strategy: %q", r.strategy)
 	}
 }
 
@@ -75,9 +83,7 @@ func (r *Resolver) interactiveResolve(source, target *model.CalendarItem) (*mode
 
 	input, err := r.reader.ReadString('\n')
 	if err != nil {
-		// EOF or read error: fall back to preferring source
-		r.log(source.Title, target.Title, "prefer-source-eof")
-		return source, nil
+		return nil, fmt.Errorf("interactive conflict resolution requires terminal input (stdin closed): %w", err)
 	}
 	input = strings.TrimSpace(strings.ToLower(input))
 
@@ -201,7 +207,9 @@ func (r *Resolver) WriteLog() error {
 	}
 
 	logDir := config.ConfigDir()
-	_ = os.MkdirAll(logDir, 0755)
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		return fmt.Errorf("create conflict log dir: %w", err)
+	}
 
 	logPath := filepath.Join(logDir, "conflict-log.json")
 

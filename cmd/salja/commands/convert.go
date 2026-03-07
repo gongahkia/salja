@@ -222,7 +222,10 @@ func NewConvertCmd() *cobra.Command {
 						if !quiet && !jsonOutput {
 							fmt.Fprintf(os.Stderr, "Found %d duplicate(s) in existing output file\n", len(matches))
 						}
-						resolver := conflict.NewResolver(strategy)
+						resolver, resolverErr := conflict.NewResolver(strategy)
+						if resolverErr != nil {
+							return fmt.Errorf("--merge: %w", resolverErr)
+						}
 						resolved := make(map[int]bool)
 						for _, m := range matches {
 							result, err := resolver.Resolve(&collection.Items[m.SourceIndex], &existing.Items[m.TargetIndex])

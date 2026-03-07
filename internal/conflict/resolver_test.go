@@ -31,7 +31,7 @@ func makeTargetItem() *model.CalendarItem {
 }
 
 func TestResolvePreferSource(t *testing.T) {
-	r := NewResolver(StrategyPreferSource)
+	r, _ := NewResolver(StrategyPreferSource)
 	source := makeSourceItem()
 	target := makeTargetItem()
 
@@ -48,7 +48,7 @@ func TestResolvePreferSource(t *testing.T) {
 }
 
 func TestResolvePreferTarget(t *testing.T) {
-	r := NewResolver(StrategyPreferTarget)
+	r, _ := NewResolver(StrategyPreferTarget)
 	source := makeSourceItem()
 	target := makeTargetItem()
 
@@ -65,7 +65,7 @@ func TestResolvePreferTarget(t *testing.T) {
 }
 
 func TestResolveSkip(t *testing.T) {
-	r := NewResolver(StrategySkip)
+	r, _ := NewResolver(StrategySkip)
 	source := makeSourceItem()
 	target := makeTargetItem()
 
@@ -78,8 +78,25 @@ func TestResolveSkip(t *testing.T) {
 	}
 }
 
+func TestNewResolverInvalidStrategy(t *testing.T) {
+	_, err := NewResolver("invalid-strategy")
+	if err == nil {
+		t.Fatal("expected error for invalid strategy")
+	}
+}
+
+func TestNewResolverValidStrategy(t *testing.T) {
+	r, err := NewResolver(StrategyPreferSource)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if r == nil {
+		t.Fatal("expected non-nil resolver")
+	}
+}
+
 func TestResolveFail(t *testing.T) {
-	r := NewResolver(StrategyFail)
+	r, _ := NewResolver(StrategyFail)
 	source := makeSourceItem()
 	target := makeTargetItem()
 
