@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gongahkia/salja/internal/api"
@@ -90,9 +91,14 @@ func newAuthLoginCmd() *cobra.Command {
 			case "notion":
 				var input string
 				fmt.Fprint(os.Stderr, "Enter your Notion integration token: ")
-				_, _ = fmt.Fscanln(os.Stdin, &input)
+				if _, err := fmt.Fscanln(os.Stdin, &input); err != nil {
+					return fmt.Errorf("reading Notion token from stdin: %w", err)
+				}
 				if input == "" {
 					return fmt.Errorf("token cannot be empty")
+				}
+				if !strings.HasPrefix(input, "secret_") && !strings.HasPrefix(input, "ntn_") {
+					return fmt.Errorf("invalid Notion token: must start with 'secret_' or 'ntn_'")
 				}
 				token := &api.Token{AccessToken: input, ExpiresAt: time.Now().AddDate(10, 0, 0)}
 				if err := store.Set("notion", token); err != nil {

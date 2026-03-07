@@ -12,6 +12,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var supportedSyncServices = map[string]bool{
+	"google": true, "microsoft": true, "todoist": true, "ticktick": true, "notion": true,
+}
+
+func validateSyncService(name, flag string) error {
+	if !supportedSyncServices[name] {
+		return fmt.Errorf("unsupported sync service for --%s: %q; supported: google, microsoft, todoist, ticktick, notion", flag, name)
+	}
+	return nil
+}
+
 func NewSyncCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sync",
@@ -71,6 +82,9 @@ func newSyncPushCmd() *cobra.Command {
 		Short: "Push local file items to a cloud service",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := validateSyncService(to, "to"); err != nil {
+				return err
+			}
 			filePath := args[0]
 			format := DetectFormat(filePath)
 
@@ -133,6 +147,9 @@ func newSyncPullCmd() *cobra.Command {
 		Use:   "pull",
 		Short: "Pull events from a cloud service to a local file",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := validateSyncService(from, "from"); err != nil {
+				return err
+			}
 			store, err := api.DefaultSecureStore()
 			if err != nil {
 				return err
@@ -450,7 +467,9 @@ func pushToNotion(ctx context.Context, token *api.Token, collection *model.Calen
 
 	fmt.Fprint(os.Stderr, "Enter Notion database ID: ")
 	var databaseID string
-	_, _ = fmt.Fscanln(os.Stdin, &databaseID)
+	if _, err := fmt.Fscanln(os.Stdin, &databaseID); err != nil {
+		return fmt.Errorf("reading Notion database ID from stdin: %w", err)
+	}
 	if databaseID == "" {
 		return fmt.Errorf("database ID cannot be empty")
 	}
@@ -488,7 +507,9 @@ func pullFromNotion(ctx context.Context, token *api.Token, timeout time.Duration
 
 	fmt.Fprint(os.Stderr, "Enter Notion database ID: ")
 	var databaseID string
-	_, _ = fmt.Fscanln(os.Stdin, &databaseID)
+	if _, err := fmt.Fscanln(os.Stdin, &databaseID); err != nil {
+		return nil, fmt.Errorf("reading Notion database ID from stdin: %w", err)
+	}
 	if databaseID == "" {
 		return nil, fmt.Errorf("database ID cannot be empty")
 	}
