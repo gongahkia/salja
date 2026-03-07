@@ -94,7 +94,10 @@ func (p *Parser) parseEvent(comp *ical.Component) (*model.CalendarItem, error) {
 	}
 
 	if dtstart := comp.Props.Get("DTSTART"); dtstart != nil {
-		dt, isAllDay, tz := parseDateTime(dtstart)
+		dt, isAllDay, tz, err := parseDateTime(dtstart)
+		if err != nil {
+			return nil, fmt.Errorf("event %q DTSTART: %w", item.UID, err)
+		}
 		item.StartTime = &dt
 		item.IsAllDay = isAllDay
 		if tz != "" {
@@ -103,7 +106,10 @@ func (p *Parser) parseEvent(comp *ical.Component) (*model.CalendarItem, error) {
 	}
 
 	if dtend := comp.Props.Get("DTEND"); dtend != nil {
-		dt, _, _ := parseDateTime(dtend)
+		dt, _, _, err := parseDateTime(dtend)
+		if err != nil {
+			return nil, fmt.Errorf("event %q DTEND: %w", item.UID, err)
+		}
 		item.EndTime = &dt
 	}
 
@@ -116,18 +122,20 @@ func (p *Parser) parseEvent(comp *ical.Component) (*model.CalendarItem, error) {
 	}
 
 	for _, exdate := range comp.Props.Values("EXDATE") {
-		exdates := parseExDate(&exdate)
 		if item.Recurrence == nil {
-			item.Recurrence = &model.Recurrence{}
+			fmt.Fprintf(os.Stderr, "Warning: event %q has EXDATE without RRULE, skipping\n", item.UID)
+			continue
 		}
+		exdates := parseExDate(&exdate)
 		item.Recurrence.ExDates = append(item.Recurrence.ExDates, exdates...)
 	}
 
 	for _, rdate := range comp.Props.Values("RDATE") {
-		rdates := parseRDate(&rdate)
 		if item.Recurrence == nil {
-			item.Recurrence = &model.Recurrence{}
+			fmt.Fprintf(os.Stderr, "Warning: event %q has RDATE without RRULE, skipping\n", item.UID)
+			continue
 		}
+		rdates := parseRDate(&rdate)
 		item.Recurrence.RDates = append(item.Recurrence.RDates, rdates...)
 	}
 
@@ -168,7 +176,10 @@ func (p *Parser) parseTodo(comp *ical.Component) (*model.CalendarItem, error) {
 	}
 
 	if due := comp.Props.Get("DUE"); due != nil {
-		dt, _, tz := parseDateTime(due)
+		dt, _, tz, err := parseDateTime(due)
+		if err != nil {
+			return nil, fmt.Errorf("todo %q DUE: %w", item.UID, err)
+		}
 		item.DueDate = &dt
 		if tz != "" {
 			item.Timezone = tz
@@ -176,7 +187,10 @@ func (p *Parser) parseTodo(comp *ical.Component) (*model.CalendarItem, error) {
 	}
 
 	if dtstart := comp.Props.Get("DTSTART"); dtstart != nil {
-		dt, _, tz := parseDateTime(dtstart)
+		dt, _, tz, err := parseDateTime(dtstart)
+		if err != nil {
+			return nil, fmt.Errorf("todo %q DTSTART: %w", item.UID, err)
+		}
 		item.StartTime = &dt
 		if tz != "" {
 			item.Timezone = tz
@@ -188,7 +202,10 @@ func (p *Parser) parseTodo(comp *ical.Component) (*model.CalendarItem, error) {
 	}
 
 	if completed := comp.Props.Get("COMPLETED"); completed != nil {
-		dt, _, _ := parseDateTime(completed)
+		dt, _, _, err := parseDateTime(completed)
+		if err != nil {
+			return nil, fmt.Errorf("todo %q COMPLETED: %w", item.UID, err)
+		}
 		item.CompletionDate = &dt
 	}
 
@@ -243,7 +260,10 @@ func (p *Parser) parseJournal(comp *ical.Component) (*model.CalendarItem, error)
 	}
 
 	if dtstart := comp.Props.Get("DTSTART"); dtstart != nil {
-		dt, _, tz := parseDateTime(dtstart)
+		dt, _, tz, err := parseDateTime(dtstart)
+		if err != nil {
+			return nil, fmt.Errorf("journal %q DTSTART: %w", item.UID, err)
+		}
 		item.StartTime = &dt
 		if tz != "" {
 			item.Timezone = tz
@@ -253,7 +273,7 @@ func (p *Parser) parseJournal(comp *ical.Component) (*model.CalendarItem, error)
 	return item, nil
 }
 
-func parseDateTime(prop *ical.Prop) (time.Time, bool, string) {
+func parseDateTime(prop *ical.Prop) (time.Time, bool, string, error) {
 	isAllDay := false
 	tz := ""
 
@@ -283,15 +303,20 @@ func parseDateTime(prop *ical.Prop) (time.Time, bool, string) {
 	}
 
 	if err != nil {
-		return time.Time{}, false, ""
+		return time.Time{}, false, "", fmt.Errorf("parse ICS datetime %q: %w", prop.Value, err)
 	}
 
-	return t, isAllDay, tz
+	return t, isAllDay, tz, nil
 }
 
 func parseRRule(value string) (*model.Recurrence, error) {
 	rec := &model.Recurrence{
 		Interval: 1,
+	}
+
+	validFreqs := map[string]bool{
+		"DAILY": true, "WEEKLY": true, "MONTHLY": true, "YEARLY": true,
+		"SECONDLY": true, "MINUTELY": true, "HOURLY": true,
 	}
 
 	parts := strings.Split(value, ";")
@@ -305,6 +330,9 @@ func parseRRule(value string) (*model.Recurrence, error) {
 
 		switch key {
 		case "FREQ":
+			if !validFreqs[val] {
+				return nil, fmt.Errorf("invalid RRULE FREQ: %q", val)
+			}
 			rec.Freq = model.FreqType(val)
 		case "INTERVAL":
 			if n, err := fmt.Sscanf(val, "%d", &rec.Interval); n != 1 || err != nil {
