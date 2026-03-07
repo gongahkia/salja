@@ -1,85 +1,144 @@
 package tui
 
 import (
-	"sort"
+	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/gongahkia/salja/internal/appdetect"
+	"github.com/gongahkia/salja/internal/platform"
 )
 
-type menuItem struct {
-	title string
-	desc  string
+type suggestedAction struct {
+	label string
+	key   string
 	view  View
 }
 
-func (m menuItem) Title() string       { return m.title }
-func (m menuItem) Description() string { return m.desc }
-func (m menuItem) FilterValue() string { return m.title }
-
-var menuItems = []list.Item{
-	menuItem{"convert", "Convert between calendar/task formats", ViewConvert},
-	menuItem{"validate", "Validate a calendar/task file", ViewValidate},
-	menuItem{"diff", "Compare two calendar/task files", ViewDiff},
-	menuItem{"sync", "Cloud sync (push/pull)", ViewSync},
-	menuItem{"auth", "Manage service authentication", ViewAuth},
-	menuItem{"config", "View configuration", ViewConfig},
-}
-
-// HomeModel is the main menu view.
+// HomeModel is the main menu view with platform info and detected apps.
 type HomeModel struct {
-	list list.Model
-	keys KeyMap
+	keys       KeyMap
+	platInfo   platform.PlatformInfo
+	apps       []appdetect.DetectedApp
+	appsLoaded bool
+	actions    []suggestedAction
+	cursor     int
+	width      int
+	height     int
 }
 
 // NewHomeModel creates a new home menu.
 func NewHomeModel() HomeModel {
-	items := make([]list.Item, len(menuItems))
-	copy(items, menuItems)
-	sort.Slice(items, func(i, j int) bool {
-		return items[i].(menuItem).title < items[j].(menuItem).title
-	})
+	return HomeModel{
+		keys:     DefaultKeyMap(),
+		platInfo: platform.Summary(),
+		actions:  defaultActions(),
+	}
+}
 
-	delegate := list.NewDefaultDelegate()
-	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.Foreground(ColorPrimary)
-	delegate.Styles.SelectedDesc = delegate.Styles.SelectedDesc.Foreground(ColorSecondary)
+func defaultActions() []suggestedAction {
+	return []suggestedAction{
+		{"Convert a file", "c", ViewConvert},
+		{"Validate a file", "v", ViewValidate},
+		{"Diff two files", "d", ViewDiff},
+		{"Cloud sync", "s", ViewSync},
+		{"Manage auth", "a", ViewAuth},
+		{"Settings", "o", ViewConfig},
+	}
+}
 
-	l := list.New(items, delegate, 60, 14)
-	l.Title = "salja"
-	l.Styles.Title = lipgloss.NewStyle().Bold(true).Foreground(ColorPrimary).MarginLeft(1)
-	l.SetShowStatusBar(false)
-	l.SetFilteringEnabled(true)
-	l.SetShowHelp(false)
+type appsDetectedMsg struct {
+	apps []appdetect.DetectedApp
+}
 
-	return HomeModel{list: l, keys: DefaultKeyMap()}
+func detectAppsCmd() tea.Msg {
+	return appsDetectedMsg{apps: appdetect.DetectAll()}
 }
 
 func (h HomeModel) Init() tea.Cmd {
-	return nil
+	return detectAppsCmd
 }
 
 func (h HomeModel) Update(msg tea.Msg) (HomeModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		h.list.SetSize(msg.Width, msg.Height)
+		h.width = msg.Width
+		h.height = msg.Height
+		return h, nil
+	case appsDetectedMsg:
+		h.apps = msg.apps
+		h.appsLoaded = true
 		return h, nil
 	case tea.KeyMsg:
-		if h.list.FilterState() == list.Filtering {
-			break
-		}
-		if key.Matches(msg, h.keys.Enter) {
-			if item, ok := h.list.SelectedItem().(menuItem); ok {
-				return h, func() tea.Msg { return NavigateMsg{Target: item.view} }
+		switch {
+		case key.Matches(msg, h.keys.Enter):
+			if h.cursor < len(h.actions) {
+				target := h.actions[h.cursor].view
+				return h, func() tea.Msg { return NavigateMsg{Target: target} }
+			}
+		case key.Matches(msg, key.NewBinding(key.WithKeys("j", "down"))):
+			if h.cursor < len(h.actions)-1 {
+				h.cursor++
+			}
+		case key.Matches(msg, key.NewBinding(key.WithKeys("k", "up"))):
+			if h.cursor > 0 {
+				h.cursor--
+			}
+		default:
+			for i, a := range h.actions {
+				if key.Matches(msg, key.NewBinding(key.WithKeys(a.key))) {
+					h.cursor = i
+					return h, func() tea.Msg { return NavigateMsg{Target: a.view} }
+				}
 			}
 		}
 	}
-	var cmd tea.Cmd
-	h.list, cmd = h.list.Update(msg)
-	return h, cmd
+	return h, nil
 }
 
 func (h HomeModel) View() string {
-	return h.list.View()
+	var sections []string
+
+	// header with platform badge
+	title := TitleStyle.Render("salja")
+	badge := MutedStyle.Render(fmt.Sprintf("%s %s", h.platInfo.OS, h.platInfo.Arch))
+	sections = append(sections, lipgloss.JoinHorizontal(lipgloss.Center, title, " ", badge))
+	sections = append(sections, MutedStyle.Render("  Universal Calendar & Task Converter"))
+	sections = append(sections, "")
+
+	// detected apps
+	if !h.appsLoaded {
+		sections = append(sections, MutedStyle.Render("  Detecting installed apps..."))
+	} else if len(h.apps) > 0 {
+		sections = append(sections, SubtitleStyle.Render("Detected Apps"))
+		for _, app := range h.apps {
+			indicator := lipgloss.NewStyle().Foreground(ColorSuccess).Render("●")
+			if !app.Installed {
+				indicator = lipgloss.NewStyle().Foreground(ColorMuted).Render("○")
+			}
+			line := fmt.Sprintf("  %s %s", indicator, app.Name)
+			if len(app.DataPaths) > 0 {
+				line += MutedStyle.Render(fmt.Sprintf(" (%d data paths)", len(app.DataPaths)))
+			}
+			sections = append(sections, line)
+		}
+	}
+	sections = append(sections, "")
+
+	// suggested actions
+	sections = append(sections, SubtitleStyle.Render("Actions"))
+	for i, a := range h.actions {
+		prefix := "  "
+		style := lipgloss.NewStyle()
+		if i == h.cursor {
+			prefix = "▸ "
+			style = SelectedStyle
+		}
+		keyHint := MutedStyle.Render(fmt.Sprintf("[%s]", a.key))
+		sections = append(sections, fmt.Sprintf("%s%s %s", prefix, style.Render(a.label), keyHint))
+	}
+
+	return strings.Join(sections, "\n")
 }
