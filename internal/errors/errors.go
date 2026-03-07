@@ -66,6 +66,15 @@ func (e *APIError) Unwrap() error { return e.Err }
 
 func (e *APIError) IsRateLimit() bool { return e.StatusCode == 429 }
 
+func (e *APIError) IsRetryable() bool {
+	switch e.StatusCode {
+	case 0, 429, 500, 502, 503, 504:
+		return true
+	default:
+		return false
+	}
+}
+
 type PermissionError struct {
 	Resource string
 	Message  string
@@ -124,7 +133,7 @@ func Retry(cfg *RetryConfig, fn func() error) error {
 		}
 
 		if apiErr, ok := lastErr.(*APIError); ok {
-			if !apiErr.IsRateLimit() && !isTransient(apiErr.StatusCode) {
+			if !apiErr.IsRetryable() {
 				return lastErr
 			}
 		}

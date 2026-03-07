@@ -168,6 +168,38 @@ func TestRetryExponentialBackoff(t *testing.T) {
 	}
 }
 
+func TestAPIErrorIsRetryable(t *testing.T) {
+	cases := []struct {
+		code      int
+		retryable bool
+	}{
+		{0, true}, {200, false}, {401, false}, {403, false},
+		{404, false}, {429, true}, {500, true}, {502, true},
+		{503, true}, {504, true},
+	}
+	for _, tc := range cases {
+		e := &APIError{Service: "test", StatusCode: tc.code}
+		if got := e.IsRetryable(); got != tc.retryable {
+			t.Errorf("IsRetryable(%d)=%v, want %v", tc.code, got, tc.retryable)
+		}
+	}
+}
+
+func TestRetryNonRetryableReturnsImmediately(t *testing.T) {
+	attempts := 0
+	cfg := &RetryConfig{MaxRetries: 3, BaseDelay: 0}
+	err := Retry(cfg, func() error {
+		attempts++
+		return &APIError{Service: "test", StatusCode: 401, Message: "unauthorized"}
+	})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if attempts != 1 {
+		t.Errorf("expected 1 attempt for non-retryable, got %d", attempts)
+	}
+}
+
 func TestErrorCollectorSummary(t *testing.T) {
 	c := NewErrorCollector()
 	c.AddError(&ParseError{File: "test.csv", Line: 5, Message: "bad row"})
