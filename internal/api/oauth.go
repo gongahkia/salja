@@ -66,7 +66,7 @@ func DefaultSecureStore() (TokenStorer, error) {
 	return NewKeyringTokenStore(fileStore), nil
 }
 
-func (s *TokenStore) Load() (TokenFile, error) {
+func (s *TokenStore) Load() (result TokenFile, retErr error) {
 	f, err := os.OpenFile(s.Path, os.O_RDONLY, 0600)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -86,7 +86,11 @@ func (s *TokenStore) Load() (TokenFile, error) {
 	if err := lockFile(f, false); err != nil {
 		return nil, fmt.Errorf("failed to lock token file: %w", err)
 	}
-	defer func() { _ = unlockFile(f) }()
+	defer func() {
+		if unlockErr := unlockFile(f); unlockErr != nil && retErr == nil {
+			retErr = fmt.Errorf("unlock token file: %w", unlockErr)
+		}
+	}()
 	data, err := os.ReadFile(s.Path)
 	if err != nil {
 		return nil, err
@@ -98,7 +102,7 @@ func (s *TokenStore) Load() (TokenFile, error) {
 	return tf, nil
 }
 
-func (s *TokenStore) Save(tf TokenFile) error {
+func (s *TokenStore) Save(tf TokenFile) (retErr error) {
 	if err := os.MkdirAll(filepath.Dir(s.Path), 0700); err != nil {
 		return err
 	}
@@ -110,7 +114,11 @@ func (s *TokenStore) Save(tf TokenFile) error {
 	if err := lockFile(f, true); err != nil {
 		return fmt.Errorf("failed to lock token file: %w", err)
 	}
-	defer func() { _ = unlockFile(f) }()
+	defer func() {
+		if unlockErr := unlockFile(f); unlockErr != nil && retErr == nil {
+			retErr = fmt.Errorf("unlock token file: %w", unlockErr)
+		}
+	}()
 	data, err := json.MarshalIndent(tf, "", "  ")
 	if err != nil {
 		return err
