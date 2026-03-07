@@ -73,7 +73,7 @@ func (p *TrelloParser) Parse(ctx context.Context, r io.Reader, sourcePath string
 		OriginalFilePath: sourcePath,
 	}
 
-	for _, card := range board.Cards {
+	for i, card := range board.Cards {
 		item := model.CalendarItem{
 			Title:       card.Name,
 			Description: card.Desc,
@@ -86,9 +86,11 @@ func (p *TrelloParser) Parse(ctx context.Context, r io.Reader, sourcePath string
 		}
 
 		if card.Due != "" {
-			if t, err := time.Parse(time.RFC3339, card.Due); err == nil {
-				item.DueDate = &t
+			t, err := time.Parse(time.RFC3339, card.Due)
+			if err != nil {
+				return nil, fmt.Errorf("card %d (%q): invalid due date %q: %w", i, card.Name, card.Due, err)
 			}
+			item.DueDate = &t
 		}
 
 		for _, label := range card.Labels {

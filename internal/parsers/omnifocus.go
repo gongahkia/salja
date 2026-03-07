@@ -43,9 +43,10 @@ func (p *OmniFocusParser) Parse(ctx context.Context, r io.Reader, sourcePath str
 
 	scanner := bufio.NewScanner(tr)
 	var currentItem *model.CalendarItem
-	_ = 0 // indent tracking reserved for nested support
+	lineNum := 0
 
 	for scanner.Scan() {
+		lineNum++
 		line := scanner.Text()
 
 		currentIndent := 0
@@ -101,10 +102,14 @@ func parseOmniFocusTags(item *model.CalendarItem, tagStr string) {
 		case "due":
 			if t, err := parseOmniFocusDate(tagValue); err == nil {
 				item.DueDate = &t
+			} else {
+				fmt.Fprintf(os.Stderr, "omnifocus parser: malformed due date %q: %v\n", tagValue, err)
 			}
 		case "defer":
 			if t, err := parseOmniFocusDate(tagValue); err == nil {
 				item.StartTime = &t
+			} else {
+				fmt.Fprintf(os.Stderr, "omnifocus parser: malformed defer date %q: %v\n", tagValue, err)
 			}
 		case "done":
 			item.Status = model.StatusCompleted

@@ -200,6 +200,80 @@ func TestRetryNonRetryableReturnsImmediately(t *testing.T) {
 	}
 }
 
+func TestCSVColumnCountMismatch(t *testing.T) {
+	input := "Name,Date,Priority\nTask1,2024-01-01,High\nBad,Only Two\n"
+	parser, err := NewStreamingCSVParser(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("unexpected header error: %v", err)
+	}
+	_, _, err = parser.Next() // first row OK
+	if err != nil {
+		t.Fatalf("first row should parse: %v", err)
+	}
+	_, _, err = parser.Next() // second row has wrong column count
+	if err == nil {
+		t.Fatal("expected error for column count mismatch")
+	}
+	if !strings.Contains(err.Error(), "row") {
+		t.Errorf("error should mention row number: %v", err)
+	}
+}
+
+func TestPartialResultSummaryTruncation(t *testing.T) {
+	result := NewPartialResult[string]()
+	for i := 0; i < 30; i++ {
+		result.AddError(i, "", "some error", nil)
+	}
+	summary := result.Summary()
+	if !strings.Contains(summary, "and 10 more errors") {
+		t.Errorf("expected truncation message in summary: %s", summary)
+	}
+	if len(result.AllErrors()) != 30 {
+		t.Errorf("AllErrors should return all 30, got %d", len(result.AllErrors()))
+	}
+}
+
+func TestPartialResultSummaryNoTruncation(t *testing.T) {
+	result := NewPartialResult[string]()
+	for i := 0; i < 5; i++ {
+		result.AddError(i, "", "err", nil)
+	}
+	summary := result.Summary()
+	if strings.Contains(summary, "more errors") {
+		t.Errorf("should not truncate 5 errors: %s", summary)
+	}
+}
+
+func TestUTF16LEChunkedReading(t *testing.T) {
+	// UTF-16LE with BOM: "Hi"
+	data := []byte{0xFF, 0xFE, 'H', 0, 'i', 0}
+	reader, enc, err := TranscodeToUTF8(strings.NewReader(string(data)))
+	if err != nil {
+		t.Fatalf("transcode error: %v", err)
+	}
+	if enc != EncodingUTF16LE {
+		t.Errorf("expected UTF-16LE, got %s", enc)
+	}
+	// read in small chunks
+	var result []byte
+	buf := make([]byte, 1)
+	for {
+		n, err := reader.Read(buf)
+		if n > 0 {
+			result = append(result, buf[:n]...)
+		}
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Fatalf("read error: %v", err)
+		}
+	}
+	if string(result) != "Hi" {
+		t.Errorf("expected 'Hi', got %q", string(result))
+	}
+}
+
 func TestErrorCollectorSummary(t *testing.T) {
 	c := NewErrorCollector()
 	c.AddError(&ParseError{File: "test.csv", Line: 5, Message: "bad row"})
