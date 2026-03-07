@@ -81,7 +81,10 @@ func NewDiffCmd() *cobra.Command {
 					"added":          addedTitles,
 					"removed":        removedTitles,
 				}
-				data, _ := json.MarshalIndent(result, "", "  ")
+				data, marshalErr := json.MarshalIndent(result, "", "  ")
+				if marshalErr != nil {
+					return fmt.Errorf("marshal diff output: %w", marshalErr)
+				}
 				_, _ = fmt.Fprintln(out, string(data))
 
 			case "patch":

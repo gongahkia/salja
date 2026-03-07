@@ -14,6 +14,7 @@ import (
 	"github.com/gongahkia/salja/internal/conflict"
 	salerr "github.com/gongahkia/salja/internal/errors"
 	"github.com/gongahkia/salja/internal/fidelity"
+	"github.com/gongahkia/salja/internal/logging"
 	"github.com/gongahkia/salja/internal/model"
 	"github.com/gongahkia/salja/internal/parsers"
 	"github.com/gongahkia/salja/internal/registry"
@@ -53,8 +54,12 @@ func NewConvertCmd() *cobra.Command {
 				}
 			}
 
-			// Load config early so streaming threshold is available
-			cfg, _ := config.Load()
+			cfg, cfgErr := config.Load()
+			if cfgErr != nil {
+				logging.Default().Warn("system", fmt.Sprintf("config load failed, using defaults: %v", cfgErr))
+				fmt.Fprintf(os.Stderr, "Warning: config load failed, using defaults: %v\n", cfgErr)
+				cfg = config.DefaultConfig()
+			}
 
 			if locale != "" {
 				parsers.SetLocale(locale)
@@ -85,7 +90,10 @@ func NewConvertCmd() *cobra.Command {
 						fmt.Fprintf(os.Stderr, "Warning: input file is %dMB (threshold: %dMB). Large files may use significant memory.\n", fileSizeMB, thresholdMB)
 						fmt.Fprint(os.Stderr, "Continue? [Y/n] ")
 						var confirm string
-						_, _ = fmt.Fscanln(os.Stdin, &confirm)
+						if _, err := fmt.Fscanln(os.Stdin, &confirm); err != nil {
+							logging.Default().Warn("system", fmt.Sprintf("stdin read failed, aborting: %v", err))
+							return fmt.Errorf("aborted: failed to read confirmation: %w", err)
+						}
 						if confirm == "n" || confirm == "N" {
 							return fmt.Errorf("aborted by user")
 						}
@@ -243,7 +251,10 @@ func NewConvertCmd() *cobra.Command {
 								collection.Items = append(collection.Items, item)
 							}
 						}
-						_ = resolver.WriteLog()
+						if logErr := resolver.WriteLog(); logErr != nil {
+							logging.Default().Error("error", fmt.Sprintf("conflict log write failed: %v", logErr))
+							fmt.Fprintf(os.Stderr, "Warning: failed to write conflict log: %v\n", logErr)
+						}
 					} else {
 						// No duplicates: append all existing items
 						collection.Items = append(collection.Items, existing.Items...)
@@ -292,7 +303,10 @@ func NewConvertCmd() *cobra.Command {
 					Details:     warningStrs,
 					Errors:      errStrs,
 				}
-				data, _ := json.MarshalIndent(report, "", "  ")
+				data, marshalErr := json.MarshalIndent(report, "", "  ")
+				if marshalErr != nil {
+					return fmt.Errorf("marshal JSON report: %w", marshalErr)
+				}
 				fmt.Println(string(data))
 			} else if !quiet {
 				if partial.HasErrors() {
@@ -453,6 +467,7 @@ func interactiveFormatPicker(role string) string {
 	fmt.Fprint(os.Stderr, "> ")
 	var choice int
 	if _, err := fmt.Fscan(os.Stdin, &choice); err != nil || choice < 1 || choice > len(names) {
+		fmt.Fprintf(os.Stderr, "Invalid choice, defaulting to %s\n", names[0])
 		return names[0]
 	}
 	return names[choice-1]

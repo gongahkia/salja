@@ -8,6 +8,7 @@ import (
 
 	"github.com/gongahkia/salja/internal/api"
 	"github.com/gongahkia/salja/internal/config"
+	"github.com/gongahkia/salja/internal/logging"
 	"github.com/gongahkia/salja/internal/model"
 	"github.com/spf13/cobra"
 )
@@ -88,7 +89,12 @@ func newSyncPushCmd() *cobra.Command {
 			filePath := args[0]
 			format := DetectFormat(filePath)
 
-			cfg, _ := config.Load()
+			cfg, cfgErr := config.Load()
+			if cfgErr != nil {
+				logging.Default().Warn("system", fmt.Sprintf("config load failed: %v", cfgErr))
+				fmt.Fprintf(os.Stderr, "Warning: config load failed, using defaults: %v\n", cfgErr)
+				cfg = config.DefaultConfig()
+			}
 			apiTimeout := 30 * time.Second
 			if cfg != nil && cfg.APITimeoutSeconds > 0 {
 				apiTimeout = time.Duration(cfg.APITimeoutSeconds) * time.Second
@@ -160,7 +166,12 @@ func newSyncPullCmd() *cobra.Command {
 				return err
 			}
 
-			cfg, _ := config.Load()
+			cfg, cfgErr := config.Load()
+			if cfgErr != nil {
+				logging.Default().Warn("system", fmt.Sprintf("config load failed: %v", cfgErr))
+				fmt.Fprintf(os.Stderr, "Warning: config load failed, using defaults: %v\n", cfgErr)
+				cfg = config.DefaultConfig()
+			}
 
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
