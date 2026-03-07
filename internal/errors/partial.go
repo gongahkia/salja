@@ -59,15 +59,27 @@ func (p *PartialResult[T]) SuccessCount() int {
 	return len(p.Items)
 }
 
-// Summary returns a human-readable summary.
+// AllErrors returns the full untruncated error list.
+func (p *PartialResult[T]) AllErrors() []ItemError {
+	return p.Errors
+}
+
+// Summary returns a human-readable summary, capped at 20 errors.
 func (p *PartialResult[T]) Summary() string {
 	if !p.HasErrors() {
 		return fmt.Sprintf("all %d items converted successfully", p.Total)
 	}
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "%d/%d items converted (%d errors):\n", p.SuccessCount(), p.Total, len(p.Errors))
-	for _, e := range p.Errors {
+	limit := len(p.Errors)
+	if limit > 20 {
+		limit = 20
+	}
+	for _, e := range p.Errors[:limit] {
 		fmt.Fprintf(&sb, "  - %s\n", e.Error())
+	}
+	if len(p.Errors) > 20 {
+		fmt.Fprintf(&sb, "  ... and %d more errors (see log for full details)\n", len(p.Errors)-20)
 	}
 	return sb.String()
 }
