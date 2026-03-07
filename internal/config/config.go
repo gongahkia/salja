@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -62,16 +63,24 @@ func DefaultConfig() *Config {
 	}
 }
 
-var overridePath string
+var (
+	overridePathMu sync.Mutex
+	overridePath   string
+)
 
 // SetOverridePath sets a custom config file path, overriding the default.
 func SetOverridePath(path string) {
+	overridePathMu.Lock()
 	overridePath = path
+	overridePathMu.Unlock()
 }
 
 func Load() (*Config, error) {
-	if overridePath != "" {
-		return LoadFrom(overridePath)
+	overridePathMu.Lock()
+	op := overridePath
+	overridePathMu.Unlock()
+	if op != "" {
+		return LoadFrom(op)
 	}
 	configPath := ConfigPath()
 	return LoadFrom(configPath)

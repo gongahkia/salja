@@ -2,6 +2,7 @@ package parsers
 
 import (
 	"io"
+	"sync"
 	"time"
 
 	salerr "github.com/gongahkia/salja/internal/errors"
@@ -24,14 +25,21 @@ func transcodeReader(r io.Reader) (io.Reader, error) {
 	return tr, err
 }
 
-// parseAmbiguousDate uses locale-aware date parsing for ambiguous date strings.
-var defaultDateParser = salerr.NewAmbiguousDateParser("")
+var (
+	dateParserMu      sync.RWMutex
+	defaultDateParser = salerr.NewAmbiguousDateParser("")
+)
 
 func parseAmbiguousDate(s string) (time.Time, error) {
-	return defaultDateParser.Parse(s)
+	dateParserMu.RLock()
+	p := defaultDateParser
+	dateParserMu.RUnlock()
+	return p.Parse(s)
 }
 
 // SetLocale updates the date parser with the given locale.
 func SetLocale(locale string) {
+	dateParserMu.Lock()
 	defaultDateParser = salerr.NewAmbiguousDateParser(locale)
+	dateParserMu.Unlock()
 }
