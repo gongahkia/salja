@@ -9,6 +9,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	salerr "github.com/gongahkia/salja/internal/errors"
+	"github.com/gongahkia/salja/internal/logging"
 )
 
 type Config struct {
@@ -90,6 +91,7 @@ func LoadFrom(path string) (*Config, error) {
 	cfg := DefaultConfig()
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
+		logging.Default().Info("system", fmt.Sprintf("no config file found at %s, using defaults", path))
 		return cfg, nil
 	}
 
@@ -100,9 +102,11 @@ func LoadFrom(path string) (*Config, error) {
 
 	undecoded := md.Undecoded()
 	if len(undecoded) > 0 {
-		for _, key := range undecoded {
-			fmt.Fprintf(os.Stderr, "Warning: unknown config key '%s'\n", key)
+		keys := make([]string, len(undecoded))
+		for i, key := range undecoded {
+			keys[i] = key.String()
 		}
+		logging.Default().Warn("system", fmt.Sprintf("unknown config keys: %v", keys))
 	}
 
 	if err := validate(cfg); err != nil {
