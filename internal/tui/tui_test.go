@@ -90,14 +90,19 @@ func TestHelpModelView(t *testing.T) {
 	}
 }
 
-func TestErrorDisplayView(t *testing.T) {
-	e := NewErrorDisplay("ParseError", "unexpected token", 1)
+func TestErrorPanelView(t *testing.T) {
+	e := NewErrorPanel()
+	e.Push("error", "unexpected token")
 	view := e.View()
-	if !strings.Contains(view, "ParseError") {
-		t.Error("expected error display to contain title")
+	if !strings.Contains(view, "unexpected token") {
+		t.Error("expected error panel to contain error message")
 	}
-	if !strings.Contains(view, "Exit code: 1") {
-		t.Error("expected error display to show exit code")
+	if !e.visible {
+		t.Error("expected error panel to be visible after push")
+	}
+	e.Dismiss()
+	if e.visible {
+		t.Error("expected error panel to be hidden after dismiss")
 	}
 }
 

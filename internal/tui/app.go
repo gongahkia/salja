@@ -35,7 +35,7 @@ type App struct {
 	config     ConfigModel
 	help       HelpModel
 	showHelp   bool
-	err        error
+	errorPanel ErrorPanel
 }
 
 // NewApp creates a new root TUI application model.
@@ -44,6 +44,7 @@ func NewApp() App {
 		keys:       DefaultKeyMap(),
 		activeView: ViewHome,
 		home:       NewHomeModel(),
+		errorPanel: NewErrorPanel(),
 	}
 }
 
@@ -82,10 +83,14 @@ func (a App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return a.initView(msg.Target)
 
 	case ErrorMsg:
-		a.err = msg.Err
+		a.errorPanel.Push("error", msg.Err.Error())
 		return a, nil
 	}
 
+	if a.errorPanel.visible {
+		a.errorPanel, _ = a.errorPanel.Update(msg)
+		return a, nil
+	}
 	return a.updateChild(msg)
 }
 
@@ -117,7 +122,12 @@ func (a App) View() string {
 	header := TitleStyle.Render("salja")
 	status := StatusBarStyle.Render("? help · esc back · q quit")
 
-	return lipgloss.JoinVertical(lipgloss.Left, header, content, status)
+	parts := []string{header, content}
+	if errView := a.errorPanel.View(); errView != "" {
+		parts = append(parts, errView)
+	}
+	parts = append(parts, status)
+	return lipgloss.JoinVertical(lipgloss.Left, parts...)
 }
 
 func (a App) updateChild(msg tea.Msg) (tea.Model, tea.Cmd) {
